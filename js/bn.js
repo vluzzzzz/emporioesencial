@@ -24,12 +24,10 @@
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 let BANNERS = [
-  // principalhero.png en pausa. Para traerlo de vuelta, borrá las dos barras:
-  // { desktop:'images/principalhero.webp', mobile:'', alt:'Essential Tech · Tecnología al por mayor', link:'#ofertas' },
-  { desktop:'images/bannerdos.webp',     mobile:'images/bannerdoscelu.webp',    alt:'AirPods Pro 3',        producto:'airpods-3' },
-  { desktop:'images/bannertres.webp',    mobile:'images/bannertrescelu.webp',   alt:'Apple Watch Serie 11', producto:'apple-watch-serie-10' },
-  { desktop:'images/CUATRO.webp',         mobile:'images/batterypackbannercelu.webp', alt:'Batería MagSafe',      producto:'bateria-magsafe' },
-  { desktop:'images/eliguetuproximoiphone.webp',   mobile:'images/medidacelulareliguetuproximoiphone.webp',  alt:'Celulares',            categoria:'celulares' },
+  { desktop:'images/emporio-images/2.jpeg', mobile:'images/emporio-images/2.jpeg', alt:'Cocina',       categoria:'cocina' },
+  { desktop:'images/emporio-images/3.jpeg', mobile:'images/emporio-images/3.jpeg', alt:'Belleza',      categoria:'belleza' },
+  { desktop:'images/emporio-images/1.jpeg', mobile:'images/emporio-images/1.jpeg', alt:'Herramientas', categoria:'herramientas' },
+  { desktop:'images/emporio-images/4.jpeg', mobile:'images/emporio-images/4.jpeg', alt:'Limpieza',     categoria:'limpieza' },
 ];
 
 // Banner ancho de promoción (va entre la grilla y las reseñas) → 2400 × 600 px
@@ -37,15 +35,15 @@ const PROMO_BANNER = { desktop:'', mobile:'', archivo:'bannerpromo.webp', alt:'P
 
 // Imagen alta de la izquierda en la fila de ofertas → 620 × 714 px
 // En el teléfono va arriba y apaisada → 1080 × 470 px
-const OFERTA_LATERAL = { desktop:'images/banneroferta.webp', mobile:'images/bannerofertacelu.webp', alt:'Ofertas del mes', link:'#ofertas' };
+const OFERTA_LATERAL = { desktop:'images/emporio-images/3.jpeg', mobile:'images/emporio-images/3.jpeg', alt:'Ofertas del mes', link:'#ofertas' };
 
 // Mensajes de la cinta de arriba. Se repiten en bucle, uno tras otro.
 const CINTA = [
   'Calidad Garantizada',
-  '+500 Clientes',
-  'Pago Seguro',
-  'Envío Express',
-  'Distribución Mayorista',
+  'Despacho a todo Chile',
+  'Atención por WhatsApp',
+  'Variedad para el hogar',
+  'Precios claros',
 ];
 
 // Velocidad de la cinta, en píxeles por segundo. Más chico = más lenta.
@@ -71,14 +69,14 @@ const CINTA_SEPARADOR = 'images/logo-cinta.webp';
    'bannerMobile' es la del teléfono → 1080 × 810 px. Vacío = usa la de arriba.
    Cada hueco dice qué archivo espera y en qué medida exportarlo.          */
 let CATEGORIAS = [
-  { arriba:'Lo mejor en', titulo:'Audífonos',  desde:'$14.000', cat:'audifonos',  img:'images/cat-audifonos.webp',  medida:'800 × 1000', banner:'images/audifonoscategorias.webp', bannerMobile:'images/aurifonoscategoriacelu.webp', bannerArchivo:'banner-audifonos.webp'  },
-  { arriba:'Todo en',     titulo:'Smartwatch', desde:'$29.990', cat:'smartwatch', img:'images/smarwacth.webp',      medida:'800 × 500',  banner:'images/categoriasmarwatch.webp', bannerMobile:'images/relojescategoriacelu.webp', bannerArchivo:'banner-smartwatch.webp' },
-  { arriba:'Todo en',     titulo:'iPhone',     desde:'$15.000', cat:'celulares',  img:'images/iphone.webp',         medida:'800 × 500',  banner:'images/iphonescategoria.webp', bannerMobile:'images/iphonecategoriacelu.webp', bannerArchivo:'banner-celulares.webp'  },
-  { arriba:'Todo en',     titulo:'Cargadores', desde:'$5.000',  cat:'cargadores', img:'images/categoriacargadoress.webp', medida:'800 × 1000', banner:'images/categoriacargadores.webp', bannerMobile:'images/cargadorescelu.webp', bannerArchivo:'banner-cargadores.webp' },
+  { arriba:'Todo en', titulo:'Cocina',       cat:'cocina',       img:'images/emporio-images/2.jpeg', medida:'800 × 1000', banner:'images/emporio-images/2.jpeg', bannerMobile:'images/emporio-images/2.jpeg', bannerArchivo:'banner-cocina.webp'  },
+  { arriba:'Todo en', titulo:'Belleza',      cat:'belleza',      img:'images/emporio-images/3.jpeg', medida:'800 × 500',  banner:'images/emporio-images/3.jpeg', bannerMobile:'images/emporio-images/3.jpeg', bannerArchivo:'banner-belleza.webp' },
+  { arriba:'Todo en', titulo:'Herramientas', cat:'herramientas', img:'images/emporio-images/1.jpeg', medida:'800 × 500',  banner:'images/emporio-images/1.jpeg', bannerMobile:'images/emporio-images/1.jpeg', bannerArchivo:'banner-herramientas.webp'  },
+  { arriba:'Todo en', titulo:'Limpieza',     cat:'limpieza',     img:'images/emporio-images/4.jpeg', medida:'800 × 1000', banner:'images/emporio-images/4.jpeg', bannerMobile:'images/emporio-images/4.jpeg', bannerArchivo:'banner-limpieza.webp' },
 ];
 
 // Banner de la sección "todo el catálogo" (el enlace Productos de la nav).
-const BANNER_TODOS = { banner:'images/bannertodoelcatalogocelular.webp', bannerMobile:'images/bannertodoelcatalogo.webp', bannerArchivo:'banner-catalogo.webp' };
+const BANNER_TODOS = { banner:'images/emporio-images/2.jpeg', bannerMobile:'images/emporio-images/2.jpeg', bannerArchivo:'banner-catalogo.webp' };
 /* ═══════════════════════════ FIN ZONA EDITABLE ═════════════════════════════ */
 
 

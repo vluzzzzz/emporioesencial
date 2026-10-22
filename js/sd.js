@@ -4,28 +4,32 @@ const HERO_STOCK = {};
 // ── FALLBACK hardcodeado ──────────────────────────────────────────────────
 // Si Supabase no está configurado o falla, la web usa estos datos y NO se
 // rompe. loadCatalog() los sobreescribe cuando Supabase responde.
+// Las 4 fotos del emporio, repetidas en todo el catálogo mientras se cargan
+// los productos reales desde /admin.
+const IMG = {
+  soplador:'images/emporio-images/1.jpeg',
+  cocina:'images/emporio-images/2.jpeg',
+  cera:'images/emporio-images/3.jpeg',
+  limpiavidrios:'images/emporio-images/4.jpeg',
+};
 let PRODUCTS=[
-  {id:1,key:'airpods-pro-2',name:'AirPods Pro 2',price:'$14.000',rawPrice:14000,image:'images/airpods.webp',bgLabel:'AIRPODS PRO 2',scale:1,offsetX:0,offsetY:0},
-  {id:2,key:'airpods-4',name:'AirPods 4',price:'$15.000',rawPrice:15000,image:'images/airpods4.webp',bgLabel:'AIRPODS 4',scale:0.8,offsetX:0,offsetY:0},
-  {id:3,key:'airpods-max',name:'AirPods Max',price:'$26.990',rawPrice:26990,image:'images/airpodsmax.webp',bgLabel:'AIRPODS MAX',scale:1.4,offsetX:50,offsetY:-20},
+  {id:1,key:'set-cocina-silicona',name:'Set de Cocina de Silicona',price:'$10.000',rawPrice:10000,image:IMG.cocina,bgLabel:'COCINA',scale:0.9,offsetX:0,offsetY:0},
+  {id:2,key:'calentador-cera',name:'Calentador de Cera',price:'$12.990',rawPrice:12990,image:IMG.cera,bgLabel:'BELLEZA',scale:0.9,offsetX:0,offsetY:0},
+  {id:3,key:'soplador-bateria',name:'Soplador a Batería 18V',price:'$29.990',rawPrice:29990,image:IMG.soplador,bgLabel:'HERRAMIENTAS',scale:0.9,offsetX:0,offsetY:0},
 ];
 const PRICE_TIERS={
-  'apple-watch-ultra-3':[{qty:1,price:27500},{qty:3,price:27500},{qty:5,price:27500},{qty:10,price:27500}],
-  'apple-watch-serie-10':[{qty:1,price:27500},{qty:3,price:27500},{qty:5,price:27500},{qty:10,price:27500}],
-  'airpods-4':[{qty:1,price:20000},{qty:3,price:13000},{qty:5,price:12000},{qty:10,price:11500}],
-  'airpods-3':[{qty:1,price:25000},{qty:3,price:15500},{qty:5,price:15000},{qty:10,price:14500}],
-  'airpods-pro-2':[{qty:1,price:14000},{qty:3,price:12500},{qty:5,price:11500},{qty:10,price:10500}],
-  'airpods-max':[{qty:1,price:26990},{qty:3,price:24990},{qty:5,price:22990},{qty:10,price:20990}],
-  'buds4-pro':[{qty:1,price:16000},{qty:3,price:16000},{qty:5,price:16000},{qty:10,price:16000}],
-  'buds2-pro':[{qty:1,price:14000},{qty:3,price:14000},{qty:5,price:14000},{qty:10,price:14000}],
-  'iphone-15-128':[{qty:1,price:480000}],
-  'iphone-16-128':[{qty:1,price:580000}],
-  'iphone-18-pro-max-256':[{qty:1,price:1150000}],
-  's26-plus-256':[{qty:1,price:580000}],
-  'bateria-magsafe':[{qty:1,price:15000},{qty:3,price:15000},{qty:5,price:15000},{qty:10,price:15000}],
-  'cargador-lightning':[{qty:1,price:5000},{qty:3,price:5000},{qty:5,price:5000},{qty:10,price:4500}],
-  'cargador-tipo-c':[{qty:1,price:6000},{qty:3,price:6000},{qty:5,price:6000},{qty:10,price:4500}],
-  'cargador-samsung-45w':[{qty:1,price:6000},{qty:3,price:6000},{qty:5,price:6000},{qty:10,price:6000}],
+  'set-cocina-silicona':[{qty:1,price:10000}],
+  'utensilios-bambu':[{qty:1,price:8990}],
+  'organizador-cocina':[{qty:1,price:7490}],
+  'calentador-cera':[{qty:1,price:12990}],
+  'kit-depilacion':[{qty:1,price:9990}],
+  'espejo-led':[{qty:1,price:14990}],
+  'soplador-bateria':[{qty:1,price:29990}],
+  'taladro-bateria':[{qty:1,price:34990}],
+  'set-herramientas':[{qty:1,price:19990}],
+  'limpiavidrios-telescopico':[{qty:1,price:4990}],
+  'mopa-giratoria':[{qty:1,price:15990}],
+  'set-limpieza-hogar':[{qty:1,price:11990}],
 };
 const getUnitPrice=(key,qty)=>{const t=PRICE_TIERS[key];if(!t||!t.length)return 0;let p=t[0].price;for(const r of t)if(qty>=r.qty)p=r.price;return p;};
 
@@ -37,26 +41,22 @@ const getUnitPrice=(key,qty)=>{const t=PRICE_TIERS[key];if(!t||!t.length)return 
    distinta en vez de reusar la misma. Ahora todas salen del mismo lugar.
    loadCatalog() lo reemplaza entero si Supabase responde.                   */
 let CATALOGO = [
-  {slug:'apple-watch-ultra-3',      cat:'smartwatch', name:'Apple Watch Ultra 3',        image:'images/ultra3black.webp', desc:'El Apple Watch más resistente. Titanio de grado aeroespacial, pantalla Always-On de 49mm y hasta 60 horas de batería.'},
-  {slug:'apple-watch-serie-10',     cat:'smartwatch', name:'Apple Watch Serie 11',       image:'images/serie11black.webp',        desc:'El Apple Watch más delgado hasta la fecha. Pantalla OLED más grande, detección de apnea del sueño y carga rápida.'},
-  {slug:'airpods-4',                cat:'audifonos',  name:'AirPods 4ta Generación',     image:'images/airpods-4gen.webp',        desc:'Diseño completamente rediseñado, audio adaptable y cancelación activa de ruido. La mejor experiencia sin cables.'},
-  {slug:'airpods-3',                cat:'audifonos',  name:'AirPods Pro 3',              image:'images/airpodspro3uno.webp',        desc:'Cancelación activa de ruido, audio espacial y resistencia al agua. La generación más avanzada, cómoda para todo el día.'},
-  {slug:'airpods-pro-2',            cat:'audifonos',  name:'AirPods Pro 2',              image:'images/airpods-pro-2.webp',       desc:'Cancelación activa de ruido de siguiente nivel, audio espacial personalizado y hasta 30 horas de batería con el estuche.'},
-  {slug:'airpods-max',              cat:'audifonos',  name:'Max Magnéticos',             image:'images/max-magneticos.webp',      desc:'Accesorios magnéticos premium compatibles con MagSafe. Fijación perfecta y carga inalámbrica optimizada.'},
-  {slug:'buds4-pro',                cat:'audifonos',  name:'Galaxy Buds4 Pro',           image:'images/buds4black.webp',           desc:'Audífonos inalámbricos Samsung con cancelación de ruido y audio de alta resolución. Compatibles con toda la línea Galaxy.'},
-  {slug:'buds2-pro',                cat:'audifonos',  name:'Galaxy Buds2 Pro',           image:'images/budspro2.webp',           desc:'Audífonos inalámbricos Samsung, compactos y livianos, con cancelación de ruido y sonido envolvente.'},
-  {slug:'iphone-15-128',            cat:'celulares',  name:'iPhone 15 128 GB',           image:'images/iphone15uno.webp',           desc:'iPhone 15 de 128 GB. Pantalla Super Retina XDR, Dynamic Island, cámara de 48 MP y puerto USB-C.'},
-  {slug:'iphone-16-128',            cat:'celulares',  name:'iPhone 16 128 GB',           image:'images/iphone16uno.webp',           desc:'iPhone 16 de 128 GB. Chip A18, botón de Control de Cámara, cámara de 48 MP y batería de mayor duración.'},
-  {slug:'s26-plus-256',             cat:'celulares',  name:'Galaxy S26 Plus 256 GB',     image:'images/samsumg26uno.webp',            desc:'Samsung Galaxy S26 Plus de 256 GB. Pantalla Dynamic AMOLED, cámara de alta resolución y carga rápida.'},
-  {slug:'iphone-18-pro-max-256',    cat:'celulares',  name:'iPhone 18 Pro Max 256 GB',   image:'images/iphone18.webp',            desc:'iPhone 18 Pro Max de 256 GB. Pantalla Super Retina XDR, sistema de cámaras Pro y el chip más potente de Apple.'},
-  {slug:'bateria-magsafe',          cat:'celulares',     name:'Batería MagSafe',            image:'images/bateria-magsafe.webp',     desc:'Batería externa magnética para iPhone. Se adhiere perfectamente y carga de forma inalámbrica sin cables. Compacta y ligera.'},
-  {slug:'cargador-lightning',       cat:'cargadores', name:'Cargador Lightning Completo',image:'images/cargador-lightning.webp',  desc:'Cargador completo con cable Lightning y adaptador de corriente. Compatible con iPhone, iPad y AirPods.'},
-  {slug:'cargador-tipo-c',          cat:'cargadores', name:'Cargador Tipo C Completo',   image:'images/cargadorcompletotipoc.webp',     desc:'Cargador completo con cable USB-C. Compatible con iPhone 15 en adelante, iPad Pro y MacBook. Carga rápida.'},
-  {slug:'cargador-samsung-45w',     cat:'cargadores', name:'Cargador Samsung 45W',       image:'images/cargador-samsung-45w.webp',desc:'Cargador ultra rápido Samsung 45W. Compatible con toda la línea Galaxy. Carga completa en menos de una hora.'},
+  {slug:'set-cocina-silicona',       cat:'cocina',       name:'Set de Cocina de Silicona 12 Piezas', image:IMG.cocina,        desc:'Set completo de utensilios de cocina de silicona con mango de madera. Resistentes al calor y antiadherentes.'},
+  {slug:'utensilios-bambu',          cat:'cocina',       name:'Juego de Utensilios de Bambú',        image:IMG.cocina,        desc:'Juego de utensilios de cocina de bambú natural. Livianos, resistentes y amables con tus sartenes.'},
+  {slug:'organizador-cocina',        cat:'cocina',       name:'Organizador de Cocina',               image:IMG.cocina,        desc:'Organizador multiuso para mantener ordenados los utensilios y accesorios de tu cocina.'},
+  {slug:'calentador-cera',           cat:'belleza',      name:'Calentador de Cera Profesional',      image:IMG.cera,          desc:'Calentador de cera profesional para todo tipo de ceras. Incluye contenedor de aluminio y control de temperatura.'},
+  {slug:'kit-depilacion',            cat:'belleza',      name:'Kit de Depilación',                   image:IMG.cera,          desc:'Kit completo de depilación para uso en casa. Práctico, fácil de usar y de larga duración.'},
+  {slug:'espejo-led',                cat:'belleza',      name:'Espejo con Luz LED',                  image:IMG.cera,          desc:'Espejo de maquillaje con iluminación LED regulable. Luz pareja para un acabado perfecto.'},
+  {slug:'soplador-bateria',          cat:'herramientas', name:'Soplador / Ventilador a Batería 18V', image:IMG.soplador,      desc:'Soplador inalámbrico potente de 18V. Ideal para limpieza y secado. Incluye batería y cargador.'},
+  {slug:'taladro-bateria',           cat:'herramientas', name:'Taladro a Batería',                   image:IMG.soplador,      desc:'Taladro inalámbrico recargable con torque ajustable. Para perforar y atornillar en casa.'},
+  {slug:'set-herramientas',          cat:'herramientas', name:'Set de Herramientas',                 image:IMG.soplador,      desc:'Set de herramientas esenciales para el hogar. Todo lo que necesitas para reparaciones básicas.'},
+  {slug:'limpiavidrios-telescopico', cat:'limpieza',     name:'Limpiavidrios Telescópico',           image:IMG.limpiavidrios, desc:'Limpiavidrios telescópico extensible de 21 a 86 cm. Mango antideslizante y correa de seguridad.'},
+  {slug:'mopa-giratoria',            cat:'limpieza',     name:'Mopa Giratoria 360°',                 image:IMG.limpiavidrios, desc:'Mopa giratoria 360° con balde escurridor. Limpia pisos sin esfuerzo y seca más rápido.'},
+  {slug:'set-limpieza-hogar',        cat:'limpieza',     name:'Set de Limpieza para el Hogar',       image:IMG.limpiavidrios, desc:'Set completo de implementos de limpieza para mantener cada rincón de tu hogar impecable.'},
 ];
 
 // Si Supabase no trae categoría, se deduce de la primera palabra del slug.
-const FAMILIAS = {airpods:'audifonos', apple:'smartwatch', cargador:'cargadores', bateria:'celulares'};
+const FAMILIAS = {set:'cocina', calentador:'belleza', kit:'belleza', espejo:'belleza', soplador:'herramientas', taladro:'herramientas', limpiavidrios:'limpieza', mopa:'limpieza'};
 const familiaDe = slug => FAMILIAS[String(slug||'').split('-')[0]] || 'otros';
 
 const findProduct  = slug => CATALOGO.find(p => p.slug === slug) || null;
@@ -190,7 +190,7 @@ function slideHTML(p,i){
 }
 
 async function loadCatalog(){
-  if (!window.sb) return false;   // Supabase no configurado → se queda el fallback
+  if (!window.sb) return false;   // Supabase no configurado → se queda el fallback (demo de hogar)
   try {
     const { data, error } = await window.sb
       .from('products')
@@ -257,60 +257,25 @@ async function loadCatalog(){
 
 
 const FEATURES={
-  'airpods-pro-2':['Cancelación activa de ruido','Audio espacial personalizado','Hasta 30 horas de batería','Resistencia al agua IPX4'],
-  'airpods-4':['Audio adaptativo','Cancelación activa de ruido','Diseño rediseñado','Hasta 30 horas con estuche'],
-  'airpods-3':['Cancelación activa de ruido','Audio espacial personalizado','Resistencia al agua','Hasta 30 horas con estuche'],
-  'apple-watch-ultra-3':['Caja de titanio aeroespacial','Pantalla Always-On 49mm','Hasta 60 horas de batería','GPS de doble frecuencia'],
-  'apple-watch-serie-10':['Pantalla OLED más grande','Detección de apnea del sueño','Carga rápida','Diseño más delgado'],
-  'iphone-15-128':['128 GB de almacenamiento','Pantalla Super Retina XDR','Cámara principal de 48 MP','Puerto USB-C'],
-  'iphone-16-128':['128 GB de almacenamiento','Chip A18','Botón de Control de Cámara','Cámara principal de 48 MP'],
-  'iphone-18-pro-max-256':['256 GB de almacenamiento','Pantalla Super Retina XDR','Sistema de cámaras Pro','Chip de última generación'],
-  's26-plus-256':['256 GB de almacenamiento','Pantalla Dynamic AMOLED','Cámara de alta resolución','Carga rápida'],
-  'bateria-magsafe':['Carga magnética MagSafe','Compacta y liviana','Compatible iPhone 12 en adelante','Sin cables'],
-  'airpods-max':['Compatibles con MagSafe','Fijación magnética perfecta','Carga inalámbrica optimizada','Múltiples colores'],
-  'cargador-lightning':['Cable Lightning incluido','Adaptador de corriente','Compatible iPhone/iPad/AirPods','Carga rápida'],
-  'cargador-tipo-c':['Cable USB-C incluido','Compatible iPhone 15+','iPad Pro y MacBook','Carga rápida 20W'],
-  'cargador-samsung-45w':['Carga ultra rápida 45W','Compatible línea Galaxy','Cable USB-C incluido','Carga completa en ~1 hora'],
-  'buds4-pro':['Cancelación de ruido activa','Audio de alta resolución','Compatible con Galaxy','Estuche con carga inalámbrica'],
-  'buds2-pro':['Cancelación de ruido activa','Diseño compacto y liviano','Sonido envolvente','Resistencia al agua IPX7'],
+  'set-cocina-silicona':['12 piezas','Silicona apta para alimentos','Mango de madera','Incluye soporte'],
+  'utensilios-bambu':['Bambú natural','Livianos y resistentes','No rayan tus sartenes','Fáciles de lavar'],
+  'organizador-cocina':['Multiuso','Ahorra espacio','Material resistente','Fácil de limpiar'],
+  'calentador-cera':['Uso profesional','Control de temperatura','Contenedor de aluminio','Tapa transparente'],
+  'kit-depilacion':['Uso en casa','Práctico y fácil','Larga duración','Incluye accesorios'],
+  'espejo-led':['Luz LED regulable','Luz pareja','Recargable','Base estable'],
+  'soplador-bateria':['Batería 18V','Inalámbrico','Incluye cargador','Alto rendimiento'],
+  'taladro-bateria':['Inalámbrico recargable','Torque ajustable','Perfora y atornilla','Incluye brocas'],
+  'set-herramientas':['Herramientas esenciales','Para el hogar','Estuche incluido','Acero resistente'],
+  'limpiavidrios-telescopico':['Extensible 21–86 cm','Mango antideslizante','Correa de seguridad','Liviano'],
+  'mopa-giratoria':['Giro 360°','Balde escurridor','Seca más rápido','Repuesto incluido'],
+  'set-limpieza-hogar':['Set completo','Para todo el hogar','Materiales duraderos','Práctico de guardar'],
 };            // fallback — loadCatalog() lo sobreescribe desde Supabase
 // { slug: [imgPrincipal, ...secundarias] } — desde Supabase (vacío = usa fallback hardcodeado)
-const GALLERY={
-  'buds2-pro':['images/budspro2.webp','images/budspro2imagen2.webp'],
-  'airpods-3':['images/airpodspro3uno.webp','images/airpodspro3dos.webp'],
-  'iphone-15-128':['images/iphone15uno.webp','images/iphone15dos.webp','images/iphone15tres.webp'],
-  'iphone-16-128':['images/iphone16uno.webp','images/iphone16dos.webp','images/iphone16tres.webp'],
-  'iphone-18-pro-max-256':['images/iphone18.webp','images/iphone18dos.webp'],
-  's26-plus-256':['images/samsumg26uno.webp','images/samsumg26dos.webp','images/samsumg26tres.webp'],
-};
+const GALLERY={};
 // Variantes de color — SOLO los slugs listados acá muestran colores (dots + selector + validación).
 /* Cada color lleva 'agotado'. En true sigue a la vista pero en gris y no se
    puede elegir, y desde /admin se vuelve a encender sin perder las fotos. */
-const COLOR_VARIANTS={
-  'apple-watch-serie-10':[
-    {name:'Negro', hex:'#1A1A1A', img:'images/serie11black.webp',  swatch:'images/miniblack11.webp'},
-    {name:'Oro',   hex:'#E3C08D', img:'images/serie11oro.webp',    swatch:'images/minioro.webp'},
-    {name:'Gris',  hex:'#8E8E93', img:'images/grisserie11.webp',   swatch:'images/miniserie11gris.webp'},
-  ],
-  'apple-watch-ultra-3':[
-    {name:'Negro',       hex:'#1A1A1A', img:'images/ultra3black.webp',            swatch:'images/miniultra3correablack.webp'},
-    {name:'Negro total', hex:'#000000', img:'images/ultra3blackcorreablack.webp', swatch:'images/miniblackultra3.webp'},
-    {name:'Gris',        hex:'#8E8E93', img:'images/ultra3gris.webp',             swatch:'images/minigrisultra3.webp'},
-    {name:'Naranja',     hex:'#F26513', img:'images/ultra3orange.webp',           swatch:'images/miniorangeultra3.webp'},
-  ],
-  'buds4-pro':[
-    {name:'Negro', hex:'#1A1A1A', img:'images/buds4black.webp', swatch:'images/minibuds4black.webp'},
-    {name:'Gris',  hex:'#8E8E93', img:'images/buds4gris.webp',  swatch:'images/minibuds4gris.webp'},
-    {name:'Rosa',  hex:'#E8A0B4', img:'images/buds4pink.webp',  swatch:'images/minibuds4pink.webp'},
-  ],
-  'airpods-max':[
-    {name:'Midnight', hex:'#1A1A1A', img:'images/max-negros.webp',  swatch:'images/black.webp'},
-    {name:'Starlight',hex:'#F5F0E8', img:'images/max-blanco.webp',  swatch:'images/mstarlight.webp'},
-    {name:'Purple',   hex:'#9B59B6', img:'images/max-morado.webp',  swatch:'images/purple.webp'},
-    {name:'Orange',   hex:'#F26513', img:'images/max-naranja.webp', swatch:'images/orange.webp', agotado:true},
-    {name:'Blue',     hex:'#3498DB', img:'images/max-azul.webp',    swatch:'images/blue.webp',   agotado:true},
-  ],
-};
+const COLOR_VARIANTS={};
 const PRODUCT_CONFIG={
   1:{fontSize:'22vw',productScale:1.1,productY:-15,blobYRatio:0.88,blobSpeed:0.030},
   2:{fontSize:'28vw',productScale:1.1,productY:-10,blobYRatio:0.88,blobSpeed:0.030},

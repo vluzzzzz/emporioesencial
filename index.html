@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Esencial Tech · Tecnología Apple al por mayor</title>
+  <title>Esencial Emporio · Catálogo para el hogar</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://sfcuiptbnsqvnzzraoee.supabase.co" crossorigin>
@@ -24,15 +24,15 @@
 
 <header class="nav" role="banner">
   <div class="nav-logo">
-    <a href="#inicio" aria-label="Esencial Tech · Inicio">
+    <a href="#inicio" aria-label="Esencial Emporio · Inicio">
       <img src="images/logo-cinta.webp" alt="" width="58" height="58">
-      <span class="nav-marca">Esencial Tech</span>
+      <span class="nav-marca">Esencial Emporio</span>
     </a>
   </div>
   <div class="nav-buscador">
     <div class="buscador">
       <svg class="buscador-lupa" viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14"/></svg>
-      <input type="search" id="buscadorInput" class="buscador-input" placeholder="Busca audífonos, relojes, cargadores…" autocomplete="off" aria-label="Buscar productos" role="combobox" aria-expanded="false" aria-controls="buscadorSug" aria-autocomplete="list">
+      <input type="search" id="buscadorInput" class="buscador-input" placeholder="Busca para la cocina, belleza, limpieza…" autocomplete="off" aria-label="Buscar productos" role="combobox" aria-expanded="false" aria-controls="buscadorSug" aria-autocomplete="list">
       <button class="buscador-clear" id="buscadorClear" aria-label="Limpiar búsqueda" hidden>&times;</button>
       <div class="buscador-sug" id="buscadorSug" role="listbox" aria-label="Sugerencias" hidden></div>
     </div>
@@ -63,21 +63,21 @@
 </section>
 
 <nav class="catnav" aria-label="Categorías">
-  <a class="catnav-item" href="#panel" data-cat-abrir="audifonos">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M4 13v-1a8 8 0 0 1 16 0v1"/><path pathLength="1" d="M4 13a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-2a2 2 0 0 1 2-2z"/><path pathLength="1" d="M20 13a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2 2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2z"/></svg></span>
-    <span class="catnav-txt">Audífonos</span>
+  <a class="catnav-item" href="#panel" data-cat-abrir="cocina">
+    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M3 2v7a3 3 0 0 0 6 0V2M6 9v13"/><path pathLength="1" d="M14 2c-1.5 1.5-2 4-2 6s.5 3 2 3 2-1 2-3-.5-4.5-2-6zM16 11v11"/></svg></span>
+    <span class="catnav-txt">Cocina</span>
   </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="smartwatch">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect pathLength="1" x="6" y="6" width="12" height="12" rx="3"/><path pathLength="1" d="M9 6V3h6v3M9 18v3h6v-3"/></svg></span>
-    <span class="catnav-txt">Smartwatch</span>
+  <a class="catnav-item" href="#panel" data-cat-abrir="belleza">
+    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle pathLength="1" cx="12" cy="8" r="5"/><path pathLength="1" d="M12 13v8M9 21h6"/></svg></span>
+    <span class="catnav-txt">Belleza</span>
   </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="celulares">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect pathLength="1" x="7" y="2" width="10" height="20" rx="2.5"/><path pathLength="1" d="M11 18h2"/></svg></span>
-    <span class="catnav-txt">iPhone</span>
+  <a class="catnav-item" href="#panel" data-cat-abrir="herramientas">
+    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M14 7a4 4 0 0 1-5 5l-6 6 2 2 6-6a4 4 0 0 0 5-5l-2 2-2-2 2-2z"/></svg></span>
+    <span class="catnav-txt">Herramientas</span>
   </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="cargadores">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span>
-    <span class="catnav-txt">Cargadores</span>
+  <a class="catnav-item" href="#panel" data-cat-abrir="limpieza">
+    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M3 21h18M6 21V8l4-5 4 5v13M10 3v5"/></svg></span>
+    <span class="catnav-txt">Limpieza</span>
   </a>
 </nav>
 
@@ -257,7 +257,7 @@
   <div class="footer-inner">
     <div class="footer-logo">
       <img src="images/logo-cinta.webp" alt="" aria-hidden="true" width="58" height="58">
-      <span>Esencial Tech</span>
+      <span>Esencial Emporio</span>
     </div>
     <nav class="footer-nav">
       <a href="#inicio">Inicio</a>
@@ -272,7 +272,7 @@
       </a>
     </div>
     <div class="footer-pagos" id="footerPagos"></div>
-    <p class="footer-copy">© 2026 Esencial Tech. Todos los derechos reservados.</p>
+    <p class="footer-copy">© 2026 Esencial Emporio. Todos los derechos reservados.</p>
   </div>
 </footer>
 
@@ -496,7 +496,7 @@
 <script defer src="js/cf.js?v=27"></script>
 <script defer src="js/pi.js"></script>
 <script defer src="js/mn.js"></script>
-<a class="wa-flotante" href="https://wa.me/56930521645?text=%C2%A1Hola!%20Me%20interesa%20hacer%20un%20pedido%20al%20por%20mayor" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
+<a class="wa-flotante" href="https://wa.me/56930521645?text=%C2%A1Hola!%20Me%20interesa%20un%20producto%20del%20cat%C3%A1logo" target="_blank" rel="noopener" aria-label="Escríbenos por WhatsApp">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
   <span class="wa-flotante-txt">Escríbenos</span>
 </a>
