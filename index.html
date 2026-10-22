@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Esencial Emporio · Catálogo para el hogar</title>
+<meta name="description" content="Catálogo de productos para el hogar, cocina, belleza, herramientas y limpieza.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://sfcuiptbnsqvnzzraoee.supabase.co" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script>if('scrollRestoration' in history) history.scrollRestoration='manual';</script>
+<style>
+  :root{
+    --amarillo:#ffe600;
+    --texto:#2d2d2d;
+    --suave:#666;
+    --gris:#ededed;
+    --fondo:#f5f5f5;
+    --verde:#00a650;
+    --azul:#3483fa;
+    --radio:12px;
+    --sombra:0 1px 4px rgba(0,0,0,.08);
+    --sombra-h:0 8px 22px rgba(0,0,0,.13);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'DM Sans',system-ui,sans-serif;background:var(--fondo);color:var(--texto)}
+  a{color:inherit;text-decoration:none}
+  img{display:block;max-width:100%}
+  .ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+  /* Tirante */
+  .tirante{background:var(--texto);color:#fff;text-align:center;font-size:13px;padding:8px 12px;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .tirante .ico{width:15px;height:15px;stroke:#fff}
+
+  /* Header */
+  .header{background:var(--amarillo);padding:14px 16px;position:sticky;top:0;z-index:50}
+  .header-row{max-width:1200px;margin:0 auto;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .marca{font-weight:700;font-size:22px;white-space:nowrap}
+  .marca span{color:#3a3a3a}
+  .buscador{flex:1;min-width:220px;display:flex;background:#fff;border-radius:8px;overflow:hidden;box-shadow:var(--sombra)}
+  .buscador input{flex:1;border:0;padding:12px 16px;font-size:15px;outline:none;font-family:inherit}
+  .buscador button{border:0;background:#fff;padding:0 16px;cursor:pointer;color:#888;display:grid;place-items:center}
+  .buscador button .ico{width:20px;height:20px;stroke:#888}
+  .header-ws{display:inline-flex;align-items:center;gap:8px;background:#fff;border-radius:8px;padding:10px 15px;font-weight:600;font-size:14px;white-space:nowrap;box-shadow:var(--sombra)}
+  .header-ws .ico{width:18px;height:18px;stroke:#25d366}
+
+  /* Banner */
+  .banner{max-width:1200px;margin:16px auto 0;padding:0 16px}
+  .banner-in{border-radius:var(--radio);overflow:hidden;background:linear-gradient(120deg,#3a4a5a,#1f2a36);color:#fff;display:flex;align-items:center;min-height:260px;padding:40px 48px;position:relative}
+  .banner-in h1{font-size:40px;line-height:1.05;margin-bottom:12px}
+  .banner-in p{opacity:.9;font-size:16px;max-width:380px}
+  .banner-in .pill{display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:#fff;color:#1f2a36;font-weight:600;padding:11px 22px;border-radius:30px;font-size:14px}
+
+  /* Categorías */
+  .cats{max-width:1200px;margin:26px auto;padding:0 16px}
+  .cats h2{font-size:20px;margin-bottom:14px}
+  .cats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+  .cat{background:#fff;border-radius:var(--radio);padding:16px;display:flex;align-items:center;gap:12px;box-shadow:var(--sombra);cursor:pointer;transition:.15s;border:1px solid transparent}
+  .cat:hover{transform:translateY(-2px);box-shadow:var(--sombra-h);border-color:#0001}
+  .cat .cat-ico{width:46px;height:46px;border-radius:10px;background:var(--gris);display:grid;place-items:center;flex-shrink:0;color:#444}
+  .cat .cat-ico .ico{width:24px;height:24px}
+  .cat b{font-size:14px;font-weight:600}
+
+  /* Filas */
+  .fila{max-width:1200px;margin:30px auto;padding:0 16px}
+  .fila-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+  .fila-head h2{font-size:20px}
+  .fila-head a{color:var(--azul);font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:4px}
+  .fila-head a .ico{width:15px;height:15px;stroke:var(--azul)}
+  .track-wrap{position:relative}
+  .track{display:flex;gap:14px;overflow-x:auto;scroll-behavior:smooth;padding:4px 2px;scrollbar-width:none}
+  .track::-webkit-scrollbar{display:none}
+  .arrow{position:absolute;top:50%;transform:translateY(-50%);width:42px;height:42px;border-radius:50%;background:#fff;border:0;box-shadow:0 2px 12px rgba(0,0,0,.2);cursor:pointer;display:grid;place-items:center;z-index:2;color:#555}
+  .arrow .ico{width:22px;height:22px;stroke:#555}
+  .arrow.left{left:-8px}
+  .arrow.right{right:-8px}
+  @media(max-width:720px){.arrow{display:none}}
+
+  /* Tarjeta — clickeable, sin botón, solo precio */
+  .card{flex:0 0 220px;background:#fff;border-radius:var(--radio);box-shadow:var(--sombra);overflow:hidden;display:flex;flex-direction:column;transition:.15s;cursor:pointer}
+  .card:hover{transform:translateY(-3px);box-shadow:var(--sombra-h)}
+  .card-img{aspect-ratio:1/1;background:#fff;display:flex;align-items:center;justify-content:center;padding:16px;overflow:hidden}
+  .card-img img{width:100%;height:100%;object-fit:contain}
+  .card-body{padding:14px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .card-name{font-size:14px;line-height:1.3;color:#333;min-height:36px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card-price{font-size:22px;font-weight:700;color:#1a1a1a;margin-top:2px}
+  .card-stock{font-size:12px;color:var(--verde);font-weight:600;display:inline-flex;align-items:center;gap:5px}
+  .card-stock .dot{width:7px;height:7px;border-radius:50%;background:var(--verde);display:inline-block}
+  .card-stock.off{color:#c0392b}
+  .card-stock.off .dot{background:#c0392b}
+
+  .vacio{max-width:1200px;margin:40px auto;padding:0 16px;color:var(--suave);text-align:center}
+
+  /* Detalle (modal) */
+  .modal{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;z-index:100;padding:16px}
+  .modal.open{display:flex}
+  .modal-box{background:#fff;border-radius:16px;max-width:760px;width:100%;max-height:90vh;overflow:auto;display:grid;grid-template-columns:1fr 1fr}
+  @media(max-width:640px){.modal-box{grid-template-columns:1fr}}
+  .modal-img{background:#fff;display:flex;align-items:center;justify-content:center;padding:28px;border-right:1px solid #eee}
+  .modal-img img{width:100%;height:100%;max-height:360px;object-fit:contain}
+  .modal-info{padding:28px;position:relative;display:flex;flex-direction:column;gap:12px}
+  .modal-close{position:absolute;top:14px;right:14px;background:#f1f1f1;border:0;width:34px;height:34px;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:#555}
+  .modal-info h3{font-size:22px;line-height:1.25;padding-right:34px}
+  .modal-price{font-size:30px;font-weight:700}
+  .modal-desc{color:var(--suave);font-size:14px;line-height:1.5}
+  .modal-feats{list-style:none;display:flex;flex-direction:column;gap:7px;margin-top:4px}
+  .modal-feats li{display:flex;align-items:flex-start;gap:8px;font-size:14px;color:#444}
+  .modal-feats li .ico{width:16px;height:16px;stroke:var(--verde);margin-top:2px}
+  .modal-ws{margin-top:auto;display:inline-flex;align-items:center;justify-content:center;gap:9px;background:#25d366;color:#fff;border:0;border-radius:10px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+  .modal-ws .ico{stroke:#fff}
+
+  footer{background:#fff;margin-top:44px;padding:34px 16px;text-align:center;color:#888;font-size:13px;line-height:1.7}
+  footer .marca{font-size:18px;color:#444}
+
+  @media(max-width:640px){
+    .banner-in{padding:28px;min-height:190px}
+    .banner-in h1{font-size:28px}
+    .card{flex-basis:160px}
+    .marca{font-size:18px}
+  }
+</style>
+</head>
+<body>
+
+<div class="tirante">
+  <svg class="ico" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+  Despacho a todo Chile · Escríbenos por WhatsApp para consultar stock
+</div>
+
+<header class="header">
+  <div class="header-row">
+    <a href="#" class="marca">Esencial <span>Emporio</span></a>
+    <div class="buscador">
+      <input type="search" id="buscar" placeholder="Buscar productos para el hogar, cocina, belleza…" autocomplete="off">
+      <button aria-label="Buscar"><svg class="ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></button>
+    </div>
+    <a class="header-ws" id="headerWs" href="#" target="_blank" rel="noopener">
+      <svg class="ico" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.3L3 21l2.3-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+      Consultar
+    </a>
+  </div>
+</header>
+
+<section class="banner">
+  <div class="banner-in">
+    <div>
+      <h1>Todo para tu<br>hogar y más</h1>
+      <p>Cocina, belleza, herramientas y limpieza. Precios claros, sin vueltas.</p>
+      <a href="#catalogo" class="pill">Ver catálogo
+        <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section class="cats">
+  <h2>Categorías</h2>
+  <div class="cats-grid" id="catsGrid"></div>
+</section>
+
+<div id="catalogo"></div>
+
+<footer>
+  <div class="marca">Esencial Emporio</div>
+  Catálogo de productos para el hogar · Escríbenos por WhatsApp para comprar
+</footer>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <div class="modal-img"><img id="mImg" src="" alt=""></div>
+    <div class="modal-info">
+      <button class="modal-close" id="mClose" aria-label="Cerrar"><svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      <h3 id="mName"></h3>
+      <div class="modal-price" id="mPrice"></div>
+      <div class="card-stock" id="mStock"><span class="dot"></span>En stock</div>
+      <p class="modal-desc" id="mDesc"></p>
+      <ul class="modal-feats" id="mFeats"></ul>
+      <a class="modal-ws" id="mWs" href="#" target="_blank" rel="noopener">
+        <svg class="ico" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.3L3 21l2.3-5.4A8.4 8.4 0 1 1 21 11.5z"/></svg>
+        Consultar por WhatsApp
+      </a>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js"></script>
+<script>
+/* ====== Configuración del negocio ====== */
+const WSP_NUMERO = '56900000000'; // <-- reemplazar por el WhatsApp real (formato 569XXXXXXXX)
+
+/* Íconos SVG por categoría (sin emojis) */
+const ICOS = {
+  cocina:'<path d="M3 2v7a3 3 0 0 0 6 0V2M6 9v13M14 2c-1.5 1.5-2 4-2 6s.5 3 2 3 2-1 2-3-.5-4.5-2-6zM16 11v11"/>',
+  belleza:'<circle cx="12" cy="8" r="5"/><path d="M12 13v8M9 21h6"/>',
+  herramientas:'<path d="M14 7a4 4 0 0 1-5 5l-6 6 2 2 6-6a4 4 0 0 0 5-5l-2 2-2-2 2-2z"/>',
+  limpieza:'<path d="M3 21h18M6 21V8l4-5 4 5v13M10 3v5"/>',
+  auto:'<path d="M5 13 7 7h10l2 6M3 13h18v5H3zM6 18v2M18 18v2"/><circle cx="7" cy="15.5" r="1.5"/><circle cx="17" cy="15.5" r="1.5"/>',
+  hogar:'<path d="M3 11 12 3l9 8M5 10v10h14V10"/>',
+  regalos:'<rect x="3" y="8" width="18" height="13"/><path d="M3 8h18M12 8v13M12 8s-1-5-4-5-2 5 4 5zM12 8s1-5 4-5 2 5-4 5z"/>',
+  ofertas:'<path d="M20 12 12 4H5v7l8 8 7-7zM8 8h.01"/>',
+  default:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>'
+};
+function icoCat(nombre){
+  const k = (nombre||'').toLowerCase();
+  for(const key in ICOS){ if(k.includes(key)) return ICOS[key]; }
+  return ICOS.default;
+}
+
+/* Productos de ejemplo (fallback si Supabase está vacío o no responde) */
+const DEMO = [
+  {name:'Set de Cocina de Silicona 12 Piezas', category:'Cocina', image:'images/emporio-images/2.jpeg', price:10000, description:'Set completo de utensilios de cocina de silicona con mango de madera. Resistentes al calor y antiadherentes.', features:['12 piezas','Silicona apta para alimentos','Mango de madera','Incluye soporte']},
+  {name:'Calentador de Cera TASBEL Profesional', category:'Belleza', image:'images/emporio-images/3.jpeg', price:12990, description:'Calentador de cera profesional para todo tipo de ceras. Incluye contenedor de aluminio extra.', features:['Uso profesional','Control de temperatura','Contenedor de aluminio','Tapa transparente']},
+  {name:'Ventilador / Soplador a Batería 18V', category:'Herramientas', image:'images/emporio-images/1.jpeg', price:29990, description:'Soplador inalámbrico potente de 18V. Ideal para limpieza y secado. Incluye batería y cargador.', features:['Batería 18V','Inalámbrico','Incluye cargador','Alto rendimiento']},
+  {name:'Limpiavidrios Telescópico', category:'Limpieza', image:'images/emporio-images/4.jpeg', price:4990, description:'Limpiavidrios telescópico extensible de 21 a 86 cm. Mango antideslizante y correa de seguridad.', features:['Extensible 21–86 cm','Mango antideslizante','Correa de seguridad','Liviano']},
+];
+
+const fmt = n => (n==null||n==='') ? '' : '$' + Number(n).toLocaleString('es-CL');
+const waLink = txt => `https://wa.me/${WSP_NUMERO}?text=${encodeURIComponent(txt)}`;
+
+/* Normaliza un producto venga de Supabase o del demo */
+function precioDe(p){
+  if(p.price!=null && p.price!=='') return Number(p.price);
+  // si tiene tramos de precio, usa el de 1 unidad (o el menor activo)
+  const tiers = (p.price_tiers||[]).filter(t=>t.active!==false);
+  if(tiers.length){
+    const uno = tiers.find(t=>t.qty===1) || tiers.sort((a,b)=>a.price-b.price)[0];
+    return uno ? Number(uno.price) : null;
+  }
+  return null;
+}
+
+let PRODUCTOS = [];
+
+function cardHTML(p, idx){
+  const precio = precioDe(p);
+  const stock = p.in_stock!==false;
+  return `<article class="card" data-i="${idx}">
+    <div class="card-img"><img src="${p.image||''}" alt="${p.name||''}" loading="lazy"
+         onerror="this.style.opacity=.25;this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22/>'"></div>
+    <div class="card-body">
+      <div class="card-name">${p.name||''}</div>
+      ${precio!=null?`<div class="card-price">${fmt(precio)}</div>`:''}
+      <div class="card-stock ${stock?'':'off'}"><span class="dot"></span>${stock?'En stock':'Sin stock'}</div>
+    </div>
+  </article>`;
+}
+
+function filaHTML(titulo, items, startIndex){
+  let cards='';
+  items.forEach((p,i)=>{ cards += cardHTML(p, startIndex+i); });
+  return `<section class="fila">
+    <div class="fila-head"><h2>${titulo}</h2></div>
+    <div class="track-wrap">
+      <button class="arrow left" data-dir="-1" aria-label="Anterior"><svg class="ico" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="track">${cards}</div>
+      <button class="arrow right" data-dir="1" aria-label="Siguiente"><svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg></button>
+    </div>
+  </section>`;
+}
+
+function render(lista){
+  PRODUCTOS = lista;
+
+  // Categorías presentes
+  const cats = [...new Set(lista.map(p=>p.category).filter(Boolean))];
+  const baseCats = cats.length ? cats : ['Cocina','Belleza','Herramientas','Limpieza','Hogar','Ofertas'];
+  document.getElementById('catsGrid').innerHTML = baseCats.map(c =>
+    `<div class="cat" data-cat="${c}"><div class="cat-ico"><svg class="ico" viewBox="0 0 24 24">${icoCat(c)}</svg></div><b>${c}</b></div>`
+  ).join('');
+
+  // Filas: una por categoría (si hay), + "Todos los productos"
+  const cont = document.getElementById('catalogo');
+  let html = '';
+  let idx = 0;
+  if(cats.length){
+    cats.forEach(cat=>{
+      const items = lista.filter(p=>p.category===cat);
+      html += filaHTML(cat, items, idx); idx += items.length;
+    });
+  }
+  html += filaHTML('Todos los productos', lista, idx);
+  cont.innerHTML = html;
+
+  wireCards();
+  wireArrows();
+  wireCats();
+}
+
+function wireArrows(){
+  document.querySelectorAll('.arrow').forEach(b=>{
+    b.onclick = () => {
+      const track = b.parentElement.querySelector('.track');
+      track.scrollBy({left: b.dataset.dir*640, behavior:'smooth'});
+    };
+  });
+}
+function wireCards(){
+  document.querySelectorAll('.card').forEach(c=>{
+    c.onclick = () => abrir(PRODUCTOS[+c.dataset.i]);
+  });
+}
+function wireCats(){
+  document.querySelectorAll('.cat').forEach(c=>{
+    c.onclick = () => {
+      const cat = c.dataset.cat;
+      const fila = [...document.querySelectorAll('.fila-head h2')].find(h=>h.textContent===cat);
+      if(fila) fila.closest('.fila').scrollIntoView({behavior:'smooth', block:'start'});
+    };
+  });
+}
+
+/* Detalle */
+const modal = document.getElementById('modal');
+function abrir(p){
+  if(!p) return;
+  const precio = precioDe(p);
+  document.getElementById('mImg').src = p.image||'';
+  document.getElementById('mImg').alt = p.name||'';
+  document.getElementById('mName').textContent = p.name||'';
+  document.getElementById('mPrice').textContent = precio!=null?fmt(precio):'Consultar precio';
+  const st = document.getElementById('mStock');
+  const stock = p.in_stock!==false;
+  st.className = 'card-stock '+(stock?'':'off');
+  st.innerHTML = `<span class="dot"></span>${stock?'En stock':'Sin stock'}`;
+  document.getElementById('mDesc').textContent = p.description||'';
+  const feats = (p.features||[]);
+  document.getElementById('mFeats').innerHTML = feats.map(f=>
+    `<li><svg class="ico" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>${f}</li>`).join('');
+  document.getElementById('mWs').href = waLink(`Hola! Me interesa: ${p.name}${precio!=null?' ('+fmt(precio)+')':''}`);
+  modal.classList.add('open');
+}
+document.getElementById('mClose').onclick = () => modal.classList.remove('open');
+modal.onclick = e => { if(e.target===modal) modal.classList.remove('open'); };
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') modal.classList.remove('open'); });
+
+/* Buscador: filtra las tarjetas visibles */
+document.getElementById('buscar').addEventListener('input', e=>{
+  const q = e.target.value.trim().toLowerCase();
+  document.querySelectorAll('.card').forEach(c=>{
+    const p = PRODUCTOS[+c.dataset.i];
+    const match = !q || (p.name||'').toLowerCase().includes(q) || (p.category||'').toLowerCase().includes(q);
+    c.style.display = match ? '' : 'none';
+  });
+});
+
+/* WhatsApp del header */
+document.getElementById('headerWs').href = waLink('Hola! Quiero hacer una consulta sobre el catálogo');
+
+/* Carga desde Supabase, con fallback al demo */
+async function cargar(){
+  if(window.sb){
+    try{
+      const { data, error } = await window.sb
+        .from('products')
+        .select('*, price_tiers(qty,price,active)')
+        .order('position', { ascending:true });
+      if(!error && data && data.length){ render(data); return; }
+    }catch(_){}
+  }
+  render(DEMO);
+}
+cargar();
+</script>
+</body>
+</html>

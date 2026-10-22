@@ -1,0 +1,7 @@
+{
+  "name": "esencial-emporio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Catálogo de productos para el hogar (Supabase + Vercel)",
+  "dependencies": {}
+}
