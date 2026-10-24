@@ -163,9 +163,9 @@ const Sesion = (() => {
   }
 
   /* ── Panel lateral ────────────────────────────────────── */
-  function panel(titulo, kicker, cuerpo, pie){
+  function panel(titulo, kicker, cuerpo, pie, full){
     const ov = document.createElement('div');
-    ov.className = 'venta-ov';
+    ov.className = 'venta-ov' + (full ? ' venta-full' : '');
     ov.innerHTML = `
       <div class="venta-panel">
         <header class="venta-head">
@@ -320,7 +320,7 @@ const Sesion = (() => {
 
   /* ── Mis ventas ───────────────────────────────────────── */
   async function abrirMisVentas(){
-    const { ov } = panel('Mis ventas', 'Historial', '<p class="venta-vacio">Cargando…</p>');
+    const { ov } = panel('Mis ventas', 'Historial', '<p class="venta-vacio">Cargando…</p>', '', true);
     const box = ov.querySelector('.venta-body');
 
     const { data, error } = await sb.from('ventas')
@@ -329,24 +329,37 @@ const Sesion = (() => {
     if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Producto vendido.</p>'; return; }
 
     const suma = data.reduce((a, v) => a + (v.total || 0), 0);
+    const envios = data.reduce((a, v) => a + (v.costo_despacho || 0), 0);
     box.innerHTML = `
-      <p class="venta-resumen">${data.length} venta${data.length === 1 ? '' : 's'} · <b>${fmt(suma)}</b> en total</p>
-      <ul class="venta-lista">
-        ${data.map(v => `
-          <li>
-            <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
-            <div class="vl-info">
-              <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-              <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}</small>
-              <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
-              <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
-            </div>
-            <div class="vl-total">
-              <b>${fmt(v.total)}</b>
-              <small>despacho ${fmt(v.costo_despacho)}</small>
-            </div>
-          </li>`).join('')}
-      </ul>`;
+      <div class="venta-wrap">
+        <div class="venta-tarjetas">
+          <div class="vt"><span>Ventas</span><b>${data.length}</b></div>
+          <div class="vt"><span>Productos</span><b>${fmt(suma - envios)}</b></div>
+          <div class="vt"><span>Envíos</span><b>${fmt(envios)}</b></div>
+          <div class="vt destacada"><span>Total</span><b>${fmt(suma)}</b></div>
+        </div>
+        <ul class="venta-lista">
+          ${data.map(v => {
+            const prod = (v.precio_unitario || 0) * (v.cantidad || 1);
+            return `
+            <li>
+              <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+              <div class="vl-info">
+                <b>${esc(v.producto_nombre)}</b>
+                <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}${v.cliente_email ? ' · ' + esc(v.cliente_email) : ''}</small>
+                <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
+                <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
+                ${v.notas ? `<small>${esc(v.notas)}</small>` : ''}
+              </div>
+              <div class="vl-cuenta">
+                <div class="vl-linea"><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt(prod)}</b></div>
+                <div class="vl-linea"><span>Envío · ${esc(v.comuna)}</span><b>${fmt(v.costo_despacho)}</b></div>
+                <div class="vl-linea vl-final"><span>Total</span><b>${fmt(v.total)}</b></div>
+              </div>
+            </li>`;
+          }).join('')}
+        </ul>
+      </div>`;
   }
 
   return { init, ficha };
