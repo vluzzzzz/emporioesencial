@@ -164,6 +164,15 @@ const CatPage=(()=>{
     belleza:'Belleza',
     herramientas:'Herramientas',
     limpieza:'Limpieza',
+    hogar:'Hogar y decoración',
+    organizacion:'Organización',
+    electrodomesticos:'Electrodomésticos',
+    bano:'Baño',
+    dormitorio:'Dormitorio',
+    mascotas:'Mascotas',
+    jardin:'Jardín y exterior',
+    autos:'Autos',
+    tecnologia:'Tecnología',
     todos:'Todo el catálogo',
   };
 
