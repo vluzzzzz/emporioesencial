@@ -183,35 +183,90 @@ const EdVendedores = (() => {
         <button type="button" class="venta-btn" id="nvCrear" style="margin-top:14px">Crear vendedor</button>
         <p class="venta-msg" id="nvMsg"></p>
       </div>
+
       <p class="venta-sec">Equipo</p>
-      ${usuarios.map(u => `
-        <div class="ev-persona" data-u="${esc(u.id)}">
-          <div class="venta-g2">
-            <label class="venta-f"><span>Nombre</span><input type="text" data-uf="nombre" value="${esc(u.nombre)}"></label>
-            <label class="venta-f"><span>Correo</span><input type="text" value="${esc(u.email)}" disabled></label>
-            <label class="venta-f"><span>Teléfono</span><input type="tel" data-uf="telefono" value="${esc(u.telefono)}"></label>
-            <label class="venta-f"><span>Rol</span>
-              <select data-uf="rol">
-                <option value="vendedor"${u.rol === 'vendedor' ? ' selected' : ''}>Vendedor</option>
-                <option value="admin"${u.rol === 'admin' ? ' selected' : ''}>Administrador</option>
-              </select>
-            </label>
-            <label class="venta-f venta-ancho"><span>Observación</span><input type="text" data-uf="observacion" value="${esc(u.observacion)}"></label>
-            <label class="venta-f venta-ancho"><span>Contraseña nueva (opcional)</span><input type="text" data-uf="clave" placeholder="Mínimo 8 caracteres"></label>
-          </div>
-          <div class="ev-acc">
-            <button type="button" class="venta-btn" data-ua="guardar">Guardar</button>
-            <button type="button" class="venta-btn ghost" data-ua="activo">${u.activo ? 'Desactivar' : 'Activar'}</button>
-            ${u.activo ? '' : '<span class="ev-apagado">Cuenta desactivada</span>'}
-          </div>
-        </div>`).join('')}`;
+      <div class="ev-grid">
+        ${usuarios.map(u => `
+          <div class="ev-ficha${u.activo ? '' : ' apagada'}">
+            <span class="ev-ini">${esc((u.nombre || u.email).trim().charAt(0).toUpperCase())}</span>
+            <span class="ev-txt">
+              <b>${esc(u.nombre || u.email)}</b>
+              <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.activo ? '' : ' · desactivado'}</small>
+            </span>
+            <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+            </button>
+          </div>`).join('')}
+      </div>`;
 
     ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, e.target));
-    box.querySelectorAll('[data-u]').forEach(card => card.addEventListener('click', e => {
-      const acc = e.target.closest('[data-ua]')?.dataset.ua;
-      if (acc === 'guardar') guardarUsuario(ov, card, e.target);
-      if (acc === 'activo')  cambiarActivo(ov, card.dataset.u, e.target);
-    }));
+    box.querySelectorAll('[data-editar-u]').forEach(b =>
+      b.addEventListener('click', () => editarPersona(ov, b.dataset.editarU)));
+  }
+
+  // Los datos de una persona se editan en su propio panel: en la grilla solo
+  // va el nombre, para poder ver todo el equipo de una mirada.
+  function editarPersona(padre, id){
+    const u = usuarios.find(x => x.id === id);
+    if (!u) return;
+
+    const cuerpo = `
+      <form id="evPersona">
+        <div class="venta-g2">
+          <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
+            <input type="text" data-uf="nombre" value="${esc(u.nombre)}">
+          </label>
+          <label class="venta-f venta-ancho"><span>Correo</span>
+            <input type="text" value="${esc(u.email)}" disabled>
+            <small class="ev-nota">El correo con el que entra no se puede cambiar.</small>
+          </label>
+          <label class="venta-f"><span>Teléfono</span>
+            <input type="tel" data-uf="telefono" value="${esc(u.telefono)}">
+          </label>
+          <label class="venta-f"><span>Rol</span>
+            <select data-uf="rol">
+              <option value="vendedor"${u.rol === 'vendedor' ? ' selected' : ''}>Vendedor</option>
+              <option value="admin"${u.rol === 'admin' ? ' selected' : ''}>Administrador</option>
+            </select>
+          </label>
+          <label class="venta-f venta-ancho"><span>Observación</span>
+            <input type="text" data-uf="observacion" value="${esc(u.observacion)}">
+          </label>
+          <label class="venta-f venta-ancho"><span>Contraseña nueva (opcional)</span>
+            <input type="text" data-uf="clave" placeholder="Dejalo vacío para no cambiarla">
+          </label>
+        </div>
+        <p class="venta-msg" id="evPersonaMsg"></p>
+      </form>`;
+
+    const pie = `
+      <button type="button" class="venta-btn borrar" id="evActivo">${u.activo ? 'Desactivar' : 'Activar'}</button>
+      <button type="submit" form="evPersona" class="venta-btn">Guardar</button>`;
+
+    const { ov, cerrar } = Sesion.panel(u.nombre || u.email, 'Editar persona', cuerpo, pie);
+    const f = ov.querySelector('#evPersona');
+
+    ov.querySelector('#evActivo').addEventListener('click', async e => {
+      await cambiarActivo(padre, id, e.target);
+      cerrar();
+    });
+
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = ov.querySelector('button[type=submit]');
+      const msg = ov.querySelector('#evPersonaMsg');
+      btn.disabled = true; btn.textContent = 'Guardando…';
+      msg.className = 'venta-msg'; msg.textContent = '';
+      try {
+        await guardarUsuario(padre, f, id);
+        cerrar();
+        toast('Guardado');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'Guardar';
+        msg.className = 'venta-msg err';
+        msg.textContent = mensajeError(err);
+      }
+    });
   }
 
   async function token(){
@@ -249,33 +304,27 @@ const EdVendedores = (() => {
     }
   }
 
-  async function guardarUsuario(ov, card, btn){
-    const id = card.dataset.u;
-    const val = f => card.querySelector('[data-uf=' + f + ']').value.trim();
+  async function guardarUsuario(padre, f, id){
+    const val = campo => f.querySelector('[data-uf=' + campo + ']').value.trim();
     const clave = val('clave');
-    btn.disabled = true; btn.textContent = 'Guardando…';
-    try {
-      const { error } = await sb.from('profiles').update({
-        nombre: val('nombre'), telefono: val('telefono'),
-        observacion: val('observacion'), rol: val('rol'),
-      }).eq('id', id);
-      if (error) throw error;
-      if (clave) {
-        if (clave.length < 8) throw new Error('La contraseña necesita 8 caracteres o más');
-        const r = await fetch('/api/crear-vendedor', {
-          method: 'POST',
-          headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + await token() },
-          body: JSON.stringify({ accion:'clave', id, password: clave }),
-        });
-        if (!r.ok) throw new Error((await r.json()).error || 'No se pudo cambiar la contraseña');
-      }
-      await cargar();
-      pintar(ov);
-      toast('Guardado');
-    } catch (err) {
-      btn.disabled = false; btn.textContent = 'Guardar';
-      toast(mensajeError(err), true);
+
+    const { error } = await sb.from('profiles').update({
+      nombre: val('nombre'), telefono: val('telefono'),
+      observacion: val('observacion'), rol: val('rol'),
+    }).eq('id', id);
+    if (error) throw error;
+
+    if (clave) {
+      if (clave.length < 8) throw new Error('La contraseña necesita 8 caracteres o más');
+      const r = await fetch('/api/crear-vendedor', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + await token() },
+        body: JSON.stringify({ accion:'clave', id, password: clave }),
+      });
+      if (!r.ok) throw new Error((await r.json()).error || 'No se pudo cambiar la contraseña');
     }
+    await cargar();
+    pintar(padre);
   }
 
   async function cambiarActivo(ov, id, btn){
