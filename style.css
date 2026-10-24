@@ -2496,8 +2496,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .topbar,.topbar-track,.topbar *{color:#e9d9a8}
 
 .footer-logo-img{height:46px;width:auto;object-fit:contain;display:block}
-.footer-logo-img{height:110px!important}
-@media(max-width:560px){.footer-logo-img{height:80px!important}}
+.footer-logo img.footer-logo-img{height:110px!important;width:auto!important}
+@media(max-width:560px){.footer-logo img.footer-logo-img{height:80px!important}}
 .wa-flotante{background:linear-gradient(45deg,#feda75,#fa7e1e,#d62976,#962fbf,#4f5bd5)!important;box-shadow:0 8px 24px rgba(214,41,118,.4),0 2px 8px rgba(0,0,0,.14)!important}
 .wa-flotante:hover{box-shadow:0 12px 30px rgba(214,41,118,.5),0 2px 8px rgba(0,0,0,.16)!important}
 
