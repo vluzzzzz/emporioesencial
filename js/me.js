@@ -12,27 +12,59 @@ const Menu = (() => {
   const fallback = i => 'images/emporio-images/' + ((i % 23) + 1) + '.webp';
   let cats = [];
 
+  const esChico = () => window.matchMedia('(max-width:860px)').matches;
+
+  function tiles(c, idx){
+    const subs = c.subs.map((s,i)=>`<a class="mega-tile" href="#panel" data-cat-abrir="${s.cat}"><span class="mega-tile-img"><img src="${s.img || fallback(idx+i)}" alt="" loading="lazy"></span><span class="mega-tile-name">${s.name}</span></a>`).join('');
+    return `<a class="mega-tile mega-tile--all" href="#panel" data-cat-abrir="${c.cat}"><span class="mega-tile-img"><img src="${c.img || fallback(idx)}" alt="" loading="lazy"></span><span class="mega-tile-name">Ver todo ${c.name}</span></a>${subs}`;
+  }
+
+  // Escritorio: las subcategorías van en el panel de la derecha.
   function renderMegaPanel(idx){
     const panel = document.getElementById('megaPanel');
     const c = cats[idx];
     if (!c || !panel) return;
-    const tiles = c.subs.map((s,i)=>`<a class="mega-tile" href="#panel" data-cat-abrir="${s.cat}"><span class="mega-tile-img"><img src="${s.img || fallback(idx+i)}" alt="" loading="lazy"></span><span class="mega-tile-name">${s.name}</span></a>`).join('');
-    panel.innerHTML = `<a class="mega-tile mega-tile--all" href="#panel" data-cat-abrir="${c.cat}"><span class="mega-tile-img"><img src="${c.img || fallback(idx)}" alt="" loading="lazy"></span><span class="mega-tile-name">Ver todo ${c.name}</span></a>${tiles}`;
+    panel.innerHTML = tiles(c, idx);
   }
 
   function renderMega(){
     const megaList = document.getElementById('megaList');
     if (!megaList) return;
     cats = Cats.mega();
-    megaList.innerHTML = cats.map((c,i)=>`<li><button class="mega-item${i===0?' active':''}" data-idx="${i}">${c.name}<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button></li>`).join('');
+    // Cada categoría lleva su propio panel de subcategorías. En el teléfono
+    // se abre ahí mismo, debajo de la categoría tocada; en escritorio queda
+    // oculto y manda el panel de la derecha.
+    megaList.innerHTML = cats.map((c,i)=>`
+      <li class="mega-li">
+        <button class="mega-item${i===0?' active':''}" data-idx="${i}" aria-expanded="false">
+          ${c.name}
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+        <div class="mega-subs" data-subs="${i}" hidden>${tiles(c, i)}</div>
+      </li>`).join('');
+
     megaList.querySelectorAll('.mega-item').forEach(b => {
-      const act = () => {
+      const idx = Number(b.dataset.idx);
+      const marcar = () => {
         megaList.querySelectorAll('.mega-item').forEach(x => x.classList.remove('active'));
         b.classList.add('active');
-        renderMegaPanel(Number(b.dataset.idx));
+        renderMegaPanel(idx);
       };
-      b.addEventListener('mouseenter', act);
-      b.addEventListener('click', act);
+      b.addEventListener('mouseenter', () => { if (!esChico()) marcar(); });
+      b.addEventListener('click', () => {
+        if (!esChico()) { marcar(); return; }
+        // En chico funciona como acordeón: se abre una sola a la vez.
+        const subs = megaList.querySelector('[data-subs="' + idx + '"]');
+        const abierto = !subs.hidden;
+        megaList.querySelectorAll('.mega-subs').forEach(x => { x.hidden = true; });
+        megaList.querySelectorAll('.mega-item').forEach(x => {
+          x.classList.remove('active');
+          x.setAttribute('aria-expanded', 'false');
+        });
+        subs.hidden = abierto;
+        b.classList.toggle('active', !abierto);
+        b.setAttribute('aria-expanded', String(!abierto));
+      });
     });
     renderMegaPanel(0);
   }
