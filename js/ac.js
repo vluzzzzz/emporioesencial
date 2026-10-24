@@ -97,6 +97,7 @@ async function loadProducts(){
     .order('position', { ascending: true });
   if (error) { list.innerHTML = '<div class="empty">Error: ' + escH(error.message) + '</div>'; return; }
   products = data || [];
+  if (typeof Admin !== 'undefined') Admin.refrescar();
   work.clear();
   if (!products.length) { list.innerHTML = '<div class="empty">Todavía no hay productos. Creá el primero arriba.</div>'; return; }
   list.innerHTML = '';

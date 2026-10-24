@@ -193,29 +193,115 @@ const Admin = (() => {
     pintarVentas();
   }
 
+  const fotoDe = slug => (products.find(p => p.slug === slug) || {}).image || '';
+
+  // Las ventas se agrupan por vendedor: primero quién vendió, después qué.
+  function porVendedor(){
+    const mapa = new Map();
+    ventas.forEach(v => {
+      if (!mapa.has(v.vendedor_id)) mapa.set(v.vendedor_id, { id:v.vendedor_id, nombre:v.vendedor_nombre, lista:[] });
+      mapa.get(v.vendedor_id).lista.push(v);
+    });
+    usuarios.forEach(u => {
+      const g = mapa.get(u.id);
+      if (g) g.nombre = u.nombre || u.email;
+      else if (u.rol === 'vendedor') mapa.set(u.id, { id:u.id, nombre:u.nombre || u.email, lista:[] });
+    });
+    return [...mapa.values()].sort((a, b) =>
+      b.lista.reduce((x, v) => x + v.total, 0) - a.lista.reduce((x, v) => x + v.total, 0));
+  }
+
+  function filaVenta(v){
+    return `
+      <li>
+        <img src="${escH(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="av-info">
+          <b>${escH(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+          <small>${escH(v.cliente_nombre)} · ${escH(v.cliente_telefono)}</small>
+          <small>${escH(v.cliente_direccion)}, ${escH(v.comuna)}</small>
+          <small>${escH(v.metodo_pago)} · ${escH(fecha(v.created_at))}</small>
+        </div>
+        <div class="av-cuenta">
+          <div class="av-linea"><span>Producto</span><b>${fmt((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+          <div class="av-linea"><span>Envío</span><b>${fmt(v.costo_despacho)}</b></div>
+          <div class="av-linea av-final"><span>Total</span><b>${fmt(v.total)}</b></div>
+        </div>
+      </li>`;
+  }
+
   function pintarVentas(){
     const box = $('#listVentas');
     const filtro = $('#filtroVendedor').value;
-    const lista = filtro ? ventas.filter(v => v.vendedor_id === filtro) : ventas;
-    const suma = lista.reduce((a, v) => a + (v.total || 0), 0);
-    $('#resumenVentas').textContent = lista.length
-      ? `${lista.length} venta${lista.length === 1 ? '' : 's'} · ${fmt(suma)} en total`
+    const grupos = porVendedor().filter(g => !filtro || g.id === filtro);
+    const suma = ventas.reduce((a, v) => a + (v.total || 0), 0);
+    $('#resumenVentas').textContent = ventas.length
+      ? `${ventas.length} venta${ventas.length === 1 ? '' : 's'} de ${grupos.length} vendedor${grupos.length === 1 ? '' : 'es'} · ${fmt(suma)} en total`
       : 'Sin ventas registradas todavía.';
 
-    if (!lista.length) { box.innerHTML = '<div class="empty">Sin ventas.</div>'; return; }
-    box.innerHTML = lista.map(v => `
-      <div class="card venta-fila">
-        <div class="prod-head">
-          <h3>${escH(v.producto_nombre)} ${v.cantidad > 1 ? '× ' + v.cantidad : ''}</h3>
-          <span class="slug-badge">${fmt(v.total)}</span>
+    if (!grupos.length) { box.innerHTML = '<div class="empty">Todavía no hay vendedores.</div>'; return; }
+    box.innerHTML = grupos.map(g => {
+      const total = g.lista.reduce((a, v) => a + (v.total || 0), 0);
+      return `
+      <div class="card vendedor" data-v="${escH(g.id)}">
+        <button type="button" class="vend-head" data-abrir="${escH(g.id)}">
+          <span class="vend-ini">${escH((g.nombre || '?').trim().charAt(0).toUpperCase())}</span>
+          <span class="vend-txt">
+            <b>${escH(g.nombre)}</b>
+            <small>${g.lista.length} venta${g.lista.length === 1 ? '' : 's'} · ${fmt(total)}</small>
+          </span>
+          <span class="vend-ver">Ver historial</span>
+        </button>
+        ${g.lista.length ? `
+          <p class="vend-sec">Ventas recientes</p>
+          <ul class="av-lista">${g.lista.slice(0, 3).map(filaVenta).join('')}</ul>
+          ${g.lista.length > 3 ? `<button type="button" class="vend-mas" data-abrir="${escH(g.id)}">Ver las ${g.lista.length} ventas</button>` : ''}
+        ` : '<p class="hint">Todavía no registró ninguna venta.</p>'}
+      </div>`;
+    }).join('');
+
+    box.querySelectorAll('[data-abrir]').forEach(b =>
+      b.addEventListener('click', () => historial(b.dataset.abrir)));
+  }
+
+  // Historial completo de un vendedor, a pantalla completa.
+  function historial(id){
+    const g = porVendedor().find(x => x.id === id);
+    if (!g) return;
+    const total = g.lista.reduce((a, v) => a + (v.total || 0), 0);
+    const envios = g.lista.reduce((a, v) => a + (v.costo_despacho || 0), 0);
+
+    const ov = document.createElement('div');
+    ov.className = 'vend-full';
+    ov.innerHTML = `
+      <header class="vf-head">
+        <div>
+          <p class="vf-kicker">Vendedor</p>
+          <h2>${escH(g.nombre)}</h2>
         </div>
-        <p class="hint">
-          <b>${escH(v.cliente_nombre)}</b> · ${escH(v.cliente_telefono)}${v.cliente_email ? ' · ' + escH(v.cliente_email) : ''}<br>
-          ${escH(v.cliente_direccion)}, ${escH(v.comuna)} · despacho ${fmt(v.costo_despacho)}<br>
-          ${escH(v.metodo_pago)} · vendió ${escH(v.vendedor_nombre)} · ${escH(fecha(v.created_at))}
-          ${v.notas ? '<br>' + escH(v.notas) : ''}
-        </p>
-      </div>`).join('');
+        <button type="button" class="vf-x" data-cerrar aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </header>
+      <div class="vf-body">
+        <div class="vf-wrap">
+          <div class="vf-tarjetas">
+            <div class="vt"><span>Ventas</span><b>${g.lista.length}</b></div>
+            <div class="vt"><span>Productos</span><b>${fmt(total - envios)}</b></div>
+            <div class="vt"><span>Envíos</span><b>${fmt(envios)}</b></div>
+            <div class="vt destacada"><span>Total</span><b>${fmt(total)}</b></div>
+          </div>
+          ${g.lista.length
+            ? `<ul class="av-lista">${g.lista.map(filaVenta).join('')}</ul>`
+            : '<p class="hint">Este vendedor todavía no registró ventas.</p>'}
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+    document.documentElement.style.overflow = 'hidden';
+    const cerrar = () => { ov.remove(); document.documentElement.style.overflow = ''; };
+    ov.addEventListener('click', e => { if (e.target.closest('[data-cerrar]')) cerrar(); });
+    document.addEventListener('keydown', function salir(e){
+      if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', salir); }
+    });
   }
 
   /* ── Comunas ──────────────────────────────────────────── */
@@ -255,5 +341,5 @@ const Admin = (() => {
     }
   }
 
-  return { init };
+  return { init, refrescar: () => { if (yo && yo.rol === 'admin' && ventas.length) pintarVentas(); } };
 })();

@@ -1,15 +1,8 @@
 'use strict';
 // ap
 function freshWork(p){
-  // Precio al por mayor: 10 tramos fijos (1..10), se rellenan desde la BD.
-  const tiers = [];
-  for (let q = 1; q <= 10; q++) tiers.push({ qty:q, price:0, active:false });
-  (p.price_tiers || []).forEach(t => {
-    if (t.qty >= 1 && t.qty <= 10) {
-      tiers[t.qty-1].price = t.price || 0;
-      tiers[t.qty-1].active = t.active !== false;
-    }
-  });
+  const uno = (p.price_tiers || []).find(t => t.qty === 1);
+  const precio = uno ? (uno.price || 0) : 0;
   const copy = {
     id:p.id, slug:p.slug, name:p.name, category:p.category || 'cocina',
     description:p.description || '', image:p.image || '', image_scale:p.image_scale ?? 0.85,
@@ -18,7 +11,7 @@ function freshWork(p){
     gallery:[...(p.gallery||[])], colors:[...(p.colors||[])],
     is_hero:!!p.is_hero, is_featured:!!p.is_featured,
   };
-  return { p: copy, tiers };
+  return { p: copy, precio };
 }
 
 /* ── Construir tarjeta de producto ──────────────────────── */
@@ -37,11 +30,10 @@ function buildCard(p){
       <input type="text" data-f="name" value="${escH(p.name)}">
     </label>
 
-    <div>
-      <label class="fld" style="margin-bottom:8px"><span>Precio al por mayor · 1 a 10 unidades</span></label>
-      <div class="tiers" data-box="tiers"></div>
-      <p class="note-stock">Poné el precio por unidad según la cantidad y activá los tramos que quieras ofrecer.</p>
-    </div>
+    <label class="fld"><span>Precio</span>
+      <input type="number" min="0" step="1" data-f="precio" value="${(p.price_tiers||[]).find(t=>t.qty===1)?.price || ''}" placeholder="Ej: 12990">
+      <p class="note-stock">Es el precio que se muestra en la tarjeta y en la ficha del producto.</p>
+    </label>
 
     <label class="fld"><span>Descripción</span>
       <textarea data-f="desc">${escH(p.description)}</textarea>
@@ -124,6 +116,7 @@ function bindCard(card){
   // inputs escalares
   card.querySelector('[data-f=name]').addEventListener('input', e => { st.p.name = e.target.value; card.querySelector('[data-h=name]').textContent = e.target.value; });
   card.querySelector('[data-f=desc]').addEventListener('input', e => st.p.description = e.target.value);
+  card.querySelector('[data-f=precio]').addEventListener('input', e => st.precio = parseInt(e.target.value, 10) || 0);
   const imgInput = card.querySelector('[data-f=image]');
   imgInput.addEventListener('input', e => { st.p.image = e.target.value; const t = card.querySelector('[data-h=thumb]'); t.src = e.target.value; t.style.visibility = 'visible'; });
   card.querySelector('[data-f=category]').addEventListener('change', e => st.p.category = e.target.value);
@@ -150,28 +143,12 @@ function bindCard(card){
   card.querySelector('[data-act=upload-main]').addEventListener('change', e => uploadMain(e, card, st));
   card.querySelector('[data-act=upload-gallery]').addEventListener('change', e => uploadGallery(e, card, st));
 
-  renderTiers(card, st);
   renderFeatures(card, st);
   renderColors(card, st);
   renderGallery(card, st);
 }
 
 /* ── Sub-renders (listas dinámicas) ─────────────────────── */
-function renderTiers(card, st){
-  const box = card.querySelector('[data-box=tiers]');
-  box.innerHTML = st.tiers.map((t,i)=>`
-    <div class="tier${t.active?'':' off'}" data-i="${i}">
-      <span class="qlbl">${t.qty} ${t.qty===1?'unidad':'unidades'}</span>
-      <input type="number" min="0" data-t="price" value="${t.price||''}" placeholder="precio c/u" aria-label="precio para ${t.qty}">
-      <label class="switch" title="Activar este tramo"><input type="checkbox" data-t="active" ${t.active?'checked':''}><span class="track"></span><span class="thumb"></span></label>
-    </div>`).join('');
-  box.querySelectorAll('.tier').forEach(row=>{
-    const i = +row.dataset.i;
-    row.querySelector('[data-t=price]').addEventListener('input', e => st.tiers[i].price = parseInt(e.target.value,10)||0);
-    row.querySelector('[data-t=active]').addEventListener('change', e => { st.tiers[i].active = e.target.checked; row.classList.toggle('off', !e.target.checked); });
-  });
-}
-
 function renderFeatures(card, st){
   const box = card.querySelector('[data-box=features]');
   box.innerHTML = st.p.features.map((f,i)=>`
@@ -328,11 +305,11 @@ async function saveProduct(card, st, btn){
     if (e1) throw e1;
     if (!d1 || !d1.length) throw new Error('SIN_PERMISO');
 
-    // reemplazar tramos
     const { error: e2 } = await sb.from('price_tiers').delete().eq('product_id', p.id);
     if (e2) throw e2;
-    const rows = st.tiers.filter(t=>t.price>0).map(t=>({ product_id:p.id, qty:t.qty, price:t.price, active:!!t.active }));
-    if (rows.length) { const { error: e3 } = await sb.from('price_tiers').insert(rows); if (e3) throw e3; }
+    const { error: e3 } = await sb.from('price_tiers')
+      .insert({ product_id:p.id, qty:1, price:st.precio || 0, active:true });
+    if (e3) throw e3;
 
     toast('Producto guardado');
   } catch (err) {
