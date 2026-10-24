@@ -69,16 +69,30 @@ const Menu = (() => {
       navCatsMenu.insertBefore(x, navCatsMenu.firstChild);
     }
 
+    let velo = document.getElementById('navCatsVelo');
+    if (!velo) {
+      velo = document.createElement('div');
+      velo.id = 'navCatsVelo';
+      velo.className = 'nav-cats-velo';
+      velo.hidden = true;
+      velo.addEventListener('click', () => cerrar());
+      document.body.appendChild(velo);
+    }
+
     const cerrar = () => {
       navCats.classList.remove('open');
+      document.body.classList.remove('cats-abierto');
       navCatsMenu.hidden = true;
+      velo.hidden = true;
       navCatsBtn.setAttribute('aria-expanded','false');
     };
     navCatsBtn.addEventListener('click', e => {
       e.stopPropagation();
       const abrir = navCatsMenu.hidden;
       navCats.classList.toggle('open', abrir);
+      document.body.classList.toggle('cats-abierto', abrir);
       navCatsMenu.hidden = !abrir;
+      velo.hidden = !abrir;
       navCatsBtn.setAttribute('aria-expanded', String(abrir));
     });
     navCatsMenu.addEventListener('click', e => {

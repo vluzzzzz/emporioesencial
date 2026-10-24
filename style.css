@@ -2915,7 +2915,6 @@ svg{ -webkit-user-select:none; user-select:none; }
   .nav-cats.open .nav-cats-menu{pointer-events:auto}
 
   /* El boton flotante de Instagram quedaba por encima del cajon */
-  body:has(.nav-cats.open) .wa-flotante{opacity:0;pointer-events:none;transition:opacity .2s}
   /* Con el texto al lado, el icono de menu se encimaba en pantallas chicas */
   .nav-cats-btn span{display:none}
   .nav-cats-chev{display:none}
@@ -2932,11 +2931,17 @@ svg{ -webkit-user-select:none; user-select:none; }
     background:#111;color:#e9d9a8;font-family:var(--font-display);
     font-size:26px;letter-spacing:.04em;padding:20px 22px 16px;
   }
-  /* El velo oscuro detrás del cajón */
-  .nav-cats.open::after{
-    content:'';position:fixed;inset:0;background:rgba(17,17,17,.45);z-index:10990;
-  }
-  .nav-cats-btn{position:relative;z-index:11001}
+  /* El cajón es hijo de la barra, así que la barra sube por encima del velo
+     y adentro se apaga todo menos el cajón. Antes el ícono de categorías y
+     el de la cuenta flotaban sobre el velo. */
+  body.cats-abierto .nav{z-index:11000!important;background:transparent!important;box-shadow:none!important}
+  /* Reglas viejas fuerzan opacity con !important sobre el logo, así que acá
+     hace falta !important para apagarlo. */
+  body.cats-abierto .nav-logo,
+  body.cats-abierto .nav-right,
+  body.cats-abierto .nav-bus-movil,
+  body.cats-abierto .nav-cats-btn{opacity:0!important;pointer-events:none;transition:opacity .2s}
+  body.cats-abierto .wa-flotante{opacity:0;pointer-events:none;transition:opacity .2s}
 
   .mega{display:flex!important;flex-direction:column;width:100%;max-height:none;flex:1;overflow-y:auto}
   .mega-list{display:flex;flex-direction:column;width:100%;border-right:0;background:#fff;padding:8px 0}
@@ -2948,4 +2953,11 @@ svg{ -webkit-user-select:none; user-select:none; }
 @media(max-width:560px){
   .nav-cats-menu{width:min(92vw,340px)}
   .mega-panel{grid-template-columns:repeat(2,1fr)}
+}
+
+/* El velo del cajón de categorías vive en el body, no en la barra */
+.nav-cats-velo{display:none}
+@media(max-width:860px){
+  .nav-cats-velo{display:block;position:fixed;inset:0;background:rgba(17,17,17,.5);z-index:10990}
+  .nav-cats-velo[hidden]{display:none}
 }

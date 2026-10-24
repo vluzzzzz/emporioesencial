@@ -160,15 +160,8 @@ const EdSitio = (() => {
               <input type="checkbox" data-ver="${idx}" ${oculta ? '' : 'checked'}>
               <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
               <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
-              <span>${oculta ? 'Oculta' : 'Visible'}</span>
+              <span>${oculta ? 'Oculta' : 'En el menú'}</span>
             </label>
-            ${esSub ? '' : `
-              <label class="ec-ojo" title="Sale como tarjeta grande en el inicio">
-                <input type="checkbox" data-dest="${idx}" ${it.destacada ? 'checked' : ''}>
-                <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>
-                <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".45"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>
-                <span>Portada</span>
-              </label>`}
             ${esSub ? '' : `
               <button type="button" class="ec-entrar" data-entrar="${idx}">
                 Subcategorías
@@ -194,7 +187,7 @@ const EdSitio = (() => {
       box.innerHTML = `
         <p class="ec-intro">${dentro
           ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. Cada una tiene su foto, la que se ve al abrir el menú.'
-          : 'Cambiá la foto, el nombre y si se muestra. Lo oculto se guarda pero desaparece del menú y de la portada.'}</p>
+          : 'Cambiá la foto y el nombre de cada una. El ojo decide si aparece en el menú de la tienda: lo que apagás se guarda igual, solo deja de verse.'}</p>
         <div class="ec-grid">
           ${items.map((it, i) => tarjeta(it, i, esSub)).join('')}
           <button type="button" class="ec-nueva" id="ecNueva">
@@ -211,10 +204,6 @@ const EdSitio = (() => {
       }));
       box.querySelectorAll('[data-ver]').forEach(x => x.addEventListener('change', e => {
         lista()[+e.target.dataset.ver].oculta = !e.target.checked;
-        marcar(); pintar();
-      }));
-      box.querySelectorAll('[data-dest]').forEach(x => x.addEventListener('change', e => {
-        lista()[+e.target.dataset.dest].destacada = e.target.checked;
         marcar(); pintar();
       }));
       box.querySelectorAll('[data-entrar]').forEach(b => b.addEventListener('click', () => {
