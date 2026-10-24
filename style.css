@@ -2512,14 +2512,17 @@ svg{ -webkit-user-select:none; user-select:none; }
 .nav-right a.icon-btn svg{fill:none!important;stroke:#e9d9a8!important}
 .ppage-img-next,.ppage-img-prev{display:none!important}
 .ppage-img-dots{display:none!important}
-.ppage-thumbs{left:20px!important;right:auto!important;top:13%!important;transform:none!important;gap:8px!important}
-.ppage-thumb{width:76px!important;height:76px!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:6px!important}
+.ppage-thumbs{left:50%!important;right:auto!important;top:auto!important;bottom:24px!important;transform:translateX(-50%)!important;flex-direction:row!important;gap:12px!important;z-index:5!important}
+.ppage-thumb{width:78px!important;height:78px!important;background:#fff!important;border:none!important;box-shadow:0 4px 14px rgba(0,0,0,.08)!important;border-radius:10px!important}
 .ppage-thumb:hover{box-shadow:none!important;transform:scale(1.04)!important}
 .ppage-thumb img{width:100%!important;height:100%!important;object-fit:cover!important}
 .ppage-thumb{opacity:.6!important}
 .ppage-thumb--active{opacity:1!important;outline:2px solid var(--celeste)!important;outline-offset:1px!important;border:none!important;box-shadow:none!important;transform:none!important}
-.ppage-img-wrap{width:74%!important;height:74%!important}
-@media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{left:10px!important;right:auto!important;top:13%!important;transform:none!important;gap:6px!important}.ppage-thumb{width:56px!important;height:56px!important}}
+.ppage-img-wrap{width:70%!important;height:66%!important;margin-bottom:40px!important}
+.ppage-breadcrumb{display:flex!important;align-items:center;gap:6px;margin-bottom:10px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ppage-breadcrumb a{color:var(--celeste-deep);text-decoration:none;transition:color .15s}
+.ppage-breadcrumb a:hover{color:var(--celeste);text-decoration:underline}
+@media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{left:50%!important;right:auto!important;top:auto!important;bottom:14px!important;transform:translateX(-50%)!important;flex-direction:row!important;gap:8px!important}.ppage-thumb{width:58px!important;height:58px!important}}
 
 .ppage-trust{margin-top:0!important;padding-top:0!important;border-top:none!important}
 

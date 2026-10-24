@@ -298,6 +298,7 @@ const FEATURES={
 };
 const GALLERY={
   'adorno-escudo-colocolo':['images/emporio-images/23.jpeg','images/emporio-images/23.1.jpeg'],
+  'tabla-picar-colocolo':['images/emporio-images/10.jpeg','images/emporio-images/10.2.png','images/emporio-images/10.3.png','images/emporio-images/10.4.png'],
 };
 // Variantes de color — SOLO los slugs listados acá muestran colores (dots + selector + validación).
 /* Cada color lleva 'agotado'. En true sigue a la vista pero en gris y no se

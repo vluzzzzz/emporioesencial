@@ -154,6 +154,16 @@ const ProductModal=(()=>{
     ppage.scrollTo({top:0,behavior:'smooth'});
   }
 
+  const CAT_LABEL={cocina:'Cocina',belleza:'Belleza',herramientas:'Herramientas',limpieza:'Limpieza',hogar:'Hogar y decoración',accesorios:'Accesorios',organizacion:'Organización',electrodomesticos:'Electrodomésticos',bano:'Baño',dormitorio:'Dormitorio',mascotas:'Mascotas',jardin:'Jardín y exterior',autos:'Autos',tecnologia:'Tecnología'};
+  function renderBreadcrumb(p){
+    const el=document.getElementById('ppageBreadcrumb');
+    if(!el)return;
+    const cat=p.cat||'';
+    const label=CAT_LABEL[cat]||'Catálogo';
+    const target=CAT_LABEL[cat]?cat:'todos';
+    el.innerHTML=`<a href="#panel" data-cat-abrir="${target}">${label}</a>`;
+  }
+
   // Descuento, bajo el nombre del producto.
   function renderMeta(p){
     const el=document.getElementById('ppageMeta');
@@ -240,6 +250,7 @@ const ProductModal=(()=>{
     document.getElementById('ppageImg').src=currentProduct.image;
     document.getElementById('ppageImg').alt=currentProduct.name;
     document.getElementById('ppageName').textContent=currentProduct.name;
+    renderBreadcrumb(p);
     document.getElementById('ppageDesc').textContent=p.desc||'';
     document.getElementById('ppageQtyNum').textContent='1';
     document.getElementById('ppageTiersList').style.height='0';
@@ -486,6 +497,15 @@ const ProductModal=(()=>{
     // se escucha en el contenedor, que sí es fijo.
     document.getElementById('ppageReviews')?.addEventListener('click',e=>{
       if(e.target.closest('#ppageRvMas'))Reviews.verMas();
+    });
+
+    document.getElementById('ppageBreadcrumb')?.addEventListener('click',e=>{
+      const a=e.target.closest('[data-cat-abrir]');
+      if(!a)return;
+      e.preventDefault();
+      const cat=a.dataset.catAbrir;
+      close();
+      setTimeout(()=>{if(typeof CatPage!=='undefined')CatPage.abrir(cat);},60);
     });
 
     // Clic en un producto similar → se rellena la misma ficha, no se abre otra.
