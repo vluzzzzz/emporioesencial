@@ -2661,8 +2661,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 @media(max-width:560px){.nav-cats-menu{left:0;right:0;position:fixed;top:64px}.mega{width:100vw;grid-template-columns:130px 1fr}.mega-panel{grid-template-columns:repeat(2,1fr)}}
 
 /* ===========================================================================
-   V57 — Cuenta en la barra, botón de venta y formulario del vendedor
+   V59 — Cuenta y ventas en la barra, panel lateral del vendedor
    ======================================================================== */
+.nav-ventas-btn{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s}
+.nav-ventas-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.nav-ventas-btn svg{width:18px;height:18px}
+
 .nav-cuenta{position:relative}
 .nav-cuenta-btn{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;cursor:pointer;padding:6px 14px 6px 6px;border-radius:999px;font-family:inherit;transition:background .18s,border-color .18s}
 .nav-cuenta-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
@@ -2678,51 +2682,77 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-vendido:hover{background:#000;transform:translateY(-1px)}
 .ppage-vendido[hidden]{display:none}
 .ppage-vendido svg{width:19px;height:19px}
-.venta-prod{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--gray-light);border-radius:14px;background:var(--off-white);margin-bottom:18px}
-.venta-prod img{width:62px;height:62px;object-fit:contain;border-radius:10px;background:#fff;flex:none}
-.venta-prod b{display:block;font-size:15.5px;line-height:1.3}
-.venta-prod small{display:block;margin-top:4px;font-size:13px;color:var(--gray-mid)}
 
-.venta-ov{position:fixed;inset:0;z-index:1200;background:rgba(17,17,17,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px;overflow-y:auto}
-.venta-card{width:min(760px,100%);max-height:92vh;display:flex;flex-direction:column;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.35)}
-.venta-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 26px 18px;background:#111;color:#fff}
+.venta-ov{position:fixed;inset:0;z-index:10000;background:rgba(17,17,17,0);transition:background .3s var(--ease-smooth)}
+.venta-ov.abierto{background:rgba(17,17,17,.45)}
+.venta-panel{position:absolute;top:0;right:0;height:100%;width:min(520px,100vw);display:flex;flex-direction:column;background:#fff;box-shadow:-24px 0 70px rgba(0,0,0,.26);transform:translateX(100%);transition:transform .34s var(--ease-smooth)}
+.venta-ov.abierto .venta-panel{transform:translateX(0)}
+.venta-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 26px 20px;background:#111;color:#fff;flex:none}
 .venta-head h2{margin:2px 0 0;font-family:var(--font-display);font-size:30px;letter-spacing:.03em;font-weight:400}
 .venta-kicker{margin:0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#e9d9a8}
 .venta-x{background:rgba(255,255,255,.1);border:0;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
 .venta-x:hover{background:rgba(255,255,255,.2)}
 .venta-x svg{width:18px;height:18px}
-.venta-body{padding:22px 26px;overflow-y:auto}
-.venta-sec{margin:22px 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
-.venta-body .venta-sec:first-child{margin-top:0}
+.venta-body{padding:22px 26px 26px;overflow-y:auto;flex:1}
+
+.venta-prod{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--gray-light);border-radius:14px;background:var(--off-white);margin-bottom:20px}
+.venta-prod img{width:64px;height:64px;object-fit:contain;border-radius:10px;background:#fff;flex:none}
+.venta-prod b{display:block;font-size:15.5px;line-height:1.3}
+.venta-prod small{display:block;margin-top:4px;font-size:13px;color:var(--gray-mid)}
+
+.venta-sec{margin:24px 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
 .venta-g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .venta-f{display:flex;flex-direction:column;gap:6px}
 .venta-f.venta-ancho{grid-column:1/-1}
-.venta-f span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
-.venta-f input,.venta-f select,.venta-f textarea{font:inherit;font-size:14.5px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff;color:var(--black);width:100%;box-sizing:border-box}
-.venta-f input:focus,.venta-f select:focus,.venta-f textarea:focus{outline:none;border-color:#111}
+.venta-f>span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
+.venta-f input,.venta-f textarea{font:inherit;font-size:14.5px;padding:12px 14px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);width:100%;box-sizing:border-box}
+.venta-f input:focus,.venta-f textarea:focus{outline:none;border-color:#111}
 .venta-f textarea{resize:vertical}
-.venta-pie{border-top:1px solid var(--gray-light);padding:18px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+
+.vsel{position:relative}
+.vsel-btn{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;font:inherit;font-size:14.5px;text-align:left;padding:12px 14px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s}
+.vsel-btn:hover{border-color:var(--gray-mid)}
+.vsel.abierto .vsel-btn{border-color:#111}
+.vsel-btn svg{width:18px;height:18px;color:var(--gray-mid);flex:none;transition:transform .2s var(--ease-smooth)}
+.vsel.abierto .vsel-btn svg{transform:rotate(180deg)}
+.vsel-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vsel-txt.vacio{color:var(--gray-mid)}
+.vsel-lista{position:absolute;top:calc(100% + 6px);left:0;right:0;max-height:260px;overflow-y:auto;list-style:none;margin:0;padding:6px;background:#fff;border:1px solid var(--gray-light);border-radius:14px;box-shadow:0 20px 48px rgba(0,0,0,.18);z-index:40}
+.vsel-lista li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 13px;border-radius:10px;font-size:14.5px;cursor:pointer}
+.vsel-lista li:hover{background:var(--off-white)}
+.vsel-lista li.elegida{background:#111;color:#e9d9a8}
+.vsel-lista li small{font-size:12.5px;color:var(--gray-mid);white-space:nowrap}
+.vsel-lista li.elegida small{color:rgba(233,217,168,.75)}
+
+.venta-pie{border-top:1px solid var(--gray-light);padding:18px 26px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;flex:none;background:#fff}
 .venta-total{display:flex;flex-direction:column;line-height:1.2;margin-right:auto}
 .venta-total span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
 .venta-total b{font-size:26px;font-weight:700}
-.venta-acc{display:flex;gap:10px}
-.venta-btn{font:inherit;font-size:14px;font-weight:700;padding:13px 24px;border-radius:999px;border:0;background:#111;color:#e9d9a8;cursor:pointer}
+.venta-btn{font:inherit;font-size:14px;font-weight:700;padding:14px 26px;border-radius:999px;border:0;background:#111;color:#e9d9a8;cursor:pointer}
 .venta-btn:hover{background:#000}
 .venta-btn:disabled{opacity:.6;cursor:default}
-.venta-btn.ghost{background:transparent;color:var(--black);border:1.5px solid var(--gray-light)}
 .venta-msg{flex-basis:100%;margin:0;font-size:13px;color:var(--gray-mid)}
 .venta-msg.err{color:#c0392b}
-.venta-resumen{margin:0 0 14px;font-size:13.5px;color:var(--gray-mid)}
-.venta-vacio{margin:0;color:var(--gray-mid);font-size:14px}
-.venta-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.venta-lista li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border:1px solid var(--gray-light);border-radius:12px}
-.venta-lista b{display:block;font-size:14.5px}
-.venta-lista small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:3px}
-.venta-lista span{font-weight:700;white-space:nowrap}
+
+.venta-resumen{margin:0 0 16px;font-size:14px;color:var(--gray-mid)}
+.venta-resumen b{color:var(--black)}
+.venta-vacio{margin:0;color:var(--gray-mid);font-size:14px;line-height:1.6}
+.venta-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.venta-lista li{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--gray-light);border-radius:14px}
+.venta-lista li img{width:64px;height:64px;object-fit:contain;border-radius:10px;background:var(--off-white);flex:none}
+.vl-info{flex:1;min-width:0}
+.vl-info b{display:block;font-size:14.5px;line-height:1.3}
+.vl-info small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vl-total{text-align:right;flex:none}
+.vl-total b{display:block;font-size:16px;font-weight:700;white-space:nowrap}
+.vl-total small{display:block;font-size:11.5px;color:var(--gray-mid);margin-top:3px;white-space:nowrap}
+
 @media(max-width:700px){
   .venta-g2{grid-template-columns:1fr}
-  .venta-card{max-height:100vh;border-radius:0;width:100%}
-  .venta-ov{padding:0}
+  .venta-panel{width:100vw}
   .nav-cuenta-txt{display:none}
   .nav-cuenta-btn{padding:6px}
+  .nav-ventas-btn span{display:none}
+  .nav-ventas-btn{padding:9px;margin-left:6px}
+  .venta-lista li img{width:52px;height:52px}
 }

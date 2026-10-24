@@ -14,6 +14,7 @@ const Sesion = (() => {
     return t.length ? t[0].price : 0;
   };
   const productos = () => (typeof CATALOGO !== 'undefined' ? CATALOGO : []);
+  const fotoDe = slug => (productos().find(p => p.slug === slug) || {}).image || '';
 
   async function init(){
     if (!sb) return;
@@ -24,7 +25,7 @@ const Sesion = (() => {
     perfil = data && data.activo ? data : null;
     if (!perfil) return;
     pintarNav();
-    if (perfil.rol === 'admin' || perfil.rol === 'vendedor') montarBotonFicha();
+    montarBotonFicha();
   }
 
   // pm.js la llama cada vez que se abre una ficha de producto.
@@ -35,7 +36,22 @@ const Sesion = (() => {
     b.dataset.slug = slug;
   }
 
+  /* ── Barra de arriba ──────────────────────────────────── */
   function pintarNav(){
+    const izq = $('.nav-left');
+    if (izq) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'nav-ventas-btn';
+      b.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 6h18l-1.7 9.4a2 2 0 0 1-2 1.6H6.7a2 2 0 0 1-2-1.6z"/><path d="M8 21h.01M16 21h.01"/>
+        </svg>
+        <span>Ventas</span>`;
+      b.addEventListener('click', abrirMisVentas);
+      izq.appendChild(b);
+    }
+
     const login = $('.nav-login');
     if (!login) return;
     const nombre = perfil.nombre || perfil.email.split('@')[0];
@@ -88,130 +104,192 @@ const Sesion = (() => {
     return comunas;
   }
 
-  /* ── Formulario de venta ──────────────────────────────── */
-  async function abrirFormulario(slug){
-    await cargarComunas();
-    const prod = productos().find(p => p.slug === slug);
-    if (!prod) return;
+  /* ── Desplegable propio ───────────────────────────────── */
+  // Reemplaza al <select> del navegador, que no se puede diseñar.
+  function desplegable(nombre, opciones, textoVacio){
+    return `
+      <div class="vsel" data-sel="${esc(nombre)}">
+        <input type="hidden" name="${esc(nombre)}" value="">
+        <button type="button" class="vsel-btn" aria-haspopup="listbox" aria-expanded="false">
+          <span class="vsel-txt vacio">${esc(textoVacio)}</span>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+        <ul class="vsel-lista" role="listbox" hidden>
+          ${opciones.map(o => `
+            <li role="option" data-val="${esc(o.valor)}" data-extra="${esc(o.extra == null ? '' : o.extra)}">
+              <span>${esc(o.texto)}</span>
+              ${o.nota ? `<small>${esc(o.nota)}</small>` : ''}
+            </li>`).join('')}
+        </ul>
+      </div>`;
+  }
+
+  function conectarDesplegables(raiz, alElegir){
+    raiz.querySelectorAll('.vsel').forEach(sel => {
+      const btn = sel.querySelector('.vsel-btn');
+      const lista = sel.querySelector('.vsel-lista');
+      const txt = sel.querySelector('.vsel-txt');
+      const campo = sel.querySelector('input');
+
+      btn.addEventListener('click', () => {
+        const abierto = !lista.hidden;
+        raiz.querySelectorAll('.vsel-lista').forEach(l => { l.hidden = true; });
+        raiz.querySelectorAll('.vsel').forEach(s => s.classList.remove('abierto'));
+        lista.hidden = abierto;
+        sel.classList.toggle('abierto', !abierto);
+        btn.setAttribute('aria-expanded', String(!abierto));
+      });
+
+      lista.addEventListener('click', e => {
+        const li = e.target.closest('li');
+        if (!li) return;
+        campo.value = li.dataset.val;
+        txt.textContent = li.querySelector('span').textContent;
+        txt.classList.remove('vacio');
+        lista.querySelectorAll('li').forEach(x => x.classList.remove('elegida'));
+        li.classList.add('elegida');
+        lista.hidden = true;
+        sel.classList.remove('abierto');
+        btn.setAttribute('aria-expanded','false');
+        if (alElegir) alElegir(sel.dataset.sel, li.dataset.val, li.dataset.extra);
+      });
+    });
+
+    raiz.addEventListener('click', e => {
+      if (e.target.closest('.vsel')) return;
+      raiz.querySelectorAll('.vsel-lista').forEach(l => { l.hidden = true; });
+      raiz.querySelectorAll('.vsel').forEach(s => s.classList.remove('abierto'));
+    });
+  }
+
+  /* ── Panel lateral ────────────────────────────────────── */
+  function panel(titulo, kicker, cuerpo, pie){
     const ov = document.createElement('div');
     ov.className = 'venta-ov';
     ov.innerHTML = `
-      <form class="venta-card" id="ventaForm">
+      <div class="venta-panel">
         <header class="venta-head">
           <div>
-            <p class="venta-kicker">Registro de venta</p>
-            <h2>Producto vendido</h2>
+            <p class="venta-kicker">${esc(kicker)}</p>
+            <h2>${esc(titulo)}</h2>
           </div>
           <button type="button" class="venta-x" data-acc="cerrar" aria-label="Cerrar">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
         </header>
-
-        <div class="venta-body">
-          <div class="venta-prod">
-            <img src="${esc(prod.image)}" alt="">
-            <div>
-              <b>${esc(prod.name)}</b>
-              <small>${fmt(precioDe(slug))} por unidad</small>
-            </div>
-          </div>
-
-          <div class="venta-g2">
-            <label class="venta-f"><span>Cantidad</span>
-              <input type="number" name="cantidad" min="1" step="1" value="1" required>
-            </label>
-            <label class="venta-f"><span>Precio por unidad</span>
-              <input type="number" name="precio" min="0" step="1" value="${precioDe(slug)}" required>
-            </label>
-          </div>
-
-          <p class="venta-sec">Despacho</p>
-          <div class="venta-g2">
-            <label class="venta-f"><span>Comuna · Región de Valparaíso</span>
-              <select name="comuna" required>
-                <option value="">Elegí la comuna</option>
-                ${comunas.map(c => `<option value="${esc(c.nombre)}" data-costo="${c.costo}">${esc(c.nombre)}</option>`).join('')}
-              </select>
-            </label>
-            <label class="venta-f"><span>Costo de despacho</span>
-              <input type="number" name="despacho" min="0" step="1" value="0" required>
-            </label>
-          </div>
-
-          <p class="venta-sec">Datos del cliente</p>
-          <div class="venta-g2">
-            <label class="venta-f"><span>Nombre y apellido</span>
-              <input type="text" name="cliente" required placeholder="Ej: María Pérez">
-            </label>
-            <label class="venta-f"><span>Teléfono</span>
-              <input type="tel" name="telefono" required placeholder="+56 9 ...">
-            </label>
-            <label class="venta-f"><span>Correo (opcional)</span>
-              <input type="email" name="email" placeholder="cliente@correo.cl">
-            </label>
-            <label class="venta-f"><span>Método de pago</span>
-              <select name="pago">
-                <option value="Transferencia">Transferencia</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Débito o crédito">Débito o crédito</option>
-                <option value="Otro">Otro</option>
-              </select>
-            </label>
-            <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
-              <input type="text" name="direccion" required placeholder="Calle, número, depto">
-            </label>
-            <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
-              <textarea name="notas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
-            </label>
-          </div>
-        </div>
-
-        <footer class="venta-pie">
-          <div class="venta-total">
-            <span>Total de la venta</span>
-            <b id="ventaTotal">$0</b>
-          </div>
-          <div class="venta-acc">
-            <button type="button" class="venta-btn ghost" data-acc="cerrar">Cancelar</button>
-            <button type="submit" class="venta-btn">Registrar venta</button>
-          </div>
-          <p class="venta-msg" id="ventaMsg"></p>
-        </footer>
-      </form>`;
+        <div class="venta-body">${cuerpo}</div>
+        ${pie ? `<footer class="venta-pie">${pie}</footer>` : ''}
+      </div>`;
     document.body.appendChild(ov);
     document.documentElement.style.overflow = 'hidden';
+    requestAnimationFrame(() => ov.classList.add('abierto'));
 
-    const f = ov.querySelector('#ventaForm');
-    const cerrar = () => { ov.remove(); document.documentElement.style.overflow = ''; };
+    const cerrar = () => {
+      ov.classList.remove('abierto');
+      document.documentElement.style.overflow = '';
+      setTimeout(() => ov.remove(), 300);
+    };
     ov.addEventListener('click', e => {
       if (e.target === ov || e.target.closest('[data-acc=cerrar]')) cerrar();
     });
-    document.addEventListener('keydown', function esc2(e){
-      if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', esc2); }
+    document.addEventListener('keydown', function salir(e){
+      if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', salir); }
     });
+    return { ov, cerrar };
+  }
+
+  /* ── Formulario de venta ──────────────────────────────── */
+  async function abrirFormulario(slug){
+    await cargarComunas();
+    const prod = productos().find(p => p.slug === slug);
+    if (!prod) return;
+
+    const cuerpo = `
+      <form id="ventaForm">
+        <div class="venta-prod">
+          <img src="${esc(prod.image)}" alt="">
+          <div>
+            <b>${esc(prod.name)}</b>
+            <small>${fmt(precioDe(slug))} por unidad</small>
+          </div>
+        </div>
+
+        <div class="venta-g2">
+          <label class="venta-f"><span>Cantidad</span>
+            <input type="number" name="cantidad" min="1" step="1" value="1" required>
+          </label>
+          <label class="venta-f"><span>Precio por unidad</span>
+            <input type="number" name="precio" min="0" step="1" value="${precioDe(slug)}" required>
+          </label>
+        </div>
+
+        <p class="venta-sec">Despacho</p>
+        <div class="venta-g2">
+          <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
+            ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elegí la comuna')}
+          </div>
+          <label class="venta-f"><span>Costo de despacho</span>
+            <input type="number" name="despacho" min="0" step="1" value="0" required>
+          </label>
+        </div>
+
+        <p class="venta-sec">Datos del cliente</p>
+        <div class="venta-g2">
+          <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
+            <input type="text" name="cliente" required placeholder="Ej: María Pérez">
+          </label>
+          <label class="venta-f"><span>Teléfono</span>
+            <input type="tel" name="telefono" required placeholder="+56 9 ...">
+          </label>
+          <label class="venta-f"><span>Correo (opcional)</span>
+            <input type="email" name="email" placeholder="cliente@correo.cl">
+          </label>
+          <div class="venta-f venta-ancho"><span>Método de pago</span>
+            ${desplegable('pago', ['Transferencia','Efectivo','Débito o crédito','Otro'].map(v => ({ valor:v, texto:v })), 'Elegí el método')}
+          </div>
+          <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
+            <input type="text" name="direccion" required placeholder="Calle, número, depto">
+          </label>
+          <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
+            <textarea name="notas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
+          </label>
+        </div>
+      </form>`;
+
+    const pie = `
+      <div class="venta-total">
+        <span>Total de la venta</span>
+        <b id="ventaTotal">$0</b>
+      </div>
+      <button type="submit" form="ventaForm" class="venta-btn">Registrar venta</button>
+      <p class="venta-msg" id="ventaMsg"></p>`;
+
+    const { ov, cerrar } = panel('Producto vendido', 'Registro de venta', cuerpo, pie);
+    const f = ov.querySelector('#ventaForm');
 
     const total = () => {
       const n = +f.cantidad.value || 0, p = +f.precio.value || 0, d = +f.despacho.value || 0;
       ov.querySelector('#ventaTotal').textContent = fmt(n * p + d);
     };
-    total();
-    f.comuna.addEventListener('change', e => {
-      f.despacho.value = e.target.selectedOptions[0]?.dataset.costo || 0;
-      total();
+    conectarDesplegables(ov, (campo, valor, extra) => {
+      if (campo === 'comuna') { f.despacho.value = extra || 0; total(); }
     });
     ['cantidad','precio','despacho'].forEach(n => f[n].addEventListener('input', total));
+    total();
 
-    f.addEventListener('submit', e => { e.preventDefault(); guardar(f, prod, cerrar); });
+    f.addEventListener('submit', e => { e.preventDefault(); guardar(ov, f, prod, cerrar); });
   }
 
-  async function guardar(f, prod, cerrar){
-    const btn = f.querySelector('button[type=submit]');
-    const msg = f.querySelector('#ventaMsg');
+  async function guardar(ov, f, prod, cerrar){
+    const btn = ov.querySelector('.venta-btn');
+    const msg = ov.querySelector('#ventaMsg');
     const cantidad = +f.cantidad.value || 1;
     const precio = +f.precio.value || 0;
     const despacho = +f.despacho.value || 0;
 
-    btn.disabled = true; btn.textContent = 'Guardando…'; msg.textContent = ''; msg.className = 'venta-msg';
+    msg.textContent = ''; msg.className = 'venta-msg';
+    if (!f.comuna.value) { msg.className = 'venta-msg err'; msg.textContent = 'Elegí la comuna de despacho.'; return; }
+    btn.disabled = true; btn.textContent = 'Guardando…';
 
     const { error } = await sb.from('ventas').insert({
       vendedor_id: perfil.id,
@@ -242,45 +320,31 @@ const Sesion = (() => {
 
   /* ── Mis ventas ───────────────────────────────────────── */
   async function abrirMisVentas(){
-    const ov = document.createElement('div');
-    ov.className = 'venta-ov';
-    ov.innerHTML = `
-      <div class="venta-card">
-        <header class="venta-head">
-          <div>
-            <p class="venta-kicker">Historial</p>
-            <h2>Mis ventas</h2>
-          </div>
-          <button type="button" class="venta-x" data-acc="cerrar" aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </header>
-        <div class="venta-body" id="misVentas"><p class="venta-vacio">Cargando…</p></div>
-      </div>`;
-    document.body.appendChild(ov);
-    document.documentElement.style.overflow = 'hidden';
-    const cerrar = () => { ov.remove(); document.documentElement.style.overflow = ''; };
-    ov.addEventListener('click', e => {
-      if (e.target === ov || e.target.closest('[data-acc=cerrar]')) cerrar();
-    });
+    const { ov } = panel('Mis ventas', 'Historial', '<p class="venta-vacio">Cargando…</p>');
+    const box = ov.querySelector('.venta-body');
 
     const { data, error } = await sb.from('ventas')
-      .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending: false }).limit(100);
-    const box = ov.querySelector('#misVentas');
+      .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(100);
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
-    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta.</p>'; return; }
+    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Producto vendido.</p>'; return; }
 
     const suma = data.reduce((a, v) => a + (v.total || 0), 0);
     box.innerHTML = `
-      <p class="venta-resumen">${data.length} venta${data.length === 1 ? '' : 's'} · ${fmt(suma)} en total</p>
+      <p class="venta-resumen">${data.length} venta${data.length === 1 ? '' : 's'} · <b>${fmt(suma)}</b> en total</p>
       <ul class="venta-lista">
         ${data.map(v => `
           <li>
-            <div>
-              <b>${esc(v.producto_nombre)}</b>
-              <small>${esc(v.cliente_nombre)} · ${esc(v.comuna)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
+            <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+            <div class="vl-info">
+              <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+              <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}</small>
+              <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
+              <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
             </div>
-            <span>${fmt(v.total)}</span>
+            <div class="vl-total">
+              <b>${fmt(v.total)}</b>
+              <small>despacho ${fmt(v.costo_despacho)}</small>
+            </div>
           </li>`).join('')}
       </ul>`;
   }
