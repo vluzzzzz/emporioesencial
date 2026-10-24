@@ -2875,3 +2875,22 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* La nota de cada opcion cede espacio antes que el nombre */
 .vsel-lista li>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .vsel-lista li small{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}
+
+/* El buscador baja a su propia fila en pantallas chicas */
+.nav-bus-movil{display:none}
+@media(max-width:860px){
+  /* En chico la barra pasa a flex: la grilla heredada de tres columnas
+     descolocaba el logo cuando aparecia la fila del buscador. Y el alto lo
+     manda el contenido, antes era fijo y la segunda fila se salia encima
+     del banner. */
+  .nav{display:flex!important;flex-wrap:wrap;align-items:center;height:auto!important;padding:8px 12px!important;gap:8px!important}
+  .nav-left{order:1;flex:none}
+  .nav-logo{order:2;flex:1 1 auto;display:flex;justify-content:center;min-width:0}
+  .nav-right{order:3;flex:none;display:flex;align-items:center;gap:8px}
+  .nav-bus-movil{display:block;order:4;flex-basis:100%;width:100%;margin-top:0}
+  .nav-bus-movil .nav-buscador{width:100%;max-width:none!important;flex:none!important}
+  .nav-bus-movil .buscador{width:100%;max-width:none}
+  .nav{align-items:center}
+  .nav-logo{min-width:0}
+  .nav-logo-img{height:34px!important}
+}

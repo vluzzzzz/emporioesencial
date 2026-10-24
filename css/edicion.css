@@ -64,8 +64,30 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 .ed-foto-ancha{height:110px;border-radius:10px;overflow:hidden;background:var(--off-white);margin-bottom:10px}
 .ed-foto-ancha img{width:100%;height:100%;object-fit:cover}
 .ed-subir.ancho{width:100%;height:auto;padding:12px;font-size:13px;gap:8px}
-.ed-cat{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--gray-light)}
-.ed-cat:last-child{border-bottom:0}
+.ed-cat-bloque{border-bottom:1px solid var(--gray-light)}
+.ed-cat-bloque:last-child{border-bottom:0}
+.ed-cat{display:flex;align-items:center;gap:10px;padding:9px 0}
+.ed-cat-chev{flex:none;width:28px;height:28px;display:grid;place-items:center;border:0;background:none;color:var(--gray-mid);cursor:pointer;border-radius:8px}
+.ed-cat-chev:hover{background:var(--off-white);color:var(--black)}
+.ed-cat-chev svg{width:15px;height:15px;transition:transform .18s var(--ease-smooth)}
+.ed-cat-bloque.abierta .ed-cat-chev svg{transform:rotate(90deg)}
+.ed-subs{padding:2px 0 14px 38px}
+.ed-sub{display:flex;align-items:center;gap:10px;padding:5px 0}
+.ed-sub input{flex:1;min-width:0;font:inherit;font-size:14px;padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
 .ed-cat>input[type=text]{flex:1;font:inherit;font-size:14.5px;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
 .ed-dest{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;cursor:pointer}
 .ed-cat-n{min-width:26px;text-align:center;font-size:12px;font-weight:700;color:var(--gray-mid);background:var(--off-white);border-radius:999px;padding:3px 8px}
+
+/* En el telefono las filas de categorias se cortaban por la derecha */
+@media(max-width:700px){
+  .ed-cat{flex-wrap:wrap;gap:8px}
+  .ed-cat>input[type=text]{flex:1 1 60%}
+  .ed-cat .ed-dest{margin-left:36px}
+  .ed-subs{padding-left:16px}
+  .ed-sub{flex-wrap:wrap;gap:8px}
+  .ed-sub input{flex:1 1 100%}
+  .ed-lista-fila{flex-wrap:wrap}
+  .ed-lista-fila>input{flex:1 1 100%}
+  .ed-lista-fila>.ed-btn{flex:1 1 auto}
+  .ed-bloque .ed-subir.ancho{box-sizing:border-box}
+}

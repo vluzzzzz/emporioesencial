@@ -24,7 +24,7 @@
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 let BANNERS = [
-  { desktop:'images/emporio-images/banner.png', mobile:'images/emporio-images/banner.png', alt:'Esencial Emporio' },
+  { desktop:'images/emporio-images/banner.webp', mobile:'images/emporio-images/banner.webp', alt:'Esencial Emporio' },
 ];
 
 // Banner ancho de promoción (va entre la grilla y las reseñas) → 2400 × 600 px
@@ -32,7 +32,7 @@ const PROMO_BANNER = { desktop:'', mobile:'', archivo:'bannerpromo.webp', alt:'P
 
 // Imagen alta de la izquierda en la fila de ofertas → 620 × 714 px
 // En el teléfono va arriba y apaisada → 1080 × 470 px
-const OFERTA_LATERAL = { desktop:'images/emporio-images/3.jpeg', mobile:'images/emporio-images/3.jpeg', alt:'Ofertas del mes', link:'#ofertas' };
+const OFERTA_LATERAL = { desktop:'images/emporio-images/3.webp', mobile:'images/emporio-images/3.webp', alt:'Ofertas del mes', link:'#ofertas' };
 
 // Mensajes de la cinta de arriba. Se repiten en bucle, uno tras otro.
 const CINTA = [
@@ -67,7 +67,7 @@ const CINTA_SEPARADOR = 'images/logo-cinta.webp';
    Cada hueco dice qué archivo espera y en qué medida exportarlo.          */
 
 // Banner de la sección "todo el catálogo" (el enlace Productos de la nav).
-const BANNER_TODOS = { banner:'images/emporio-images/2.jpeg', bannerMobile:'images/emporio-images/2.jpeg', bannerArchivo:'banner-catalogo.webp' };
+const BANNER_TODOS = { banner:'images/emporio-images/2.webp', bannerMobile:'images/emporio-images/2.webp', bannerArchivo:'banner-catalogo.webp' };
 /* ═══════════════════════════ FIN ZONA EDITABLE ═════════════════════════════ */
 
 

@@ -9,7 +9,7 @@
  *  El árbol de abajo es la semilla: si Supabase no responde, la web anda igual.
  * ========================================================================== */
 const Cats = (() => {
-  const IMG = n => 'images/emporio-images/' + n + '.jpeg';
+  const IMG = n => 'images/emporio-images/' + n + '.webp';
 
   let ARBOL = [
     { slug:'cocina', nombre:'Cocina', arriba:'Todo en', destacada:true, orden:1,
@@ -55,9 +55,17 @@ const Cats = (() => {
 
   const porOrden = (a, b) => (a.orden || 0) - (b.orden || 0);
 
+  // Igual que en sd.js: tolera las rutas .jpeg/.png guardadas antes de pasar
+  // las fotos a WebP.
+  const aWebp = u => String(u || '').replace(/^(images\/emporio-images\/[0-9.]+)\.(jpeg|jpg|png)$/i, '$1.webp');
+
   function aplicar(arbol){
     if (!Array.isArray(arbol) || !arbol.length) return false;
-    ARBOL = arbol.map(c => ({ ...c, subs: Array.isArray(c.subs) ? c.subs : [] }));
+    ARBOL = arbol.map(c => ({
+      ...c,
+      img: aWebp(c.img), banner: aWebp(c.banner), bannerMobile: aWebp(c.bannerMobile),
+      subs: Array.isArray(c.subs) ? c.subs : [],
+    }));
     return true;
   }
 

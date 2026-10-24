@@ -18,10 +18,10 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": true,
     "orden": 1,
-    "img": "images/emporio-images/2.jpeg",
+    "img": "images/emporio-images/2.webp",
     "medida": "800 × 1000",
-    "banner": "images/emporio-images/2.jpeg",
-    "bannerMobile": "images/emporio-images/2.jpeg",
+    "banner": "images/emporio-images/2.webp",
+    "bannerMobile": "images/emporio-images/2.webp",
     "bannerArchivo": "banner-cocina.webp",
     "subs": [
       {
@@ -52,7 +52,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 2,
-    "img": "images/emporio-images/6.jpeg",
+    "img": "images/emporio-images/6.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -83,10 +83,10 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": true,
     "orden": 3,
-    "img": "images/emporio-images/3.jpeg",
+    "img": "images/emporio-images/3.webp",
     "medida": "800 × 500",
-    "banner": "images/emporio-images/3.jpeg",
-    "bannerMobile": "images/emporio-images/3.jpeg",
+    "banner": "images/emporio-images/3.webp",
+    "bannerMobile": "images/emporio-images/3.webp",
     "bannerArchivo": "banner-belleza.webp",
     "subs": [
       {
@@ -117,10 +117,10 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": true,
     "orden": 4,
-    "img": "images/emporio-images/1.jpeg",
+    "img": "images/emporio-images/1.webp",
     "medida": "800 × 500",
-    "banner": "images/emporio-images/1.jpeg",
-    "bannerMobile": "images/emporio-images/1.jpeg",
+    "banner": "images/emporio-images/1.webp",
+    "bannerMobile": "images/emporio-images/1.webp",
     "bannerArchivo": "banner-herramientas.webp",
     "subs": [
       {
@@ -151,10 +151,10 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": true,
     "orden": 5,
-    "img": "images/emporio-images/4.jpeg",
+    "img": "images/emporio-images/4.webp",
     "medida": "800 × 1000",
-    "banner": "images/emporio-images/4.jpeg",
-    "bannerMobile": "images/emporio-images/4.jpeg",
+    "banner": "images/emporio-images/4.webp",
+    "bannerMobile": "images/emporio-images/4.webp",
     "bannerArchivo": "banner-limpieza.webp",
     "subs": [
       {
@@ -181,7 +181,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 6,
-    "img": "images/emporio-images/8.jpeg",
+    "img": "images/emporio-images/8.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -208,7 +208,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 7,
-    "img": "images/emporio-images/7.jpeg",
+    "img": "images/emporio-images/7.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -231,7 +231,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 8,
-    "img": "images/emporio-images/9.jpeg",
+    "img": "images/emporio-images/9.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -254,7 +254,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 9,
-    "img": "images/emporio-images/13.jpeg",
+    "img": "images/emporio-images/13.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -277,7 +277,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 10,
-    "img": "images/emporio-images/11.jpeg",
+    "img": "images/emporio-images/11.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -300,7 +300,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 11,
-    "img": "images/emporio-images/5.jpeg",
+    "img": "images/emporio-images/5.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -323,7 +323,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 12,
-    "img": "images/emporio-images/16.jpeg",
+    "img": "images/emporio-images/16.webp",
     "medida": "800 × 500",
     "subs": [
       {
@@ -346,7 +346,7 @@ values ('categorias_arbol', '[
     "arriba": "Todo en",
     "destacada": false,
     "orden": 13,
-    "img": "images/emporio-images/20.jpeg",
+    "img": "images/emporio-images/20.webp",
     "medida": "800 × 500",
     "subs": [
       {

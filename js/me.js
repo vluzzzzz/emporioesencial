@@ -7,7 +7,7 @@
  *  Menu.renderMega() y el menú se actualiza solo.
  * ========================================================================== */
 const Menu = (() => {
-  const megaImg = i => 'images/emporio-images/' + ((i % 23) + 1) + '.jpeg';
+  const megaImg = i => 'images/emporio-images/' + ((i % 23) + 1) + '.webp';
   let cats = [];
 
   function renderMegaPanel(idx){
@@ -35,8 +35,23 @@ const Menu = (() => {
     renderMegaPanel(0);
   }
 
+  // En el teléfono la barra lleva hasta cinco botones y el buscador quedaba
+  // aplastado a unos pocos píxeles. Abajo de cierto ancho baja a su propia
+  // fila, que ocupa todo el ancho.
+  function acomodarBuscador(){
+    const bus = document.querySelector('.nav-buscador');
+    const fila = document.getElementById('navBusMovil');
+    const der = document.querySelector('.nav-right');
+    if (!bus || !fila || !der) return;
+    const chico = window.matchMedia('(max-width:860px)').matches;
+    if (chico && bus.parentElement !== fila) fila.appendChild(bus);
+    if (!chico && bus.parentElement !== der) der.insertBefore(bus, der.firstChild);
+  }
+
   function init(){
     renderMega();
+    acomodarBuscador();
+    window.addEventListener('resize', acomodarBuscador, { passive:true });
     const navCats = document.getElementById('navCats');
     const navCatsBtn = document.getElementById('navCatsBtn');
     const navCatsMenu = document.getElementById('navCatsMenu');
@@ -58,5 +73,5 @@ const Menu = (() => {
     document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); });
   }
 
-  return { init, renderMega };
+  return { init, renderMega, acomodarBuscador };
 })();

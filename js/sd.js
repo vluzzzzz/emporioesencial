@@ -7,15 +7,15 @@ const HERO_STOCK = {};
 // Las 4 fotos del emporio, repetidas en todo el catálogo mientras se cargan
 // los productos reales con el modo edición.
 const IMG = {
-  soplador:'images/emporio-images/1.jpeg',
-  cocina:'images/emporio-images/2.jpeg',
-  cera:'images/emporio-images/3.jpeg',
-  limpiavidrios:'images/emporio-images/4.jpeg',
+  soplador:'images/emporio-images/1.webp',
+  cocina:'images/emporio-images/2.webp',
+  cera:'images/emporio-images/3.webp',
+  limpiavidrios:'images/emporio-images/4.webp',
 };
 let PRODUCTS=[
-  {id:1,key:'set-tazones-colocolo',name:'Set 4 Tazones Colo-Colo',price:'$15.990',rawPrice:15990,image:'images/emporio-images/14.jpeg',bgLabel:'COLO-COLO',scale:0.9,offsetX:0,offsetY:0},
-  {id:2,key:'schopero-frozen-colocolo',name:'Schopero Frozen Colo-Colo',price:'$9.990',rawPrice:9990,image:'images/emporio-images/21.jpeg',bgLabel:'SCHOPERO',scale:0.9,offsetX:0,offsetY:0},
-  {id:3,key:'mug-rosado-colocolo',name:'Mug 1200 ml Colo-Colo',price:'$14.990',rawPrice:14990,image:'images/emporio-images/12.jpeg',bgLabel:'CAMPEONAS',scale:0.9,offsetX:0,offsetY:0},
+  {id:1,key:'set-tazones-colocolo',name:'Set 4 Tazones Colo-Colo',price:'$15.990',rawPrice:15990,image:'images/emporio-images/14.webp',bgLabel:'COLO-COLO',scale:0.9,offsetX:0,offsetY:0},
+  {id:2,key:'schopero-frozen-colocolo',name:'Schopero Frozen Colo-Colo',price:'$9.990',rawPrice:9990,image:'images/emporio-images/21.webp',bgLabel:'SCHOPERO',scale:0.9,offsetX:0,offsetY:0},
+  {id:3,key:'mug-rosado-colocolo',name:'Mug 1200 ml Colo-Colo',price:'$14.990',rawPrice:14990,image:'images/emporio-images/12.webp',bgLabel:'CAMPEONAS',scale:0.9,offsetX:0,offsetY:0},
 ];
 const PRICE_TIERS={
   'soplador-bateria':[{qty:1,price:29990}],
@@ -52,29 +52,29 @@ const getUnitPrice=(key,qty)=>{const t=PRICE_TIERS[key];if(!t||!t.length)return 
    distinta en vez de reusar la misma. Ahora todas salen del mismo lugar.
    loadCatalog() lo reemplaza entero si Supabase responde.                   */
 const CATALOGO = [
-  {slug:'soplador-bateria',               cat:'herramientas', name:'Soplador / Ventilador a Batería 18V',        image:'images/emporio-images/1.jpeg',  desc:'Soplador inalámbrico potente de 18V. Ideal para limpieza y secado. Incluye batería y cargador.'},
-  {slug:'set-cocina-silicona',            cat:'cocina',       name:'Set de Cocina de Silicona 12 Piezas',        image:'images/emporio-images/2.jpeg',  desc:'Set completo de utensilios de cocina de silicona con mango de madera. Resistentes al calor y antiadherentes.'},
-  {slug:'calentador-cera',                cat:'belleza',      name:'Calentador de Cera Profesional',             image:'images/emporio-images/3.jpeg',  desc:'Calentador de cera profesional para todo tipo de ceras. Incluye contenedor de aluminio y control de temperatura.'},
-  {slug:'limpiavidrios-telescopico',      cat:'limpieza',     name:'Limpiavidrios Telescópico',                  image:'images/emporio-images/4.jpeg',  desc:'Limpiavidrios telescópico extensible de 21 a 86 cm. Mango antideslizante y correa de seguridad.'},
-  {slug:'botella-sorbete-colocolo',       cat:'cocina',       name:'Botella con Sorbete Colo-Colo',              image:'images/emporio-images/5.jpeg',  desc:'Botella de hidratación Colo-Colo con sorbete y tapa con cierre. Libre de BPA.'},
-  {slug:'bolsa-reutilizable-colocolo',    cat:'hogar',        name:'Bolsa Reutilizable Colo-Colo',               image:'images/emporio-images/6.jpeg',  desc:'Bolsa reutilizable resistente con diseño Colo-Colo. Asas reforzadas para el día a día.'},
-  {slug:'mug-termico-colocolo',           cat:'cocina',       name:'Mug Térmico Colo-Colo',                      image:'images/emporio-images/7.jpeg',  desc:'Mug térmico de acero inoxidable que mantiene la temperatura. Diseño Colo-Colo Eterno Campeón.'},
-  {slug:'cojin-cuello-colocolo',          cat:'hogar',        name:'Cojín de Cuello Colo-Colo',                  image:'images/emporio-images/8.jpeg',  desc:'Cojín de cuello cómodo para viajes y descanso, con diseño Colo-Colo.'},
-  {slug:'jarro-cerveza-colocolo',         cat:'cocina',       name:'Jarro de Cerveza Colo-Colo',                 image:'images/emporio-images/9.jpeg',  desc:'Jarro de vidrio resistente de gran capacidad con diseño Colo-Colo Eterno Campeón.'},
-  {slug:'tabla-picar-colocolo',           cat:'cocina',       name:'Tabla de Picar de Madera Colo-Colo',         image:'images/emporio-images/10.jpeg', desc:'Tabla de picar de madera con grabado Colo-Colo y colgador de cuero. Resistente para el uso diario.'},
-  {slug:'schopero-colocolo',              cat:'cocina',       name:'Schopero 500 ml Colo-Colo',                  image:'images/emporio-images/11.jpeg', desc:'Schopero de vidrio de 500 ml con asa y diseño Colo-Colo. Ideal para la previa.'},
-  {slug:'mug-rosado-colocolo',            cat:'cocina',       name:'Mug 1200 ml Colo-Colo Campeonas',            image:'images/emporio-images/12.jpeg', desc:'Mug de 1200 ml con bombilla y asa, edición Campeonas. Libre de BPA.'},
-  {slug:'cojin-escudo-colocolo',          cat:'hogar',        name:'Cojín Escudo Colo-Colo',                     image:'images/emporio-images/13.jpeg', desc:'Cojín decorativo con forma de escudo Colo-Colo. Suave y resistente.'},
-  {slug:'set-tazones-colocolo',           cat:'cocina',       name:'Set 4 Tazones Cerámica Colo-Colo',           image:'images/emporio-images/14.jpeg', desc:'Set de 4 tazones de cerámica de 400 ml con soporte, diseño Colo-Colo.'},
-  {slug:'llavero-colocolo',               cat:'accesorios',   name:'Llavero Colo-Colo',                          image:'images/emporio-images/15.jpeg', desc:'Llavero metálico resistente con diseño Colo-Colo. Compacto y elegante.'},
-  {slug:'vaso-sorbete-colocolo',          cat:'cocina',       name:'Vaso con Sorbete y Tapa Colo-Colo',          image:'images/emporio-images/16.jpeg', desc:'Vaso con tapa y sorbete, diseño Colo-Colo. Reutilizable y práctico.'},
-  {slug:'set-vaso-destapador-colocolo',   cat:'cocina',       name:'Set Vaso de Cerveza + Destapador Colo-Colo', image:'images/emporio-images/17.jpeg', desc:'Set de regalo con vaso de cerveza y destapador, diseño Colo-Colo.'},
-  {slug:'billetera-colocolo',             cat:'accesorios',   name:'Billetera Colo-Colo',                        image:'images/emporio-images/18.jpeg', desc:'Billetera de material PU con varios compartimentos y diseño Colo-Colo. Incluye caja de regalo.'},
-  {slug:'vaso-schopero-campeon-colocolo', cat:'cocina',       name:'Vaso Schopero Campeón Colo-Colo',            image:'images/emporio-images/19.jpeg', desc:'Vaso schopero de vidrio resistente con diseño "Campeón hay uno solo" Colo-Colo.'},
-  {slug:'shaker-colocolo',                cat:'cocina',       name:'Botella Shaker Deportiva Colo-Colo',         image:'images/emporio-images/20.jpeg', desc:'Botella deportiva tipo shaker con tapa hermética y asa, diseño Colo-Colo.'},
-  {slug:'schopero-frozen-colocolo',       cat:'cocina',       name:'Schopero Frozen Colo-Colo',                  image:'images/emporio-images/21.jpeg', desc:'Schopero congelable con gel interior que mantiene tu bebida fría. Diseño Colo-Colo.'},
-  {slug:'gorro-colocolo',                 cat:'accesorios',   name:'Gorro Bucket Colo-Colo',                     image:'images/emporio-images/22.jpeg', desc:'Gorro bucket de algodón con bordado Colo-Colo. Talla única.'},
-  {slug:'adorno-escudo-colocolo',         cat:'hogar',        name:'Adorno Escudo Colo-Colo Eterno Campeón',     image:'images/emporio-images/23.jpeg', desc:'Adorno decorativo del escudo Colo-Colo en 3D, Eterno Campeón. Base estable para repisa o escritorio.'},
+  {slug:'soplador-bateria',               cat:'herramientas', name:'Soplador / Ventilador a Batería 18V',        image:'images/emporio-images/1.webp',  desc:'Soplador inalámbrico potente de 18V. Ideal para limpieza y secado. Incluye batería y cargador.'},
+  {slug:'set-cocina-silicona',            cat:'cocina',       name:'Set de Cocina de Silicona 12 Piezas',        image:'images/emporio-images/2.webp',  desc:'Set completo de utensilios de cocina de silicona con mango de madera. Resistentes al calor y antiadherentes.'},
+  {slug:'calentador-cera',                cat:'belleza',      name:'Calentador de Cera Profesional',             image:'images/emporio-images/3.webp',  desc:'Calentador de cera profesional para todo tipo de ceras. Incluye contenedor de aluminio y control de temperatura.'},
+  {slug:'limpiavidrios-telescopico',      cat:'limpieza',     name:'Limpiavidrios Telescópico',                  image:'images/emporio-images/4.webp',  desc:'Limpiavidrios telescópico extensible de 21 a 86 cm. Mango antideslizante y correa de seguridad.'},
+  {slug:'botella-sorbete-colocolo',       cat:'cocina',       name:'Botella con Sorbete Colo-Colo',              image:'images/emporio-images/5.webp',  desc:'Botella de hidratación Colo-Colo con sorbete y tapa con cierre. Libre de BPA.'},
+  {slug:'bolsa-reutilizable-colocolo',    cat:'hogar',        name:'Bolsa Reutilizable Colo-Colo',               image:'images/emporio-images/6.webp',  desc:'Bolsa reutilizable resistente con diseño Colo-Colo. Asas reforzadas para el día a día.'},
+  {slug:'mug-termico-colocolo',           cat:'cocina',       name:'Mug Térmico Colo-Colo',                      image:'images/emporio-images/7.webp',  desc:'Mug térmico de acero inoxidable que mantiene la temperatura. Diseño Colo-Colo Eterno Campeón.'},
+  {slug:'cojin-cuello-colocolo',          cat:'hogar',        name:'Cojín de Cuello Colo-Colo',                  image:'images/emporio-images/8.webp',  desc:'Cojín de cuello cómodo para viajes y descanso, con diseño Colo-Colo.'},
+  {slug:'jarro-cerveza-colocolo',         cat:'cocina',       name:'Jarro de Cerveza Colo-Colo',                 image:'images/emporio-images/9.webp',  desc:'Jarro de vidrio resistente de gran capacidad con diseño Colo-Colo Eterno Campeón.'},
+  {slug:'tabla-picar-colocolo',           cat:'cocina',       name:'Tabla de Picar de Madera Colo-Colo',         image:'images/emporio-images/10.webp', desc:'Tabla de picar de madera con grabado Colo-Colo y colgador de cuero. Resistente para el uso diario.'},
+  {slug:'schopero-colocolo',              cat:'cocina',       name:'Schopero 500 ml Colo-Colo',                  image:'images/emporio-images/11.webp', desc:'Schopero de vidrio de 500 ml con asa y diseño Colo-Colo. Ideal para la previa.'},
+  {slug:'mug-rosado-colocolo',            cat:'cocina',       name:'Mug 1200 ml Colo-Colo Campeonas',            image:'images/emporio-images/12.webp', desc:'Mug de 1200 ml con bombilla y asa, edición Campeonas. Libre de BPA.'},
+  {slug:'cojin-escudo-colocolo',          cat:'hogar',        name:'Cojín Escudo Colo-Colo',                     image:'images/emporio-images/13.webp', desc:'Cojín decorativo con forma de escudo Colo-Colo. Suave y resistente.'},
+  {slug:'set-tazones-colocolo',           cat:'cocina',       name:'Set 4 Tazones Cerámica Colo-Colo',           image:'images/emporio-images/14.webp', desc:'Set de 4 tazones de cerámica de 400 ml con soporte, diseño Colo-Colo.'},
+  {slug:'llavero-colocolo',               cat:'accesorios',   name:'Llavero Colo-Colo',                          image:'images/emporio-images/15.webp', desc:'Llavero metálico resistente con diseño Colo-Colo. Compacto y elegante.'},
+  {slug:'vaso-sorbete-colocolo',          cat:'cocina',       name:'Vaso con Sorbete y Tapa Colo-Colo',          image:'images/emporio-images/16.webp', desc:'Vaso con tapa y sorbete, diseño Colo-Colo. Reutilizable y práctico.'},
+  {slug:'set-vaso-destapador-colocolo',   cat:'cocina',       name:'Set Vaso de Cerveza + Destapador Colo-Colo', image:'images/emporio-images/17.webp', desc:'Set de regalo con vaso de cerveza y destapador, diseño Colo-Colo.'},
+  {slug:'billetera-colocolo',             cat:'accesorios',   name:'Billetera Colo-Colo',                        image:'images/emporio-images/18.webp', desc:'Billetera de material PU con varios compartimentos y diseño Colo-Colo. Incluye caja de regalo.'},
+  {slug:'vaso-schopero-campeon-colocolo', cat:'cocina',       name:'Vaso Schopero Campeón Colo-Colo',            image:'images/emporio-images/19.webp', desc:'Vaso schopero de vidrio resistente con diseño "Campeón hay uno solo" Colo-Colo.'},
+  {slug:'shaker-colocolo',                cat:'cocina',       name:'Botella Shaker Deportiva Colo-Colo',         image:'images/emporio-images/20.webp', desc:'Botella deportiva tipo shaker con tapa hermética y asa, diseño Colo-Colo.'},
+  {slug:'schopero-frozen-colocolo',       cat:'cocina',       name:'Schopero Frozen Colo-Colo',                  image:'images/emporio-images/21.webp', desc:'Schopero congelable con gel interior que mantiene tu bebida fría. Diseño Colo-Colo.'},
+  {slug:'gorro-colocolo',                 cat:'accesorios',   name:'Gorro Bucket Colo-Colo',                     image:'images/emporio-images/22.webp', desc:'Gorro bucket de algodón con bordado Colo-Colo. Talla única.'},
+  {slug:'adorno-escudo-colocolo',         cat:'hogar',        name:'Adorno Escudo Colo-Colo Eterno Campeón',     image:'images/emporio-images/23.webp', desc:'Adorno decorativo del escudo Colo-Colo en 3D, Eterno Campeón. Base estable para repisa o escritorio.'},
 ];
 
 // Si Supabase no trae categoría, se deduce de la primera palabra del slug.
@@ -204,6 +204,11 @@ function slideHTML(p,i){
     </div>`;
 }
 
+// Las fotos del repositorio pasaron a WebP. Si la base todavía guarda la ruta
+// vieja, se corrige al vuelo para que no se vea una imagen rota mientras no se
+// corra supabase/imagenes-webp.sql.
+const aWebp = u => String(u || '').replace(/^(images\/emporio-images\/[0-9.]+)\.(jpeg|jpg|png)$/i, '$1.webp');
+
 // Vuelca UNA fila de products a todo lo que la web tiene en memoria. La usa
 // loadCatalog al arrancar, y el modo edición para refrescar un solo producto
 // sin recargar la página.
@@ -215,7 +220,7 @@ function aplicarProducto(p){
   if (tiers.length) PRICE_TIERS[p.slug] = tiers; else delete PRICE_TIERS[p.slug];
   FEATURES[p.slug] = p.features || [];
   // imágenes del detalle = principal + secundarias (galería)
-  GALLERY[p.slug] = [p.image, ...(p.gallery || [])].filter(Boolean);
+  GALLERY[p.slug] = [p.image, ...(p.gallery || [])].filter(Boolean).map(aWebp);
   // Colores desde el panel. Sin ellos se respeta lo que esté escrito acá
   // abajo en COLOR_VARIANTS, si no los colores aparecían un instante y se
   // borraban al llegar la respuesta de la base.
@@ -227,7 +232,7 @@ function aplicarProducto(p){
     slug: p.slug,
     cat: p.category || familiaDe(p.slug),
     name: p.name,
-    image: p.image,
+    image: aWebp(p.image),
     desc: p.description || '',
     imgScale: p.image_scale ?? 0.75,
     compare: p.compare_at_price,
@@ -272,7 +277,7 @@ async function loadCatalog(){
         const heroName = p.hero_name || p.name;
         PRODUCTS.push({
           id: idx + 1, key: p.slug, name: heroName,
-          price: fmt(p1), rawPrice: p1, image: p.hero_image || p.image,
+          price: fmt(p1), rawPrice: p1, image: aWebp(p.hero_image || p.image),
           bgLabel: p.hero_bg_label || (p.name || '').toUpperCase(),
           scale: p.hero_scale ?? 1, offsetX: p.hero_offset_x ?? 0, offsetY: p.hero_offset_y ?? 0,
         });
@@ -315,8 +320,8 @@ const FEATURES={
   'adorno-escudo-colocolo':['Escudo 3D','Eterno Campeón','Decorativo','Base estable'],
 };
 const GALLERY={
-  'adorno-escudo-colocolo':['images/emporio-images/23.jpeg','images/emporio-images/23.1.jpeg'],
-  'tabla-picar-colocolo':['images/emporio-images/10.jpeg','images/emporio-images/10.2.png','images/emporio-images/10.3.png','images/emporio-images/10.4.png'],
+  'adorno-escudo-colocolo':['images/emporio-images/23.webp','images/emporio-images/23.1.webp'],
+  'tabla-picar-colocolo':['images/emporio-images/10.webp','images/emporio-images/10.2.webp','images/emporio-images/10.3.webp','images/emporio-images/10.4.webp'],
 };
 // Variantes de color — SOLO los slugs listados acá muestran colores (dots + selector + validación).
 /* Cada color lleva 'agotado'. En true sigue a la vista pero en gris y no se

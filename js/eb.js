@@ -114,65 +114,133 @@ const EdSitio = (() => {
 
   /* ── Categorías ───────────────────────────────────────── */
   function abrirCategorias(){
-    const estado = { arbol: Cats.lista().map(c => ({ ...c, subs: c.subs.map(s => ({ ...s })) })) };
+    const estado = {
+      arbol: Cats.lista().map(c => ({ ...c, subs: c.subs.map(x => ({ ...x })) })),
+      abierta: null,
+    };
 
     const { ov, cerrar } = Sesion.panel('Categorías', 'Menú de la tienda',
-      `<p class="venta-vacio" style="margin-bottom:16px">Las destacadas son las que salen como tarjeta en la portada. El diseño está pensado para cuatro.</p>
+      `<p class="venta-vacio" style="margin-bottom:16px">Tocá la flecha para ver y editar las subcategorías. Las marcadas como <b>Portada</b> salen como tarjeta en el inicio.</p>
        <div id="edCats"></div>
-       <div class="ed-lista-fila" style="margin-top:14px">
+       <div class="ed-lista-fila" style="margin-top:16px">
          <input type="text" id="edCatNueva" placeholder="Nombre de la categoría nueva">
          <button type="button" class="ed-btn" id="edCatAgregar" style="flex:none">Agregar</button>
        </div>
        <p class="venta-msg" id="edCatMsg"></p>`,
       '<button type="button" class="venta-btn" id="edCatGuardar">Guardar</button>');
 
-    function cuantosUsan(slug){
-      return CATALOGO.filter(p => p.cat === slug || Cats.padreDe(p.cat) === slug).length;
-    }
+    const usanCat  = s => CATALOGO.filter(p => p.cat === s).length;
+    const usanTodo = c => CATALOGO.filter(p => p.cat === c.slug || c.subs.some(s => s.slug === p.cat)).length;
 
     function pintar(){
       const box = ov.querySelector('#edCats');
-      box.innerHTML = estado.arbol.map((c, i) => `
-        <div class="ed-cat" data-i="${i}">
-          <input type="text" data-nombre="${i}" value="${escH(c.nombre)}">
-          <label class="ed-dest" title="Sale como tarjeta en la portada">
-            <input type="checkbox" data-dest="${i}" ${c.destacada ? 'checked' : ''}>
-            <span>Portada</span>
-          </label>
-          <span class="ed-cat-n">${cuantosUsan(c.slug)}</span>
-          <button type="button" class="ed-mini" data-borrar="${i}">Quitar</button>
-        </div>`).join('');
+      box.innerHTML = estado.arbol.map((c, i) => {
+        const abierta = estado.abierta === i;
+        return `
+        <div class="ed-cat-bloque${abierta ? ' abierta' : ''}" data-i="${i}">
+          <div class="ed-cat">
+            <button type="button" class="ed-cat-chev" data-abrir="${i}" aria-label="Ver subcategorías">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+            </button>
+            <input type="text" data-nombre="${i}" value="${escH(c.nombre)}">
+            <label class="ed-dest" title="Sale como tarjeta en la portada">
+              <input type="checkbox" data-dest="${i}" ${c.destacada ? 'checked' : ''}>
+              <span>Portada</span>
+            </label>
+            <span class="ed-cat-n" title="Productos adentro">${usanTodo(c)}</span>
+            <button type="button" class="ed-mini" data-borrar="${i}">Quitar</button>
+          </div>
+          ${abierta ? `
+            <div class="ed-subs">
+              ${c.subs.map((s, k) => `
+                <div class="ed-sub">
+                  <input type="text" data-sub="${i}-${k}" value="${escH(s.nombre)}">
+                  <span class="ed-cat-n">${usanCat(s.slug)}</span>
+                  <button type="button" class="ed-mini" data-subborrar="${i}-${k}">Quitar</button>
+                </div>`).join('') || '<p class="venta-vacio" style="margin:2px 0 10px">Sin subcategorías todavía.</p>'}
+              <div class="ed-lista-fila">
+                <input type="text" data-subnueva="${i}" placeholder="Subcategoría nueva">
+                <button type="button" class="ed-btn ghost" data-subagregar="${i}" style="flex:none">Agregar</button>
+              </div>
+            </div>` : ''}
+        </div>`;
+      }).join('');
 
-      box.querySelectorAll('[data-nombre]').forEach(i => i.addEventListener('input', e => {
+      box.querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => {
+        const i = +b.dataset.abrir;
+        estado.abierta = estado.abierta === i ? null : i;
+        pintar();
+      }));
+      box.querySelectorAll('[data-nombre]').forEach(x => x.addEventListener('input', e => {
         estado.arbol[+e.target.dataset.nombre].nombre = e.target.value;
       }));
-      box.querySelectorAll('[data-dest]').forEach(i => i.addEventListener('change', e => {
+      box.querySelectorAll('[data-dest]').forEach(x => x.addEventListener('change', e => {
         estado.arbol[+e.target.dataset.dest].destacada = e.target.checked;
       }));
+      box.querySelectorAll('[data-sub]').forEach(x => x.addEventListener('input', e => {
+        const [a, k] = e.target.dataset.sub.split('-').map(Number);
+        estado.arbol[a].subs[k].nombre = e.target.value;
+      }));
+
       box.querySelectorAll('[data-borrar]').forEach(b => b.addEventListener('click', async () => {
         const c = estado.arbol[+b.dataset.borrar];
-        const n = cuantosUsan(c.slug);
-        if (n) {
-          toast('No se puede: hay ' + n + (n === 1 ? ' producto' : ' productos') + ' en esta categoría', true);
-          return;
-        }
-        if (await confirmar('¿Quitar la categoría "' + c.nombre + '"?', 'Quitar')) {
+        const n = usanTodo(c);
+        if (n) { toast('No se puede: hay ' + n + (n === 1 ? ' producto' : ' productos') + ' adentro', true); return; }
+        if (await confirmar('¿Quitar la categoría "' + c.nombre + '" y sus subcategorías?', 'Quitar')) {
           estado.arbol.splice(+b.dataset.borrar, 1);
+          estado.abierta = null;
           pintar();
         }
       }));
+
+      box.querySelectorAll('[data-subborrar]').forEach(b => b.addEventListener('click', async () => {
+        const [a, k] = b.dataset.subborrar.split('-').map(Number);
+        const sub = estado.arbol[a].subs[k];
+        const n = usanCat(sub.slug);
+        if (n) { toast('No se puede: hay ' + n + (n === 1 ? ' producto' : ' productos') + ' adentro', true); return; }
+        if (await confirmar('¿Quitar "' + sub.nombre + '"?', 'Quitar')) {
+          estado.arbol[a].subs.splice(k, 1);
+          pintar();
+        }
+      }));
+
+      box.querySelectorAll('[data-subagregar]').forEach(b => b.addEventListener('click', () =>
+        agregarSub(+b.dataset.subagregar, box.querySelector('[data-subnueva="' + b.dataset.subagregar + '"]'))));
+      box.querySelectorAll('[data-subnueva]').forEach(inp => inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); agregarSub(+e.target.dataset.subnueva, e.target); }
+      }));
     }
+
+    // El slug no se edita nunca: cambiarlo dejaría productos sin categoría.
+    // Al crear una, se deriva del nombre y se le suma un número si ya existe.
+    function nuevoSlug(nombre, prefijo){
+      const base = (prefijo ? prefijo + '-' : '') + slugify(nombre);
+      const usados = new Set();
+      estado.arbol.forEach(c => { usados.add(c.slug); c.subs.forEach(s => usados.add(s.slug)); });
+      if (!usados.has(base)) return base;
+      let n = 2;
+      while (usados.has(base + '-' + n)) n++;
+      return base + '-' + n;
+    }
+
+    function agregarSub(i, inp){
+      const nombre = inp.value.trim();
+      if (!nombre) return;
+      estado.arbol[i].subs.push({ slug: nuevoSlug(nombre, estado.arbol[i].slug), nombre });
+      inp.value = '';
+      pintar();
+    }
+
     pintar();
 
     const agregar = () => {
       const inp = ov.querySelector('#edCatNueva');
       const nombre = inp.value.trim();
       if (!nombre) return;
-      const slug = slugify(nombre);
-      if (estado.arbol.some(c => c.slug === slug)) { toast('Ya existe una categoría así', true); return; }
-      estado.arbol.push({ slug, nombre, arriba:'Todo en', destacada:false,
+      estado.arbol.push({ slug: nuevoSlug(nombre), nombre, arriba:'Todo en', destacada:false,
         orden: estado.arbol.length + 1, img:'', medida:'800 × 500', subs:[] });
       inp.value = '';
+      estado.abierta = estado.arbol.length - 1;
       pintar();
     };
     ov.querySelector('#edCatAgregar').addEventListener('click', agregar);
@@ -182,8 +250,9 @@ const EdSitio = (() => {
 
     ov.querySelector('#edCatGuardar').addEventListener('click', async e => {
       const btn = e.target, msg = ov.querySelector('#edCatMsg');
-      if (estado.arbol.some(c => !c.nombre.trim())) {
-        msg.className = 'venta-msg err'; msg.textContent = 'Hay una categoría sin nombre.';
+      if (estado.arbol.some(c => !c.nombre.trim() || c.subs.some(s => !s.nombre.trim()))) {
+        msg.className = 'venta-msg err';
+        msg.textContent = 'Hay una categoría o subcategoría sin nombre.';
         return;
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
