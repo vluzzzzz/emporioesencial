@@ -223,12 +223,12 @@ const EdVendedores = (() => {
           <label class="venta-f"><span>Teléfono</span>
             <input type="tel" data-uf="telefono" value="${esc(u.telefono)}">
           </label>
-          <label class="venta-f"><span>Rol</span>
-            <select data-uf="rol">
-              <option value="vendedor"${u.rol === 'vendedor' ? ' selected' : ''}>Vendedor</option>
-              <option value="admin"${u.rol === 'admin' ? ' selected' : ''}>Administrador</option>
-            </select>
-          </label>
+          <div class="venta-f"><span>Rol</span>
+            ${Sesion.desplegable('rol', [
+              { valor:'vendedor', texto:'Vendedor', nota:'Solo ventas' },
+              { valor:'admin', texto:'Administrador', nota:'Edita la web' },
+            ], 'Elegí el rol', u.rol)}
+          </div>
           <label class="venta-f venta-ancho"><span>Observación</span>
             <input type="text" data-uf="observacion" value="${esc(u.observacion)}">
           </label>
@@ -245,6 +245,7 @@ const EdVendedores = (() => {
 
     const { ov, cerrar } = Sesion.panel(u.nombre || u.email, 'Editar persona', cuerpo, pie);
     const f = ov.querySelector('#evPersona');
+    Sesion.conectarDesplegables(ov);
 
     ov.querySelector('#evActivo').addEventListener('click', async e => {
       await cambiarActivo(padre, id, e.target);
@@ -310,7 +311,8 @@ const EdVendedores = (() => {
 
     const { error } = await sb.from('profiles').update({
       nombre: val('nombre'), telefono: val('telefono'),
-      observacion: val('observacion'), rol: val('rol'),
+      observacion: val('observacion'),
+      rol: f.querySelector('[name=rol]').value || 'vendedor',
     }).eq('id', id);
     if (error) throw error;
 

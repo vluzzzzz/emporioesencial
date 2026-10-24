@@ -2866,3 +2866,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-lapiz:hover{background:#111;border-color:#111;color:#e9d9a8}
 .ev-lapiz svg{width:16px;height:16px}
 .ev-nota{display:block;margin-top:5px;font-size:12px;color:var(--gray-mid);font-weight:400}
+
+.venta-btn.peligro{background:#c0392b;color:#fff}
+.venta-btn.peligro:hover{background:#a93226}
+.venta-btn.borrar{background:transparent;color:#c0392b;border:1.5px solid rgba(192,57,43,.4)}
+.venta-btn.borrar:hover{background:rgba(192,57,43,.08);border-color:#c0392b}
+.venta-pie .venta-btn.borrar{margin-right:auto}
+/* La nota de cada opcion cede espacio antes que el nombre */
+.vsel-lista li>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.vsel-lista li small{flex:0 1 auto;overflow:hidden;text-overflow:ellipsis}

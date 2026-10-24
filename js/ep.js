@@ -85,12 +85,12 @@ const EdProducto = (() => {
           <label class="venta-f"><span>Unidades (opcional)</span>
             <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? ''}" placeholder="Avisa cuando quedan 5 o menos">
           </label>
-          <label class="venta-f"><span>¿Hay stock?</span>
-            <select name="hay">
-              <option value="1"${p.inStock ? ' selected' : ''}>Sí, a la venta</option>
-              <option value="0"${p.inStock ? '' : ' selected'}>Sin stock</option>
-            </select>
-          </label>
+          <div class="venta-f"><span>¿Hay stock?</span>
+            ${Sesion.desplegable('hay', [
+              { valor:'1', texto:'Sí, a la venta' },
+              { valor:'0', texto:'Sin stock', nota:'Se muestra en gris' },
+            ], 'Elegí', p.inStock === false ? '0' : '1')}
+          </div>
         </div>
         <p class="venta-msg" id="edMsg"></p>
       </form>`;

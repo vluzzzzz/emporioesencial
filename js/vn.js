@@ -147,17 +147,19 @@ const Sesion = (() => {
 
   /* ── Desplegable propio ───────────────────────────────── */
   // Reemplaza al <select> del navegador, que no se puede diseñar.
-  function desplegable(nombre, opciones, textoVacio){
+  // `elegido` deja una opción ya marcada, para los campos que vienen con valor.
+  function desplegable(nombre, opciones, textoVacio, elegido){
+    const actual = opciones.find(o => o.valor === elegido);
     return `
       <div class="vsel" data-sel="${esc(nombre)}">
-        <input type="hidden" name="${esc(nombre)}" value="">
+        <input type="hidden" name="${esc(nombre)}" value="${esc(actual ? actual.valor : '')}">
         <button type="button" class="vsel-btn" aria-haspopup="listbox" aria-expanded="false">
-          <span class="vsel-txt vacio">${esc(textoVacio)}</span>
+          <span class="vsel-txt${actual ? '' : ' vacio'}">${esc(actual ? actual.texto : textoVacio)}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
         <ul class="vsel-lista" role="listbox" hidden>
           ${opciones.map(o => `
-            <li role="option" data-val="${esc(o.valor)}" data-extra="${esc(o.extra == null ? '' : o.extra)}">
+            <li role="option" class="${o.valor === elegido ? 'elegida' : ''}" data-val="${esc(o.valor)}" data-extra="${esc(o.extra == null ? '' : o.extra)}">
               <span>${esc(o.texto)}</span>
               ${o.nota ? `<small>${esc(o.nota)}</small>` : ''}
             </li>`).join('')}
