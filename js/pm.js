@@ -170,7 +170,7 @@ const ProductModal=(()=>{
   function renderTrust(p){
     const el=document.getElementById('ppageTrust');
     if(!el)return;
-    el.innerHTML=`${Trust.stockHTML(p.stock)}${Trust.entregaHTML()}${Trust.pagosHTML()}`;
+    el.innerHTML=`${Trust.stockHTML(p.stock)}`;
   }
 
   // Un producto del catálogo. Si la tarjeta no está en el catálogo (por
@@ -526,8 +526,6 @@ const ProductModal=(()=>{
     document.getElementById('ppageQtyMinus').addEventListener('click',()=>{if(qty>1){qty--;document.getElementById('ppageQtyNum').textContent=qty;updateTotal();}});
     document.getElementById('ppageQtyPlus').addEventListener('click',()=>{qty++;document.getElementById('ppageQtyNum').textContent=qty;updateTotal();});
     document.getElementById('ppageWaBtn')?.addEventListener('click',()=>{if(!currentProduct)return;if(_blockColor())return;if(_colorSinStock())return;const u=priceForQty(qty),t=u*qty;const cv=colorVars(currentProduct.key),cn=(cv&&imgIndex>=0&&cv[imgIndex])?cv[imgIndex].name:'';const msg=[`*\u00a1Hola!* Me interesa este producto:`,'',`\u25b8 ${qty}x ${currentProduct.name}${cn?` (${cn})`:''}`,`  Precio: ${fmt(u)} c/u`,`  Total: *${fmt(t)}*`,'','\u00bfTienen stock disponible?'].join('\n');window.open(`https://wa.me/56930521645?text=${encodeURIComponent(msg)}`,'_blank');});
-    document.getElementById('ppageCartBtn').addEventListener('click',()=>{if(!currentProduct)return;if(_blockColor())return;if(_colorSinStock())return;const p=cartProduct();for(let i=0;i<qty;i++)Cart.addItem(p);const b=document.getElementById('ppageCartBtn');b.innerHTML='<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>';setTimeout(()=>{b.innerHTML='<svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zM7.2 14h9.5c.8 0 1.5-.5 1.7-1.2l3-7H6.2L5.3 3H1v2h3l3.6 7.6-1.3 2.4c-.1.2-.2.5-.2.8 0 1.1.9 2 2 2h12v-2H8.4c-.1 0-.2-.1-.2-.2l.03-.12L9.1 14z"/></svg>';},1800);});
-    document.getElementById('ppageMpBtn')?.addEventListener('click',()=>{if(!currentProduct)return;if(_blockColor())return;if(_colorSinStock())return;const p=cartProduct();for(let i=0;i<qty;i++)Cart.addItem(p);Checkout.open();});
     ['ppage-features'].forEach(id=>document.getElementById(id+'-header')?.addEventListener('click',()=>openAccordion(id)));
     // Las tarjetas se pintan y se repintan todo el tiempo (ofertas, panel de
     // categoría, buscador), así que el clic se escucha una sola vez acá arriba

@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', () => {
   //    aparecían recién cuando contestaba la base de datos.
   document.body.classList.add('sheet-ready');
   Banners.init();Reviews.init();Buscador.init();
-  Cart.init();NavScroll.init();ProductModal.init();Checkout.init();
-  Trust.init();                       // pinta la tira de confianza
+  NavScroll.init();ProductModal.init();
+  Trust.init();
   CatPage.init();
   Filas.init();
   ProtegerImagenes.init();

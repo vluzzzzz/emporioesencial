@@ -92,9 +92,8 @@ const Trust = (() => {
   function tiraHTML() {
     const { media, total } = Reviews.resumen();
     const items = [
-      { i:'envio',   t:'Envío a todo Chile',   s:'Despacho en 24 h hábiles' },
+      { i:'envio',   t:'Envío a todo Chile',   s:'Coordinado por WhatsApp' },
       { i:'escudo',  t:'Calidad garantizada',  s:'Cambio por falla de fábrica' },
-      { i:'candado', t:'Pago seguro',          s:'Procesado por Mercado Pago' },
       { i:'estrella',t:`${Number(media).toFixed(1).replace('.', ',')} de 5 estrellas`, s:`${total} clientes ya opinaron` },
     ];
     const uno = items.map(x => `<div class="tira-item">
@@ -142,9 +141,6 @@ const Trust = (() => {
   function init() {
     const tira = document.getElementById('tiraConfianza');
     if (tira) tira.innerHTML = tiraHTML();
-
-    const pagos = document.getElementById('footerPagos');
-    if (pagos) pagos.innerHTML = pagosHTML();
 
     decorarTarjetas();
   }
