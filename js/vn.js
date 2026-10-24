@@ -227,15 +227,24 @@ const Sesion = (() => {
 
     const cerrar = () => {
       ov.classList.remove('abierto');
-      document.documentElement.style.overflow = '';
-      setTimeout(() => ov.remove(), 300);
+      document.removeEventListener('keydown', salir);
+      setTimeout(() => {
+        ov.remove();
+        // El scroll vuelve recién cuando no queda ningún panel abierto: con
+        // dos encimados, cerrar el de arriba no tiene que soltar la página.
+        if (!document.querySelector('.venta-ov')) document.documentElement.style.overflow = '';
+      }, 300);
     };
     ov.addEventListener('click', e => {
       if (e.target === ov || e.target.closest('[data-acc=cerrar]')) cerrar();
     });
-    document.addEventListener('keydown', function salir(e){
-      if (e.key === 'Escape') { cerrar(); document.removeEventListener('keydown', salir); }
-    });
+    // Escape cierra solo el panel de más arriba, no toda la pila.
+    function salir(e){
+      if (e.key !== 'Escape') return;
+      const paneles = document.querySelectorAll('.venta-ov');
+      if (paneles[paneles.length - 1] === ov) cerrar();
+    }
+    document.addEventListener('keydown', salir);
     return { ov, cerrar };
   }
 

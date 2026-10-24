@@ -36,7 +36,19 @@ const Edicion = (() => {
     const der = document.querySelector('.nav-right');
     if (der) der.insertBefore(boton, der.querySelector('.nav-cuenta') || null);
 
+    // El panel de vendedores no depende del interruptor: el admin lo ve
+    // siempre, con los lápices apagados.
+    cargarUno('js/ev.js', () => EdVendedores.montarBoton());
+
     if (localStorage.getItem(LLAVE) === '1') alternar(true);
+  }
+
+  function cargarUno(src, alCargar){
+    const s = document.createElement('script');
+    s.src = src + '?v=' + V;
+    s.onload = alCargar;
+    s.onerror = () => console.error('No se pudo cargar', src);
+    document.body.appendChild(s);
   }
 
   async function alternar(v){

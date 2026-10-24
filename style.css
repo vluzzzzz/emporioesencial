@@ -2791,3 +2791,35 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ed-toggle.on{background:#e9d9a8;border-color:#e9d9a8;color:#111}
 .ed-toggle svg{width:17px;height:17px}
 @media(max-width:860px){.ed-toggle span{display:none}.ed-toggle{padding:9px;margin-right:6px}}
+
+.nav-vendedores-btn{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s}
+.nav-vendedores-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.nav-vendedores-btn svg{width:18px;height:18px}
+
+.ev-tabs{display:flex;gap:8px;max-width:1100px;margin:0 auto 22px;flex-wrap:wrap}
+.ev-tab{font:inherit;font-size:14px;font-weight:600;padding:10px 20px;border-radius:999px;border:1.5px solid var(--gray-light);background:#fff;color:var(--black);cursor:pointer}
+.ev-tab:hover{border-color:var(--gray-mid)}
+.ev-tab.activa{background:#111;border-color:#111;color:#e9d9a8}
+
+.ev-vendedor{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:16px;margin-bottom:12px}
+.ev-head{display:flex;align-items:center;gap:14px;width:100%;background:none;border:0;padding:0 0 14px;font:inherit;text-align:left;cursor:pointer}
+.ev-ini{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#111;color:#e9d9a8;font-weight:700;font-size:18px;flex:none}
+.ev-txt{flex:1;min-width:0}
+.ev-txt b{display:block;font-size:17px;font-weight:700}
+.ev-txt small{display:block;font-size:13px;color:var(--gray-mid);margin-top:2px}
+.ev-ver{font-size:13px;font-weight:600;color:var(--gray-mid);white-space:nowrap}
+.ev-head:hover .ev-ver{color:var(--black)}
+
+.ev-nuevo,.ev-persona{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:18px;margin-bottom:12px}
+.ev-acc{display:flex;align-items:center;gap:10px;margin-top:14px}
+.ev-apagado{font-size:12.5px;color:#c0392b;font-weight:600}
+.ev-comunas{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
+.ev-comuna{display:grid;grid-template-columns:1fr 110px auto;align-items:center;gap:10px;background:#fff;padding:11px 14px;border:1px solid var(--gray-light);border-radius:12px}
+.ev-comuna span{font-size:14px}
+.ev-comuna input[type=number]{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:1.5px solid var(--gray-light);border-radius:10px}
+.ed-dest{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;cursor:pointer}
+@media(max-width:700px){
+  .nav-vendedores-btn span{display:none}
+  .nav-vendedores-btn{padding:9px;margin-left:6px}
+  .ev-comunas{grid-template-columns:1fr}
+}
