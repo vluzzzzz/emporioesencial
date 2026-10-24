@@ -24,10 +24,7 @@
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 let BANNERS = [
-  { desktop:'images/emporio-images/2.jpeg', mobile:'images/emporio-images/2.jpeg', alt:'Cocina',       categoria:'cocina' },
-  { desktop:'images/emporio-images/3.jpeg', mobile:'images/emporio-images/3.jpeg', alt:'Belleza',      categoria:'belleza' },
-  { desktop:'images/emporio-images/1.jpeg', mobile:'images/emporio-images/1.jpeg', alt:'Herramientas', categoria:'herramientas' },
-  { desktop:'images/emporio-images/4.jpeg', mobile:'images/emporio-images/4.jpeg', alt:'Limpieza',     categoria:'limpieza' },
+  { desktop:'images/emporio-images/banner.png', mobile:'images/emporio-images/banner.png', alt:'Esencial Emporio' },
 ];
 
 // Banner ancho de promoción (va entre la grilla y las reseñas) → 2400 × 600 px

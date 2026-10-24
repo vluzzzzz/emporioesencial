@@ -202,8 +202,8 @@ const CatPage=(()=>{
   // Pinta el contenido. 'dentro' es lo que se pidió, 'fuera' el resto.
   function pintar(subT,titT,dentro,fuera,vacioT,cat){
     clonarPieEn('cpageFooter');
-    banner.innerHTML = cat ? Banners.bannerCategoria(cat) : '';
-    banner.hidden = !cat;
+    banner.innerHTML = '';
+    banner.hidden = true;
     sub.textContent=subT;
     titulo.textContent=titT;
     vacio.hidden=dentro.length>0;
