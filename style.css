@@ -2509,3 +2509,5 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-img-next,.ppage-img-prev{display:none!important}
 .ppage-thumbs{left:auto!important;right:20px!important}
 @media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{right:10px!important}}
+
+.ppage-trust{margin-top:0!important;padding-top:0!important;border-top:none!important}

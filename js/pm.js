@@ -247,9 +247,9 @@ const ProductModal=(()=>{
     document.getElementById('ppageName').textContent=currentProduct.name;
     document.getElementById('ppageDesc').textContent=p.desc||'';
     document.getElementById('ppageQtyNum').textContent='1';
-    ['ppage-features'].forEach(id=>{const b=document.getElementById(id+'-body'),c=document.getElementById(id+'-chev');if(b)b.style.height='0';if(c)c.classList.remove('open');});
     document.getElementById('ppageTiersList').style.height='0';
     renderTiers();updateTotal();renderFeatures(key);
+    ['ppage-features'].forEach(id=>{const b=document.getElementById(id+'-body'),c=document.getElementById(id+'-chev');if(b)b.style.height='auto';if(c)c.classList.add('open');});
     renderMeta(p);renderTrust(p);Reviews.renderProducto(key);renderSimilares(key);
     startViewers();
     resetCarousel(currentProduct.image,p.name,key);
