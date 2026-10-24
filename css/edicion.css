@@ -64,19 +64,51 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 .ed-foto-ancha{height:110px;border-radius:10px;overflow:hidden;background:var(--off-white);margin-bottom:10px}
 .ed-foto-ancha img{width:100%;height:100%;object-fit:cover}
 .ed-subir.ancho{width:100%;height:auto;padding:12px;font-size:13px;gap:8px}
-.ed-cat-bloque{border-bottom:1px solid var(--gray-light)}
-.ed-cat-bloque:last-child{border-bottom:0}
-.ed-cat{display:flex;align-items:center;gap:10px;padding:9px 0}
+.ed-cat-bloque{border:1px solid var(--gray-light);border-radius:14px;margin-bottom:10px;overflow:hidden}
+.ed-cat-bloque.abierta{border-color:#111}
+.ed-cat-bloque.oculta{opacity:.55}
+.ed-cat{display:flex;align-items:center;gap:12px;padding:11px 13px;cursor:default}
 .ed-cat-chev{flex:none;width:28px;height:28px;display:grid;place-items:center;border:0;background:none;color:var(--gray-mid);cursor:pointer;border-radius:8px}
 .ed-cat-chev:hover{background:var(--off-white);color:var(--black)}
 .ed-cat-chev svg{width:15px;height:15px;transition:transform .18s var(--ease-smooth)}
 .ed-cat-bloque.abierta .ed-cat-chev svg{transform:rotate(90deg)}
-.ed-subs{padding:2px 0 14px 38px}
+.ed-cat-mini{flex:none;width:44px;height:44px;border-radius:10px;overflow:hidden;background:var(--off-white);display:block}
+.ed-cat-mini img{width:100%;height:100%;object-fit:cover}
+.ed-cat-datos{flex:1;min-width:0}
+.ed-cat-datos b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-cat-datos small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:2px}
+.ed-chip{flex:none;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:#111;color:#e9d9a8;padding:5px 11px;border-radius:999px}
+
+.ed-cat-cuerpo{padding:4px 16px 18px;border-top:1px solid var(--gray-light)}
+.ed-cat-cuerpo .venta-sec{margin:18px 0 10px}
+.ed-cat-foto{display:flex;gap:14px;align-items:flex-start}
+.ed-cat-foto .ed-foto-ancha{flex:1;height:120px;margin-bottom:0;display:grid;place-items:center}
+.ed-sin-foto{font-size:13px;color:var(--gray-mid)}
+.ed-cat-foto-acc{flex:none;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.ed-cat-foto-acc .ed-btn{cursor:pointer}
+
+.ed-cat-sw{display:flex;flex-direction:column;gap:10px;margin-top:16px}
+.ed-sw{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.ed-sw input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:#111}
+.ed-sw b{display:block;font-size:14px;font-weight:600}
+.ed-sw small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:1px}
+
+.ed-subs{padding:0}
 .ed-sub{display:flex;align-items:center;gap:10px;padding:5px 0}
-.ed-sub input{flex:1;min-width:0;font:inherit;font-size:14px;padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
-.ed-cat>input[type=text]{flex:1;font:inherit;font-size:14.5px;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
-.ed-dest{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;cursor:pointer}
-.ed-cat-n{min-width:26px;text-align:center;font-size:12px;font-weight:700;color:var(--gray-mid);background:var(--off-white);border-radius:999px;padding:3px 8px}
+.ed-sub.oculta{opacity:.5}
+.ed-sub input[type=text]{flex:1;min-width:0;font:inherit;font-size:14px;padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
+.ed-sub-n{flex:none;font-size:12px;color:var(--gray-mid);white-space:nowrap}
+.ed-ojo{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:9px;cursor:pointer;color:var(--gray-mid)}
+.ed-ojo:hover{background:var(--off-white);color:var(--black)}
+.ed-ojo input{display:none}
+.ed-ojo svg{width:17px;height:17px;grid-area:1/1}
+.ed-ojo .ed-ojo-no{display:none}
+.ed-ojo:has(input:not(:checked)) .ed-ojo-si{display:none}
+.ed-ojo:has(input:not(:checked)) .ed-ojo-no{display:block}
+
+.ed-cat-pie{margin-top:18px;padding-top:14px;border-top:1px solid var(--gray-light)}
+.ed-mini.peligro{color:#c0392b}
+.ed-mini.peligro:hover{color:#a93226;text-decoration:underline}
 
 /* En el telefono las filas de categorias se cortaban por la derecha */
 @media(max-width:700px){

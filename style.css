@@ -2642,6 +2642,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .nav-cats-ico,.nav-cats-chev{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .nav-cats-chev{width:16px;height:16px;transition:transform .2s}
 .nav-cats.open .nav-cats-chev{transform:rotate(180deg)}
+.mega-x{display:none}
 .nav-cats-menu{position:absolute;top:calc(100% + 10px);left:0;background:#fff;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.26);padding:0;z-index:60;overflow:hidden}
 .nav-cats-menu[hidden]{display:none}
 .mega{display:grid;grid-template-columns:260px 1fr;width:min(92vw,900px);max-height:min(76vh,620px)}
@@ -2893,4 +2894,51 @@ svg{ -webkit-user-select:none; user-select:none; }
   .nav{align-items:center}
   .nav-logo{min-width:0}
   .nav-logo-img{height:34px!important}
+}
+
+/* ===========================================================================
+   V68 — Menú de categorías a pantalla completa en el teléfono
+   En chico el desplegable quedaba flotando, cortado y sin lugar para los
+   nombres. Ahora entra como un cajón desde la izquierda, con la lista de
+   categorías y sus subcategorías debajo.
+   ======================================================================== */
+@media(max-width:860px){
+  .nav-cats-menu{
+    position:fixed!important;inset:0!important;top:0!important;left:0!important;right:auto!important;
+    width:min(88vw,380px);height:100dvh;border-radius:0!important;
+    box-shadow:24px 0 60px rgba(0,0,0,.3);z-index:11000;
+    transform:translateX(-100%);transition:transform .3s var(--ease-smooth);
+    display:flex;flex-direction:column;
+  }
+  .nav-cats.open .nav-cats-menu{transform:translateX(0)}
+  .nav-cats-menu[hidden]{display:flex!important;pointer-events:none}
+  .nav-cats.open .nav-cats-menu{pointer-events:auto}
+
+  .mega-x{
+    display:grid;place-items:center;position:absolute;top:18px;right:16px;z-index:2;
+    width:36px;height:36px;border:0;border-radius:50%;
+    background:rgba(255,255,255,.12);color:#e9d9a8;cursor:pointer;
+  }
+  .mega-x svg{width:18px;height:18px}
+  .nav-cats-menu::before{
+    content:'Categorías';display:block;flex:none;
+    background:#111;color:#e9d9a8;font-family:var(--font-display);
+    font-size:26px;letter-spacing:.04em;padding:20px 22px 16px;
+  }
+  /* El velo oscuro detrás del cajón */
+  .nav-cats.open::after{
+    content:'';position:fixed;inset:0;background:rgba(17,17,17,.45);z-index:10990;
+  }
+  .nav-cats-btn{position:relative;z-index:11001}
+
+  .mega{display:flex!important;flex-direction:column;width:100%;max-height:none;flex:1;overflow-y:auto}
+  .mega-list{display:flex;flex-direction:column;width:100%;border-right:0;background:#fff;padding:8px 0}
+  .mega-item{width:100%;font-size:16px;padding:15px 22px}
+  .mega-panel{display:grid!important;grid-template-columns:repeat(3,1fr);gap:12px;padding:12px 18px 20px;background:var(--off-white)}
+  .mega-tile-img{width:58px;height:58px}
+  .mega-tile-name{font-size:11.5px}
+}
+@media(max-width:560px){
+  .nav-cats-menu{width:min(92vw,340px)}
+  .mega-panel{grid-template-columns:repeat(2,1fr)}
 }

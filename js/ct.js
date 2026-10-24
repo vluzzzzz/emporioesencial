@@ -69,7 +69,12 @@ const Cats = (() => {
     return true;
   }
 
+  // lista() es todo, incluso lo oculto: lo usa el editor. visibles() es lo
+  // que ve un cliente en el menú y en la portada.
   const lista = () => ARBOL.slice().sort(porOrden);
+  const visibles = () => lista()
+    .filter(c => c.oculta !== true)
+    .map(c => ({ ...c, subs: c.subs.filter(s => s.oculta !== true) }));
 
   function nombre(slug){
     if (slug === 'todos') return 'Todo el catálogo';
@@ -94,12 +99,12 @@ const Cats = (() => {
     return padreDe(catProducto) === catPedida;
   }
 
-  const mega = () => lista().map(c => ({
+  const mega = () => visibles().map(c => ({
     name: c.nombre, cat: c.slug,
     subs: c.subs.map(s => ({ name: s.nombre, cat: s.slug })),
   }));
 
-  const tarjetas = () => lista().filter(c => c.destacada).map(c => ({
+  const tarjetas = () => visibles().filter(c => c.destacada).map(c => ({
     arriba: c.arriba || 'Todo en', titulo: c.nombre, cat: c.slug,
     img: c.img || '', medida: c.medida || '800 × 500',
     banner: c.banner || '', bannerMobile: c.bannerMobile || '', bannerArchivo: c.bannerArchivo || '',
@@ -108,7 +113,7 @@ const Cats = (() => {
   // Padres y subcategorías en una sola lista, para los desplegables.
   function planas(){
     const out = [];
-    lista().forEach(c => {
+    visibles().forEach(c => {
       out.push({ slug: c.slug, nombre: c.nombre });
       c.subs.forEach(s => out.push({ slug: s.slug, nombre: c.nombre + ' · ' + s.nombre }));
     });
@@ -117,5 +122,5 @@ const Cats = (() => {
 
   const bannerDe = cat => lista().find(c => c.slug === cat) || null;
 
-  return { aplicar, lista, nombre, padreDe, incluye, mega, tarjetas, planas, bannerDe };
+  return { aplicar, lista, visibles, nombre, padreDe, incluye, mega, tarjetas, planas, bannerDe };
 })();

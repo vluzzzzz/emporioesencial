@@ -24,7 +24,7 @@
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 let BANNERS = [
-  { desktop:'images/emporio-images/banner.webp', mobile:'images/emporio-images/banner.webp', alt:'Esencial Emporio' },
+  { desktop:'images/emporio-images/banner.webp', mobile:'images/emporio-images/bannercelu.webp', alt:'Esencial Emporio' },
 ];
 
 // Banner ancho de promoción (va entre la grilla y las reseñas) → 2400 × 600 px

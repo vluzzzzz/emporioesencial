@@ -56,6 +56,17 @@ const Menu = (() => {
     const navCatsBtn = document.getElementById('navCatsBtn');
     const navCatsMenu = document.getElementById('navCatsMenu');
     if (!navCats || !navCatsBtn || !navCatsMenu) return;
+    // En el teléfono el cajón ocupa la pantalla: necesita su propia X.
+    if (!navCatsMenu.querySelector('.mega-x')) {
+      const x = document.createElement('button');
+      x.type = 'button';
+      x.className = 'mega-x';
+      x.setAttribute('aria-label', 'Cerrar categorías');
+      x.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+      x.addEventListener('click', () => cerrar());
+      navCatsMenu.insertBefore(x, navCatsMenu.firstChild);
+    }
+
     const cerrar = () => {
       navCats.classList.remove('open');
       navCatsMenu.hidden = true;
@@ -68,7 +79,9 @@ const Menu = (() => {
       navCatsMenu.hidden = !abrir;
       navCatsBtn.setAttribute('aria-expanded', String(abrir));
     });
-    navCatsMenu.addEventListener('click', cerrar);
+    navCatsMenu.addEventListener('click', e => {
+      if (e.target.closest('[data-cat-abrir]')) cerrar();
+    });
     document.addEventListener('click', e => { if (!navCats.contains(e.target)) cerrar(); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrar(); });
   }

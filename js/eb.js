@@ -120,7 +120,7 @@ const EdSitio = (() => {
     };
 
     const { ov, cerrar } = Sesion.panel('Categorías', 'Menú de la tienda',
-      `<p class="venta-vacio" style="margin-bottom:16px">Tocá la flecha para ver y editar las subcategorías. Las marcadas como <b>Portada</b> salen como tarjeta en el inicio.</p>
+      `<p class="venta-vacio" style="margin-bottom:16px">Tocá una categoría para abrirla: adentro cambiás su foto y sus subcategorías. Las que <b>no se muestran</b> quedan guardadas pero desaparecen del menú y de la portada.</p>
        <div id="edCats"></div>
        <div class="ed-lista-fila" style="margin-top:16px">
          <input type="text" id="edCatNueva" placeholder="Nombre de la categoría nueva">
@@ -131,36 +131,81 @@ const EdSitio = (() => {
 
     const usanCat  = s => CATALOGO.filter(p => p.cat === s).length;
     const usanTodo = c => CATALOGO.filter(p => p.cat === c.slug || c.subs.some(s => s.slug === p.cat)).length;
+    // En palabras, no en un número suelto: "3 productos" se entiende solo.
+    const cuantos = n => n === 0 ? 'Sin productos' : n === 1 ? '1 producto' : n + ' productos';
 
     function pintar(){
       const box = ov.querySelector('#edCats');
       box.innerHTML = estado.arbol.map((c, i) => {
         const abierta = estado.abierta === i;
+        const oculta = c.oculta === true;
         return `
-        <div class="ed-cat-bloque${abierta ? ' abierta' : ''}" data-i="${i}">
+        <div class="ed-cat-bloque${abierta ? ' abierta' : ''}${oculta ? ' oculta' : ''}" data-i="${i}">
           <div class="ed-cat">
-            <button type="button" class="ed-cat-chev" data-abrir="${i}" aria-label="Ver subcategorías">
+            <button type="button" class="ed-cat-chev" data-abrir="${i}" aria-label="Abrir">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
             </button>
-            <input type="text" data-nombre="${i}" value="${escH(c.nombre)}">
-            <label class="ed-dest" title="Sale como tarjeta en la portada">
-              <input type="checkbox" data-dest="${i}" ${c.destacada ? 'checked' : ''}>
-              <span>Portada</span>
-            </label>
-            <span class="ed-cat-n" title="Productos adentro">${usanTodo(c)}</span>
-            <button type="button" class="ed-mini" data-borrar="${i}">Quitar</button>
+            <span class="ed-cat-mini">
+              ${c.img ? `<img src="${escH(c.img)}" alt="" onerror="this.style.visibility='hidden'">` : ''}
+            </span>
+            <span class="ed-cat-datos">
+              <b>${escH(c.nombre)}</b>
+              <small>${cuantos(usanTodo(c))}${c.subs.length ? ' · ' + c.subs.length + (c.subs.length === 1 ? ' subcategoría' : ' subcategorías') : ''}${oculta ? ' · oculta' : ''}</small>
+            </span>
+            ${c.destacada ? '<span class="ed-chip">Portada</span>' : ''}
           </div>
+
           ${abierta ? `
-            <div class="ed-subs">
-              ${c.subs.map((s, k) => `
-                <div class="ed-sub">
-                  <input type="text" data-sub="${i}-${k}" value="${escH(s.nombre)}">
-                  <span class="ed-cat-n">${usanCat(s.slug)}</span>
-                  <button type="button" class="ed-mini" data-subborrar="${i}-${k}">Quitar</button>
-                </div>`).join('') || '<p class="venta-vacio" style="margin:2px 0 10px">Sin subcategorías todavía.</p>'}
-              <div class="ed-lista-fila">
-                <input type="text" data-subnueva="${i}" placeholder="Subcategoría nueva">
-                <button type="button" class="ed-btn ghost" data-subagregar="${i}" style="flex:none">Agregar</button>
+            <div class="ed-cat-cuerpo">
+              <label class="venta-f"><span>Nombre</span>
+                <input type="text" data-nombre="${i}" value="${escH(c.nombre)}">
+              </label>
+
+              <p class="venta-sec">Foto de la categoría</p>
+              <div class="ed-cat-foto">
+                <div class="ed-foto-ancha">
+                  ${c.img ? `<img src="${escH(c.img)}" alt="" onerror="this.style.visibility='hidden'">` : '<span class="ed-sin-foto">Sin foto</span>'}
+                </div>
+                <div class="ed-cat-foto-acc">
+                  <label class="ed-btn ghost">Subir foto
+                    <input type="file" accept="image/*" data-foto="${i}" hidden>
+                  </label>
+                  ${c.img ? `<button type="button" class="ed-mini" data-quitarfoto="${i}">Quitar foto</button>` : ''}
+                </div>
+              </div>
+
+              <div class="ed-cat-sw">
+                <label class="ed-sw">
+                  <input type="checkbox" data-dest="${i}" ${c.destacada ? 'checked' : ''}>
+                  <span><b>Mostrar en la portada</b><small>Sale como tarjeta grande en el inicio</small></span>
+                </label>
+                <label class="ed-sw">
+                  <input type="checkbox" data-ver="${i}" ${oculta ? '' : 'checked'}>
+                  <span><b>Visible en el menú</b><small>Si la apagás se guarda, pero nadie la ve</small></span>
+                </label>
+              </div>
+
+              <p class="venta-sec">Subcategorías</p>
+              <div class="ed-subs">
+                ${c.subs.map((s, k) => `
+                  <div class="ed-sub${s.oculta ? ' oculta' : ''}">
+                    <input type="text" data-sub="${i}-${k}" value="${escH(s.nombre)}">
+                    <span class="ed-sub-n">${cuantos(usanCat(s.slug))}</span>
+                    <label class="ed-ojo" title="${s.oculta ? 'Mostrar' : 'Ocultar'}">
+                      <input type="checkbox" data-subver="${i}-${k}" ${s.oculta ? '' : 'checked'}>
+                      <svg class="ed-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                      <svg class="ed-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+                    </label>
+                    <button type="button" class="ed-mini" data-subborrar="${i}-${k}">Eliminar</button>
+                  </div>`).join('') || '<p class="venta-vacio" style="margin:2px 0 10px">Todavía no tiene subcategorías.</p>'}
+                <div class="ed-lista-fila" style="margin-top:8px">
+                  <input type="text" data-subnueva="${i}" placeholder="Subcategoría nueva">
+                  <button type="button" class="ed-btn ghost" data-subagregar="${i}" style="flex:none">Agregar</button>
+                </div>
+              </div>
+
+              <div class="ed-cat-pie">
+                <button type="button" class="ed-mini peligro" data-borrar="${i}">Eliminar esta categoría</button>
               </div>
             </div>` : ''}
         </div>`;
@@ -176,17 +221,52 @@ const EdSitio = (() => {
       }));
       box.querySelectorAll('[data-dest]').forEach(x => x.addEventListener('change', e => {
         estado.arbol[+e.target.dataset.dest].destacada = e.target.checked;
+        pintar();
+      }));
+      box.querySelectorAll('[data-ver]').forEach(x => x.addEventListener('change', e => {
+        estado.arbol[+e.target.dataset.ver].oculta = !e.target.checked;
+        pintar();
       }));
       box.querySelectorAll('[data-sub]').forEach(x => x.addEventListener('input', e => {
         const [a, k] = e.target.dataset.sub.split('-').map(Number);
         estado.arbol[a].subs[k].nombre = e.target.value;
       }));
+      box.querySelectorAll('[data-subver]').forEach(x => x.addEventListener('change', e => {
+        const [a, k] = e.target.dataset.subver.split('-').map(Number);
+        estado.arbol[a].subs[k].oculta = !e.target.checked;
+        pintar();
+      }));
+
+      box.querySelectorAll('[data-foto]').forEach(inp => inp.addEventListener('change', async e => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const i = +e.target.dataset.foto;
+        toast('Subiendo foto…');
+        try {
+          const url = await uploadFile(file, 'categorias/');
+          const c = estado.arbol[i];
+          c.img = url;
+          // La foto sirve de tarjeta y de banner de la sección.
+          if (!c.banner) { c.banner = url; c.bannerMobile = url; }
+          pintar();
+          toast('Foto lista');
+        } catch (err) { toast(mensajeError(err), true); }
+        e.target.value = '';
+      }));
+      box.querySelectorAll('[data-quitarfoto]').forEach(b => b.addEventListener('click', () => {
+        const c = estado.arbol[+b.dataset.quitarfoto];
+        c.img = ''; c.banner = ''; c.bannerMobile = '';
+        pintar();
+      }));
 
       box.querySelectorAll('[data-borrar]').forEach(b => b.addEventListener('click', async () => {
         const c = estado.arbol[+b.dataset.borrar];
         const n = usanTodo(c);
-        if (n) { toast('No se puede: hay ' + n + (n === 1 ? ' producto' : ' productos') + ' adentro', true); return; }
-        if (await confirmar('¿Quitar la categoría "' + c.nombre + '" y sus subcategorías?', 'Quitar')) {
+        if (n) {
+          toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Podés ocultarla.', true);
+          return;
+        }
+        if (await confirmar('¿Eliminar la categoría "' + c.nombre + '" y sus subcategorías?', 'Eliminar')) {
           estado.arbol.splice(+b.dataset.borrar, 1);
           estado.abierta = null;
           pintar();
@@ -197,8 +277,11 @@ const EdSitio = (() => {
         const [a, k] = b.dataset.subborrar.split('-').map(Number);
         const sub = estado.arbol[a].subs[k];
         const n = usanCat(sub.slug);
-        if (n) { toast('No se puede: hay ' + n + (n === 1 ? ' producto' : ' productos') + ' adentro', true); return; }
-        if (await confirmar('¿Quitar "' + sub.nombre + '"?', 'Quitar')) {
+        if (n) {
+          toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Podés ocultarla.', true);
+          return;
+        }
+        if (await confirmar('¿Eliminar "' + sub.nombre + '"?', 'Eliminar')) {
           estado.arbol[a].subs.splice(k, 1);
           pintar();
         }
@@ -211,8 +294,8 @@ const EdSitio = (() => {
       }));
     }
 
-    // El slug no se edita nunca: cambiarlo dejaría productos sin categoría.
-    // Al crear una, se deriva del nombre y se le suma un número si ya existe.
+    // El identificador interno no se edita nunca: cambiarlo dejaría productos
+    // sin categoría. Se deriva del nombre al crearla, y nada más.
     function nuevoSlug(nombre, prefijo){
       const base = (prefijo ? prefijo + '-' : '') + slugify(nombre);
       const usados = new Set();
@@ -273,6 +356,7 @@ const EdSitio = (() => {
       }
     });
   }
+
 
   Edicion.registrar(montarAnclas);
 
