@@ -247,6 +247,8 @@ const ProductModal=(()=>{
       image: p.image || ''
     };
     openingImage=currentProduct.image;
+    ppage.dataset.slug=key;
+    if(typeof Sesion!=='undefined')Sesion.ficha(key);
     document.getElementById('ppageImg').src=currentProduct.image;
     document.getElementById('ppageImg').alt=currentProduct.name;
     document.getElementById('ppageName').textContent=currentProduct.name;

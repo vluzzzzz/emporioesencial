@@ -24,7 +24,15 @@ const Sesion = (() => {
     perfil = data && data.activo ? data : null;
     if (!perfil) return;
     pintarNav();
-    if (perfil.rol === 'admin' || perfil.rol === 'vendedor') montarBotonVenta();
+    if (perfil.rol === 'admin' || perfil.rol === 'vendedor') montarBotonFicha();
+  }
+
+  // pm.js la llama cada vez que se abre una ficha de producto.
+  function ficha(slug){
+    const b = $('#ppageVendido');
+    if (!b) return;
+    b.hidden = !perfil;
+    b.dataset.slug = slug;
   }
 
   function pintarNav(){
@@ -65,19 +73,11 @@ const Sesion = (() => {
     });
   }
 
-  function montarBotonVenta(){
+  function montarBotonFicha(){
     if (montado) return;
     montado = true;
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'venta-fab';
-    b.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M20 6 9 17l-5-5"/>
-      </svg>
-      <span>Producto vendido</span>`;
-    b.addEventListener('click', abrirFormulario);
-    document.body.appendChild(b);
+    const b = $('#ppageVendido');
+    if (b) b.addEventListener('click', () => abrirFormulario(b.dataset.slug));
   }
 
   async function cargarComunas(){
@@ -89,9 +89,10 @@ const Sesion = (() => {
   }
 
   /* ── Formulario de venta ──────────────────────────────── */
-  async function abrirFormulario(){
+  async function abrirFormulario(slug){
     await cargarComunas();
-    const lista = productos();
+    const prod = productos().find(p => p.slug === slug);
+    if (!prod) return;
     const ov = document.createElement('div');
     ov.className = 'venta-ov';
     ov.innerHTML = `
@@ -107,19 +108,20 @@ const Sesion = (() => {
         </header>
 
         <div class="venta-body">
-          <p class="venta-sec">Producto</p>
+          <div class="venta-prod">
+            <img src="${esc(prod.image)}" alt="">
+            <div>
+              <b>${esc(prod.name)}</b>
+              <small>${fmt(precioDe(slug))} por unidad</small>
+            </div>
+          </div>
+
           <div class="venta-g2">
-            <label class="venta-f venta-ancho"><span>¿Qué se vendió?</span>
-              <select name="producto" required>
-                <option value="">Elegí un producto</option>
-                ${lista.map(p => `<option value="${esc(p.slug)}" data-precio="${precioDe(p.slug)}">${esc(p.name)}</option>`).join('')}
-              </select>
-            </label>
             <label class="venta-f"><span>Cantidad</span>
               <input type="number" name="cantidad" min="1" step="1" value="1" required>
             </label>
             <label class="venta-f"><span>Precio por unidad</span>
-              <input type="number" name="precio" min="0" step="1" value="0" required>
+              <input type="number" name="precio" min="0" step="1" value="${precioDe(slug)}" required>
             </label>
           </div>
 
@@ -192,24 +194,19 @@ const Sesion = (() => {
       const n = +f.cantidad.value || 0, p = +f.precio.value || 0, d = +f.despacho.value || 0;
       ov.querySelector('#ventaTotal').textContent = fmt(n * p + d);
     };
-    f.producto.addEventListener('change', e => {
-      f.precio.value = e.target.selectedOptions[0]?.dataset.precio || 0;
-      total();
-    });
+    total();
     f.comuna.addEventListener('change', e => {
       f.despacho.value = e.target.selectedOptions[0]?.dataset.costo || 0;
       total();
     });
     ['cantidad','precio','despacho'].forEach(n => f[n].addEventListener('input', total));
 
-    f.addEventListener('submit', e => { e.preventDefault(); guardar(f, cerrar); });
+    f.addEventListener('submit', e => { e.preventDefault(); guardar(f, prod, cerrar); });
   }
 
-  async function guardar(f, cerrar){
+  async function guardar(f, prod, cerrar){
     const btn = f.querySelector('button[type=submit]');
     const msg = f.querySelector('#ventaMsg');
-    const slug = f.producto.value;
-    const prod = productos().find(p => p.slug === slug);
     const cantidad = +f.cantidad.value || 1;
     const precio = +f.precio.value || 0;
     const despacho = +f.despacho.value || 0;
@@ -219,8 +216,8 @@ const Sesion = (() => {
     const { error } = await sb.from('ventas').insert({
       vendedor_id: perfil.id,
       vendedor_nombre: perfil.nombre || perfil.email,
-      producto_slug: slug,
-      producto_nombre: prod ? prod.name : slug,
+      producto_slug: prod.slug,
+      producto_nombre: prod.name,
       cantidad, precio_unitario: precio,
       comuna: f.comuna.value,
       costo_despacho: despacho,
@@ -288,7 +285,7 @@ const Sesion = (() => {
       </ul>`;
   }
 
-  return { init };
+  return { init, ficha };
 })();
 
 document.addEventListener('DOMContentLoaded', () => Sesion.init().catch(e => console.error('Sesion:', e)));
