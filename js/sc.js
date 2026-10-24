@@ -192,6 +192,7 @@ const Filas=(()=>{
     if(!grid)return;
     pintarPagina(grid);
     pintarControles();
+    if(typeof Edicion!=='undefined')Edicion.remontar();
   }
   return{init};
 })();
@@ -202,7 +203,7 @@ const Filas=(()=>{
 // La misma sección sirve para los resultados del buscador.
 const CatPage=(()=>{
   let sec,overlay,banner,sub,titulo,grid,masWrap,masGrid,vacio;
-  let abierta=false;
+  let abierta=false,catActual='todos';
 
 
 
@@ -253,10 +254,12 @@ const CatPage=(()=>{
     if(fuera.length)pintarProductos(masGrid,fuera);
     else masGrid.innerHTML='';
     animarProductos(grid);animarProductos(masGrid);
+    if(typeof Edicion!=='undefined')Edicion.remontar();
   }
 
   function abrir(cat){
     if(!sec)return;
+    catActual=cat;
     const dentro = cat==='todos' ? CATALOGO.slice() : porCategoria(cat);
     const fuera  = cat==='todos' ? []               : CATALOGO.filter(p=>p.cat!==cat);
     pintar(
@@ -318,7 +321,7 @@ const CatPage=(()=>{
     });
   }
 
-  return{init,abrir,buscar,cerrar,mostrar,estaAbierta:()=>abierta};
+  return{init,abrir,buscar,cerrar,mostrar,estaAbierta:()=>abierta,catActual:()=>catActual};
 })();
 
 const Carousel3D=(()=>{

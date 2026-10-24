@@ -567,5 +567,5 @@ const ProductModal=(()=>{
     btn.classList.add('ok');
     setTimeout(()=>btn.classList.remove('ok'),1200);
   }
-  return{init,close,open,abrirSlug,closeInstant};
+  return{init,close,open,abrirSlug,closeInstant,irA};
 })();
