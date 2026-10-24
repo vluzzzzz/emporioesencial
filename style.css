@@ -2951,8 +2951,25 @@ svg{ -webkit-user-select:none; user-select:none; }
   /* En chico las subcategorías se abren debajo de su categoría, no en un
      panel al final. El panel de la derecha es solo de escritorio. */
   .mega-panel{display:none!important}
-  .mega-subs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:6px 18px 18px;background:var(--off-white)}
+  .mega-subs{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+    padding:6px 18px 18px;background:var(--off-white);
+    height:0;overflow:hidden;
+    transition:height .34s cubic-bezier(.4,0,.2,1);
+  }
   .mega-subs[hidden]{display:none}
+  /* Las fotos entran escalonadas, apenas detrás del panel */
+  .mega-subs .mega-tile{opacity:0;transform:translateY(10px) scale(.94)}
+  .mega-subs.abierto .mega-tile{
+    opacity:1;transform:none;
+    transition:opacity .3s ease var(--d,0ms), transform .34s cubic-bezier(.34,1.3,.64,1) var(--d,0ms);
+  }
+  .mega-item{transition:background .18s,color .18s}
+  .mega-item.active{background:var(--off-white)}
+  @media(prefers-reduced-motion:reduce){
+    .mega-subs{transition:none}
+    .mega-subs .mega-tile{opacity:1;transform:none;transition:none}
+  }
   .mega-tile-img{width:58px;height:58px}
   .mega-tile-name{font-size:11.5px}
 }

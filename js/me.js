@@ -13,6 +13,46 @@ const Menu = (() => {
   let cats = [];
 
   const esChico = () => window.matchMedia('(max-width:860px)').matches;
+  const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Desplegar a 'auto' no se puede animar, así que se anima hasta la altura
+  // medida y recién al terminar se suelta, para que siga creciendo si hace
+  // falta. Las fotos entran escalonadas detrás.
+  function desplegar(subs){
+    subs.hidden = false;
+    const tiles = subs.querySelectorAll('.mega-tile');
+    if (sinMovimiento()) { subs.classList.add('abierto'); subs.style.height = 'auto'; return; }
+    tiles.forEach((t, i) => t.style.setProperty('--d', (i * 45) + 'ms'));
+    const alto = subs.scrollHeight;
+    subs.style.height = '0px';
+    // El reflow va antes de la clase: si no, el navegador nunca ve a las
+    // fotos en su estado inicial y aparecen de golpe en vez de entrar.
+    void subs.offsetHeight;
+    subs.classList.add('abierto');
+    subs.style.height = alto + 'px';
+    subs.addEventListener('transitionend', function fin(e){
+      if (e.propertyName !== 'height') return;
+      subs.style.height = 'auto';
+      subs.removeEventListener('transitionend', fin);
+    });
+  }
+
+  function plegar(subs){
+    const item = subs.closest('.mega-li').querySelector('.mega-item');
+    item.classList.remove('active');
+    item.setAttribute('aria-expanded', 'false');
+    if (sinMovimiento()) { subs.classList.remove('abierto'); subs.hidden = true; subs.style.height = ''; return; }
+    subs.style.height = subs.scrollHeight + 'px';
+    void subs.offsetHeight;
+    subs.classList.remove('abierto');
+    subs.style.height = '0px';
+    subs.addEventListener('transitionend', function fin(e){
+      if (e.propertyName !== 'height') return;
+      subs.hidden = true;
+      subs.style.height = '';
+      subs.removeEventListener('transitionend', fin);
+    });
+  }
 
   function tiles(c, idx){
     const subs = c.subs.map((s,i)=>`<a class="mega-tile" href="#panel" data-cat-abrir="${s.cat}"><span class="mega-tile-img"><img src="${s.img || fallback(idx+i)}" alt="" loading="lazy"></span><span class="mega-tile-name">${s.name}</span></a>`).join('');
@@ -55,15 +95,18 @@ const Menu = (() => {
         if (!esChico()) { marcar(); return; }
         // En chico funciona como acordeón: se abre una sola a la vez.
         const subs = megaList.querySelector('[data-subs="' + idx + '"]');
-        const abierto = !subs.hidden;
-        megaList.querySelectorAll('.mega-subs').forEach(x => { x.hidden = true; });
+        const abierto = subs.classList.contains('abierto');
+        megaList.querySelectorAll('.mega-subs.abierto').forEach(x => { if (x !== subs) plegar(x); });
         megaList.querySelectorAll('.mega-item').forEach(x => {
           x.classList.remove('active');
           x.setAttribute('aria-expanded', 'false');
         });
-        subs.hidden = abierto;
-        b.classList.toggle('active', !abierto);
-        b.setAttribute('aria-expanded', String(!abierto));
+        if (abierto) plegar(subs);
+        else {
+          desplegar(subs);
+          b.classList.add('active');
+          b.setAttribute('aria-expanded', 'true');
+        }
       });
     });
     renderMegaPanel(0);
