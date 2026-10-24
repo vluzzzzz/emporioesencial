@@ -179,7 +179,6 @@ function cardHTML(p, opts){
             ${hayDcto ? `<span class="dcto"><s class="dcto-antes">${fmt(p1)}</s><span class="dcto-chip">-${Math.round((1 - p3 / p1) * 100)}%</span></span>` : ''}
           </div>
         </div>
-        <div class="card-stars-wrap"></div>
       </div>
     </div>`;
 }

@@ -154,17 +154,11 @@ const ProductModal=(()=>{
     ppage.scrollTo({top:0,behavior:'smooth'});
   }
 
-  // Estrellas y descuento, bajo el nombre del producto.
+  // Descuento, bajo el nombre del producto.
   function renderMeta(p){
     const el=document.getElementById('ppageMeta');
     if(!el)return;
-    const lista=Reviews.porProducto(p.slug);
-    let estrellas='';
-    if(lista.length){
-      const r=Reviews.resumen(lista);
-      estrellas=`<a href="#ppageReviews" class="ppage-stars">${Reviews.estrellas(Math.round(r.media),'sm')}<span>${r.total} ${r.total===1?'reseña':'reseñas'}</span></a>`;
-    }
-    el.innerHTML=estrellas+Trust.descuentoHTML(tierOne(p.slug),p.compare);
+    el.innerHTML=Trust.descuentoHTML(tierOne(p.slug),p.compare);
   }
 
   // Stock, entrega y medios de pago. Los datos salen del catálogo.
@@ -251,7 +245,7 @@ const ProductModal=(()=>{
     document.getElementById('ppageTiersList').style.height='0';
     renderTiers();updateTotal();renderFeatures(key);
     ['ppage-features'].forEach(id=>{const b=document.getElementById(id+'-body'),c=document.getElementById(id+'-chev');if(b)b.style.height='auto';if(c)c.classList.add('open');});
-    renderMeta(p);renderTrust(p);Reviews.renderProducto(key);renderSimilares(key);
+    renderMeta(p);renderTrust(p);renderSimilares(key);
     startViewers();
     resetCarousel(currentProduct.image,p.name,key);
     _buyTried=false;
