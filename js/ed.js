@@ -15,7 +15,7 @@
  * ========================================================================== */
 const Edicion = (() => {
   const V = '61';
-  const MODULOS = ['js/eu.js', 'js/ep.js'];
+  const MODULOS = ['js/eu.js', 'js/ep.js', 'js/eb.js'];
   const LLAVE = 'emporio-editando';
 
   let perfil = null, activa = false, cargando = null, boton = null;
@@ -109,6 +109,8 @@ const Edicion = (() => {
       EdProducto.abrir(document.getElementById('ppage')?.dataset.slug);
       return;
     }
+    if (que === 'banner' && typeof EdSitio !== 'undefined') { EdSitio.abrirBanners(); return; }
+    if (que === 'categorias' && typeof EdSitio !== 'undefined') { EdSitio.abrirCategorias(); return; }
     console.warn('Edición sin módulo para:', que);
   }
 

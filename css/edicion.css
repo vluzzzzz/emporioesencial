@@ -59,3 +59,18 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 .ed-lista-fila input{flex:1;font:inherit;font-size:14.5px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px}
 .ed-lista-fila button{flex:none;width:40px;border:1.5px solid var(--gray-light);background:#fff;border-radius:11px;font-size:17px;color:var(--gray-mid);cursor:pointer}
 .ed-lista-fila button:hover{border-color:#c0392b;color:#c0392b}
+
+/* Editor de banners y categorías */
+.ed-bloque{border:1px solid var(--gray-light);border-radius:14px;padding:14px;margin-bottom:12px}
+.ed-bloque-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ed-bloque-head b{font-size:14.5px}
+.ed-mini{background:none;border:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--gray-mid);cursor:pointer;padding:4px}
+.ed-mini:hover{color:#c0392b}
+.ed-foto-ancha{height:110px;border-radius:10px;overflow:hidden;background:var(--off-white);margin-bottom:10px}
+.ed-foto-ancha img{width:100%;height:100%;object-fit:cover}
+.ed-subir.ancho{width:100%;height:auto;padding:12px;font-size:13px;gap:8px}
+.ed-cat{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--gray-light)}
+.ed-cat:last-child{border-bottom:0}
+.ed-cat>input[type=text]{flex:1;font:inherit;font-size:14.5px;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:10px}
+.ed-dest{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;cursor:pointer}
+.ed-cat-n{min-width:26px;text-align:center;font-size:12px;font-weight:700;color:var(--gray-mid);background:var(--off-white);border-radius:999px;padding:3px 8px}
