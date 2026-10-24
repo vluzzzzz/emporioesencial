@@ -142,11 +142,56 @@ const Filas=(()=>{
     animarProductos(row);
     Carru.revisar(row);
   }
+  const POR_PAGINA=20;
+  const MAX_PAGINAS=2;
+  let pagina=1;
+
+  function paginar(){
+    const total=CATALOGO.length;
+    const necesarios=POR_PAGINA*MAX_PAGINAS;
+    const base=CATALOGO.slice();
+    const full=[];
+    for(let i=0;i<necesarios;i++)full.push(base[i%total]);
+    const paginas=MAX_PAGINAS;
+    return{full,paginas};
+  }
+
+  function pintarPagina(grid){
+    const{full}=paginar();
+    const ini=(pagina-1)*POR_PAGINA;
+    const lista=full.slice(ini,ini+POR_PAGINA);
+    grid.dataset.pintado='';delete grid.dataset.animado;
+    pintarProductos(grid,lista);
+    animarProductos(grid);
+  }
+
+  function pintarControles(){
+    const nav=document.getElementById('paginacion');
+    if(!nav)return;
+    const{paginas}=paginar();
+    let html='';
+    html+=`<button class="pag-btn pag-prev" data-pag="${pagina-1}" ${pagina===1?'disabled':''} aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>`;
+    for(let i=1;i<=paginas;i++){
+      html+=`<button class="pag-btn pag-num${i===pagina?' active':''}" data-pag="${i}">${i}</button>`;
+    }
+    html+=`<button class="pag-btn pag-next" data-pag="${pagina+1}" ${pagina===paginas?'disabled':''} aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;
+    nav.innerHTML=html;
+    nav.querySelectorAll('.pag-btn[data-pag]').forEach(b=>b.addEventListener('click',()=>{
+      const n=Number(b.dataset.pag);
+      if(n<1||n>paginas||n===pagina)return;
+      pagina=n;
+      const grid=document.getElementById('masGrid');
+      pintarPagina(grid);
+      pintarControles();
+      document.getElementById('mas')?.scrollIntoView({behavior:'smooth',block:'start'});
+    }));
+  }
+
   function init(){
     const grid=document.getElementById('masGrid');
     if(!grid)return;
-    pintarProductos(grid, CATALOGO);
-    animarProductos(grid);
+    pintarPagina(grid);
+    pintarControles();
   }
   return{init};
 })();
