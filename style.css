@@ -2526,6 +2526,21 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 .ppage-trust{margin-top:0!important;padding-top:0!important;border-top:none!important}
 
+.ppage-tier-label{font-size:12px!important;font-weight:700!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:#8a8f98!important;margin:18px 0 4px!important}
+.ppage-tier-selected{background:transparent!important;border:none!important;box-shadow:none!important;padding:0!important;display:block!important;cursor:default!important}
+.ppage-tier-selected .tier-lines,.ppage-tier-chevron,.ppage-tiers-list,.ppage-tier-selected-text{display:none!important}
+.ppage-tier-selected-price{font-family:var(--font-display,inherit)!important;font-size:40px!important;font-weight:800!important;color:#1a1a1a!important;line-height:1.05!important}
+.ppage-total-row{display:none!important}
+.ppage-wa-btn{margin-top:18px!important}
+.ppage-accordion{border:none!important;background:transparent!important}
+.ppage-accordion-header{pointer-events:none!important;padding-left:0!important;padding-right:0!important;border:none!important}
+.ppage-accordion-chevron{display:none!important}
+.ppage-accordion-title{font-size:20px!important;font-weight:800!important;color:#1a1a1a!important}
+.ppage-accordion-body{height:auto!important;overflow:visible!important}
+.ppage-accordion-inner{padding-left:0!important}
+.ppage-accordion-inner ul{margin:6px 0 0!important;padding-left:20px!important;list-style:disc!important}
+.ppage-accordion-inner li{margin:6px 0!important;color:#333!important;font-size:15px!important}
+
 .paginacion{display:flex;justify-content:center;align-items:center;gap:8px;flex-wrap:wrap;margin:36px auto 10px;padding:0 16px}
 .pag-btn{min-width:40px;height:40px;padding:0 12px;border-radius:10px;border:1.5px solid rgba(0,0,0,.12);background:#fff;color:#1a1a1a;font-weight:700;font-size:15px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s,color .15s}
 .pag-btn:hover:not(:disabled){border-color:var(--celeste);color:var(--celeste-deep)}
