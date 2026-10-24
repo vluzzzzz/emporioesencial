@@ -2436,3 +2436,27 @@ svg{ -webkit-user-select:none; user-select:none; }
 .wz-skip{background:none;border:none;font:inherit;font-weight:600;cursor:pointer;color:var(--gray-mid,#6e6e73)}
 .wz-next:disabled,.wz-done:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:560px){.rvfm-box{width:96vw;min-height:380px}.wz-star{font-size:40px}.wz-nombre-row{flex-direction:column;gap:14px}.wz-foto{width:100%;max-width:280px}}
+
+.product-card.temu-card{background:#fff;backdrop-filter:none;-webkit-backdrop-filter:none;border:1px solid #ececec;border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.product-card.temu-card:hover{transform:translateY(-3px);box-shadow:0 10px 26px rgba(0,0,0,.12)}
+.temu-card .card-img-wrap{width:100%;aspect-ratio:1/1;background:#f6f6f6;border-radius:14px 14px 0 0;box-shadow:none}
+.temu-card .card-img-wrap img{width:100%!important;height:100%!important;object-fit:cover;transition:transform .5s var(--ease-smooth)}
+.product-card.temu-card:hover .card-img-wrap img{transform:scale(1.05)}
+.temu-card .card-info{padding:10px 12px 14px;background:#fff;border-top:none;text-align:left}
+.temu-card .card-name{display:block;min-height:0;font-size:13px;font-weight:500;color:#333;line-height:1.35;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset}
+.temu-card .card-info{gap:0}
+.temu-card .card-foot{display:flex;align-items:baseline;gap:8px;margin:0}
+.temu-card .card-precio-col{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap}
+.temu-card .card-price{font-family:var(--font-body),system-ui,sans-serif;font-weight:700;font-size:19px;color:#111;letter-spacing:0;line-height:1;margin:0}
+.temu-card .dcto{display:inline-flex;align-items:center;gap:6px}
+.temu-card .dcto-antes{font-size:12px;color:#9a9a9f;text-decoration:line-through}
+.temu-card .dcto-chip{font-size:11px;font-weight:700;color:#ff5000;background:#ffe9dd;border:1px solid #ffd3bd;border-radius:4px;padding:1px 5px}
+.temu-card .card-stars-wrap{margin-top:7px;min-height:16px}
+.temu-card .card-stars{display:inline-flex;align-items:center;gap:5px}
+.temu-card .card-stars .stars .star{color:#e0e0e0}
+.temu-card .card-stars .stars .star.on{color:#ff8a00}
+.temu-card .card-stars-n{font-size:11px;color:#8a8a8f}
+.temu-card .card-stars-nuevo .card-stars-n{color:#ff5000;font-weight:600}
+.productos-grid{grid-template-columns:repeat(5,1fr);gap:12px}
+@media(max-width:1200px){.productos-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:900px){.productos-grid{grid-template-columns:repeat(3,1fr)}}

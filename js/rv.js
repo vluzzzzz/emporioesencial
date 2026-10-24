@@ -460,7 +460,7 @@ const Reviews = (() => {
   // Mini estrellas para la grilla de productos
   function miniEstrellas(slug) {
     const lista = porProducto(slug);
-    if (!lista.length) return '';
+    if (!lista.length) return `<span class="card-stars card-stars-nuevo">${estrellas(0, 'xs')}<span class="card-stars-n">Nuevo</span></span>`;
     const { media, total } = resumen(lista);
     const n = total >= RESENAS_MINIMAS_VISIBLES ? `<span class="card-stars-n">(${total})</span>` : '';
     return `<span class="card-stars">${estrellas(Math.round(media), 'xs')}${n}</span>`;
