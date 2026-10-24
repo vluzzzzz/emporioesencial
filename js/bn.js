@@ -37,7 +37,7 @@ const OFERTA_LATERAL = { desktop:'images/emporio-images/3.jpeg', mobile:'images/
 // Mensajes de la cinta de arriba. Se repiten en bucle, uno tras otro.
 const CINTA = [
   'Calidad Garantizada',
-  'Despacho a todo Chile',
+  'Envíos disponibles',
   'Atención por WhatsApp',
   'Variedad para el hogar',
   'Precios claros',

@@ -92,7 +92,7 @@ const Trust = (() => {
   function tiraHTML() {
     const { media, total } = Reviews.resumen();
     const items = [
-      { i:'envio',   t:'Envío a todo Chile',   s:'Coordinado por WhatsApp' },
+      { i:'envio',   t:'Envíos disponibles',   s:'Coordinado por Instagram' },
       { i:'escudo',  t:'Calidad garantizada',  s:'Cambio por falla de fábrica' },
       { i:'candado', t:'Compra con confianza',  s:'Atención personalizada' },
       { i:'estrella',t:`${Number(media).toFixed(1).replace('.', ',')} de 5 estrellas`, s:`${total} clientes ya opinaron` },
