@@ -2496,3 +2496,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .topbar,.topbar-track,.topbar *{color:#e9d9a8}
 
 .footer-logo-img{height:46px;width:auto;object-fit:contain;display:block}
+
+.nav{height:76px!important}
+.nav-logo-img{height:58px!important;width:auto!important;filter:none!important;image-rendering:auto}
+@media(max-width:560px){.nav{height:60px!important}.nav-logo-img{height:42px!important}}
