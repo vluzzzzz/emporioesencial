@@ -2522,12 +2522,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 .ppage-img-panel{
   position:static!important;width:auto!important;height:100%!important;min-height:0!important;
-  background:#fff!important;padding:28px!important;overflow:hidden!important;
-  display:flex!important;flex-direction:column!important;gap:14px!important;align-items:stretch!important;justify-content:center!important
+  background:#fff!important;padding:clamp(40px,6.5vh,86px) 28px 28px!important;overflow:hidden!important;
+  display:flex!important;flex-direction:column!important;gap:14px!important;align-items:stretch!important;justify-content:flex-start!important
 }
 .ppage-img-wrap{
   order:1;flex:0 1 auto!important;width:100%!important;height:auto!important;
-  aspect-ratio:4/3!important;max-height:100%!important;min-height:0!important;margin:0!important;
+  aspect-ratio:4/3!important;max-height:calc(100% - 98px)!important;min-height:0!important;margin:0!important;
   background:transparent!important;padding:0!important;overflow:visible!important;
   display:flex!important;align-items:center!important;justify-content:center!important
 }
@@ -2559,9 +2559,9 @@ svg{ -webkit-user-select:none; user-select:none; }
 }
 
 .ppage-info{
-  padding:44px 48px!important;gap:0!important;overflow-y:auto!important;
+  padding:clamp(40px,6.5vh,86px) 48px 48px!important;gap:0!important;overflow-y:auto!important;
   min-height:0!important;height:100%!important;
-  justify-content:center!important;justify-content:safe center!important;
+  justify-content:flex-start!important;
   border-left:1px solid #eeeef1!important;box-shadow:none!important
 }
 .ppage-info>*{flex:0 0 auto}
