@@ -2914,6 +2914,13 @@ svg{ -webkit-user-select:none; user-select:none; }
   .nav-cats-menu[hidden]{display:flex!important;pointer-events:none}
   .nav-cats.open .nav-cats-menu{pointer-events:auto}
 
+  /* El boton flotante de Instagram quedaba por encima del cajon */
+  body:has(.nav-cats.open) .wa-flotante{opacity:0;pointer-events:none;transition:opacity .2s}
+  /* Con el texto al lado, el icono de menu se encimaba en pantallas chicas */
+  .nav-cats-btn span{display:none}
+  .nav-cats-chev{display:none}
+  .nav-cats-btn{padding:9px;gap:0}
+
   .mega-x{
     display:grid;place-items:center;position:absolute;top:18px;right:16px;z-index:2;
     width:36px;height:36px;border:0;border-radius:50%;

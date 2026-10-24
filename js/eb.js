@@ -113,185 +113,153 @@ const EdSitio = (() => {
   }
 
   /* ── Categorías ───────────────────────────────────────── */
+  /* ── Categorías ───────────────────────────────────────── */
+  // A pantalla completa y en dos niveles: primero la grilla de categorías,
+  // y al entrar en una, la grilla de sus subcategorías. Cada tarjeta muestra
+  // su foto, igual que las ve un cliente en el menú.
   function abrirCategorias(){
     const estado = {
       arbol: Cats.lista().map(c => ({ ...c, subs: c.subs.map(x => ({ ...x })) })),
-      abierta: null,
+      dentro: null,
+      sucio: false,
     };
 
     const { ov, cerrar } = Sesion.panel('Categorías', 'Menú de la tienda',
-      `<p class="venta-vacio" style="margin-bottom:16px">Tocá una categoría para abrirla: adentro cambiás su foto y sus subcategorías. Las que <b>no se muestran</b> quedan guardadas pero desaparecen del menú y de la portada.</p>
-       <div id="edCats"></div>
-       <div class="ed-lista-fila" style="margin-top:16px">
-         <input type="text" id="edCatNueva" placeholder="Nombre de la categoría nueva">
-         <button type="button" class="ed-btn" id="edCatAgregar" style="flex:none">Agregar</button>
-       </div>
-       <p class="venta-msg" id="edCatMsg"></p>`,
-      '<button type="button" class="venta-btn" id="edCatGuardar">Guardar</button>');
+      '<div class="venta-wrap" id="edCats"></div>',
+      '<span class="ed-aviso" id="edCatAviso"></span>' +
+      '<button type="button" class="venta-btn ghost" id="edCatVolver" hidden>Volver</button>' +
+      '<button type="button" class="venta-btn" id="edCatGuardar">Guardar</button>',
+      true);
 
     const usanCat  = s => CATALOGO.filter(p => p.cat === s).length;
     const usanTodo = c => CATALOGO.filter(p => p.cat === c.slug || c.subs.some(s => s.slug === p.cat)).length;
-    // En palabras, no en un número suelto: "3 productos" se entiende solo.
+    // En palabras, no en un número suelto.
     const cuantos = n => n === 0 ? 'Sin productos' : n === 1 ? '1 producto' : n + ' productos';
+    const marcar = () => { estado.sucio = true; ov.querySelector('#edCatAviso').textContent = 'Hay cambios sin guardar'; };
+
+    function tarjeta(it, idx, esSub){
+      const oculta = it.oculta === true;
+      const n = esSub ? usanCat(it.slug) : usanTodo(it);
+      return `
+        <div class="ec-card${oculta ? ' oculta' : ''}" data-idx="${idx}" data-sub="${esSub ? 1 : 0}">
+          <div class="ec-foto">
+            ${it.img ? `<img src="${escH(it.img)}" alt="" onerror="this.closest('.ec-foto').classList.add('vacia')">`
+                     : '<span class="ec-sinfoto">Sin foto</span>'}
+            <label class="ec-subir" title="Cambiar foto">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h2l1.5-2h7L17 7h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <input type="file" accept="image/*" data-foto="${idx}" hidden>
+            </label>
+            ${it.img ? `<button type="button" class="ec-quitafoto" data-quitafoto="${idx}" aria-label="Quitar foto">&times;</button>` : ''}
+          </div>
+
+          <input type="text" class="ec-nombre" data-nombre="${idx}" value="${escH(it.nombre)}">
+          <p class="ec-dato">${cuantos(n)}${!esSub && it.subs.length ? ' · ' + it.subs.length + (it.subs.length === 1 ? ' subcategoría' : ' subcategorías') : ''}</p>
+
+          <div class="ec-acc">
+            <label class="ec-ojo" title="${oculta ? 'Mostrar' : 'Ocultar'}">
+              <input type="checkbox" data-ver="${idx}" ${oculta ? '' : 'checked'}>
+              <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+              <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+              <span>${oculta ? 'Oculta' : 'Visible'}</span>
+            </label>
+            ${esSub ? '' : `
+              <label class="ec-ojo" title="Sale como tarjeta grande en el inicio">
+                <input type="checkbox" data-dest="${idx}" ${it.destacada ? 'checked' : ''}>
+                <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>
+                <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" opacity=".45"><path d="M12 3l2.6 5.6 6.1.8-4.5 4.2 1.2 6-5.4-3-5.4 3 1.2-6L3.3 9.4l6.1-.8z"/></svg>
+                <span>Portada</span>
+              </label>`}
+            ${esSub ? '' : `
+              <button type="button" class="ec-entrar" data-entrar="${idx}">
+                Subcategorías
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+              </button>`}
+            <button type="button" class="ec-borrar" data-borrar="${idx}" aria-label="Eliminar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+            </button>
+          </div>
+        </div>`;
+    }
 
     function pintar(){
       const box = ov.querySelector('#edCats');
-      box.innerHTML = estado.arbol.map((c, i) => {
-        const abierta = estado.abierta === i;
-        const oculta = c.oculta === true;
-        return `
-        <div class="ed-cat-bloque${abierta ? ' abierta' : ''}${oculta ? ' oculta' : ''}" data-i="${i}">
-          <div class="ed-cat">
-            <button type="button" class="ed-cat-chev" data-abrir="${i}" aria-label="Abrir">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-            </button>
-            <span class="ed-cat-mini">
-              ${c.img ? `<img src="${escH(c.img)}" alt="" onerror="this.style.visibility='hidden'">` : ''}
-            </span>
-            <span class="ed-cat-datos">
-              <b>${escH(c.nombre)}</b>
-              <small>${cuantos(usanTodo(c))}${c.subs.length ? ' · ' + c.subs.length + (c.subs.length === 1 ? ' subcategoría' : ' subcategorías') : ''}${oculta ? ' · oculta' : ''}</small>
-            </span>
-            ${c.destacada ? '<span class="ed-chip">Portada</span>' : ''}
-          </div>
+      const dentro = estado.dentro !== null ? estado.arbol[estado.dentro] : null;
+      const items = dentro ? dentro.subs : estado.arbol;
+      const esSub = !!dentro;
 
-          ${abierta ? `
-            <div class="ed-cat-cuerpo">
-              <label class="venta-f"><span>Nombre</span>
-                <input type="text" data-nombre="${i}" value="${escH(c.nombre)}">
-              </label>
+      ov.querySelector('#edCatVolver').hidden = !dentro;
+      ov.querySelector('.venta-head h2').textContent = dentro ? dentro.nombre : 'Categorías';
+      ov.querySelector('.venta-kicker').textContent = dentro ? 'Subcategorías' : 'Menú de la tienda';
 
-              <p class="venta-sec">Foto de la categoría</p>
-              <div class="ed-cat-foto">
-                <div class="ed-foto-ancha">
-                  ${c.img ? `<img src="${escH(c.img)}" alt="" onerror="this.style.visibility='hidden'">` : '<span class="ed-sin-foto">Sin foto</span>'}
-                </div>
-                <div class="ed-cat-foto-acc">
-                  <label class="ed-btn ghost">Subir foto
-                    <input type="file" accept="image/*" data-foto="${i}" hidden>
-                  </label>
-                  ${c.img ? `<button type="button" class="ed-mini" data-quitarfoto="${i}">Quitar foto</button>` : ''}
-                </div>
-              </div>
-
-              <div class="ed-cat-sw">
-                <label class="ed-sw">
-                  <input type="checkbox" data-dest="${i}" ${c.destacada ? 'checked' : ''}>
-                  <span><b>Mostrar en la portada</b><small>Sale como tarjeta grande en el inicio</small></span>
-                </label>
-                <label class="ed-sw">
-                  <input type="checkbox" data-ver="${i}" ${oculta ? '' : 'checked'}>
-                  <span><b>Visible en el menú</b><small>Si la apagás se guarda, pero nadie la ve</small></span>
-                </label>
-              </div>
-
-              <p class="venta-sec">Subcategorías</p>
-              <div class="ed-subs">
-                ${c.subs.map((s, k) => `
-                  <div class="ed-sub${s.oculta ? ' oculta' : ''}">
-                    <input type="text" data-sub="${i}-${k}" value="${escH(s.nombre)}">
-                    <span class="ed-sub-n">${cuantos(usanCat(s.slug))}</span>
-                    <label class="ed-ojo" title="${s.oculta ? 'Mostrar' : 'Ocultar'}">
-                      <input type="checkbox" data-subver="${i}-${k}" ${s.oculta ? '' : 'checked'}>
-                      <svg class="ed-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
-                      <svg class="ed-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
-                    </label>
-                    <button type="button" class="ed-mini" data-subborrar="${i}-${k}">Eliminar</button>
-                  </div>`).join('') || '<p class="venta-vacio" style="margin:2px 0 10px">Todavía no tiene subcategorías.</p>'}
-                <div class="ed-lista-fila" style="margin-top:8px">
-                  <input type="text" data-subnueva="${i}" placeholder="Subcategoría nueva">
-                  <button type="button" class="ed-btn ghost" data-subagregar="${i}" style="flex:none">Agregar</button>
-                </div>
-              </div>
-
-              <div class="ed-cat-pie">
-                <button type="button" class="ed-mini peligro" data-borrar="${i}">Eliminar esta categoría</button>
-              </div>
-            </div>` : ''}
+      box.innerHTML = `
+        <p class="ec-intro">${dentro
+          ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. Cada una tiene su foto, la que se ve al abrir el menú.'
+          : 'Cambiá la foto, el nombre y si se muestra. Lo oculto se guarda pero desaparece del menú y de la portada.'}</p>
+        <div class="ec-grid">
+          ${items.map((it, i) => tarjeta(it, i, esSub)).join('')}
+          <button type="button" class="ec-nueva" id="ecNueva">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            <span>${dentro ? 'Subcategoría nueva' : 'Categoría nueva'}</span>
+          </button>
         </div>`;
-      }).join('');
 
-      box.querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => {
-        const i = +b.dataset.abrir;
-        estado.abierta = estado.abierta === i ? null : i;
-        pintar();
-      }));
+      const lista = () => estado.dentro !== null ? estado.arbol[estado.dentro].subs : estado.arbol;
+
       box.querySelectorAll('[data-nombre]').forEach(x => x.addEventListener('input', e => {
-        estado.arbol[+e.target.dataset.nombre].nombre = e.target.value;
-      }));
-      box.querySelectorAll('[data-dest]').forEach(x => x.addEventListener('change', e => {
-        estado.arbol[+e.target.dataset.dest].destacada = e.target.checked;
-        pintar();
+        lista()[+e.target.dataset.nombre].nombre = e.target.value;
+        marcar();
       }));
       box.querySelectorAll('[data-ver]').forEach(x => x.addEventListener('change', e => {
-        estado.arbol[+e.target.dataset.ver].oculta = !e.target.checked;
-        pintar();
+        lista()[+e.target.dataset.ver].oculta = !e.target.checked;
+        marcar(); pintar();
       }));
-      box.querySelectorAll('[data-sub]').forEach(x => x.addEventListener('input', e => {
-        const [a, k] = e.target.dataset.sub.split('-').map(Number);
-        estado.arbol[a].subs[k].nombre = e.target.value;
+      box.querySelectorAll('[data-dest]').forEach(x => x.addEventListener('change', e => {
+        lista()[+e.target.dataset.dest].destacada = e.target.checked;
+        marcar(); pintar();
       }));
-      box.querySelectorAll('[data-subver]').forEach(x => x.addEventListener('change', e => {
-        const [a, k] = e.target.dataset.subver.split('-').map(Number);
-        estado.arbol[a].subs[k].oculta = !e.target.checked;
+      box.querySelectorAll('[data-entrar]').forEach(b => b.addEventListener('click', () => {
+        estado.dentro = +b.dataset.entrar;
         pintar();
+        ov.querySelector('.venta-body').scrollTop = 0;
       }));
 
       box.querySelectorAll('[data-foto]').forEach(inp => inp.addEventListener('change', async e => {
         const file = e.target.files[0];
         if (!file) return;
-        const i = +e.target.dataset.foto;
+        const it = lista()[+e.target.dataset.foto];
         toast('Subiendo foto…');
         try {
           const url = await uploadFile(file, 'categorias/');
-          const c = estado.arbol[i];
-          c.img = url;
-          // La foto sirve de tarjeta y de banner de la sección.
-          if (!c.banner) { c.banner = url; c.bannerMobile = url; }
-          pintar();
+          it.img = url;
+          // La foto de una categoría sirve también de banner de su sección.
+          if (!esSub) { it.banner = url; it.bannerMobile = url; }
+          marcar(); pintar();
           toast('Foto lista');
         } catch (err) { toast(mensajeError(err), true); }
         e.target.value = '';
       }));
-      box.querySelectorAll('[data-quitarfoto]').forEach(b => b.addEventListener('click', () => {
-        const c = estado.arbol[+b.dataset.quitarfoto];
-        c.img = ''; c.banner = ''; c.bannerMobile = '';
-        pintar();
+      box.querySelectorAll('[data-quitafoto]').forEach(b => b.addEventListener('click', () => {
+        const it = lista()[+b.dataset.quitafoto];
+        it.img = '';
+        if (!esSub) { it.banner = ''; it.bannerMobile = ''; }
+        marcar(); pintar();
       }));
 
       box.querySelectorAll('[data-borrar]').forEach(b => b.addEventListener('click', async () => {
-        const c = estado.arbol[+b.dataset.borrar];
-        const n = usanTodo(c);
+        const i = +b.dataset.borrar;
+        const it = lista()[i];
+        const n = esSub ? usanCat(it.slug) : usanTodo(it);
         if (n) {
           toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Podés ocultarla.', true);
           return;
         }
-        if (await confirmar('¿Eliminar la categoría "' + c.nombre + '" y sus subcategorías?', 'Eliminar')) {
-          estado.arbol.splice(+b.dataset.borrar, 1);
-          estado.abierta = null;
-          pintar();
+        if (await confirmar('¿Eliminar "' + it.nombre + '"?' + (esSub ? '' : ' Se van también sus subcategorías.'), 'Eliminar')) {
+          lista().splice(i, 1);
+          marcar(); pintar();
         }
       }));
 
-      box.querySelectorAll('[data-subborrar]').forEach(b => b.addEventListener('click', async () => {
-        const [a, k] = b.dataset.subborrar.split('-').map(Number);
-        const sub = estado.arbol[a].subs[k];
-        const n = usanCat(sub.slug);
-        if (n) {
-          toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Podés ocultarla.', true);
-          return;
-        }
-        if (await confirmar('¿Eliminar "' + sub.nombre + '"?', 'Eliminar')) {
-          estado.arbol[a].subs.splice(k, 1);
-          pintar();
-        }
-      }));
-
-      box.querySelectorAll('[data-subagregar]').forEach(b => b.addEventListener('click', () =>
-        agregarSub(+b.dataset.subagregar, box.querySelector('[data-subnueva="' + b.dataset.subagregar + '"]'))));
-      box.querySelectorAll('[data-subnueva]').forEach(inp => inp.addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); agregarSub(+e.target.dataset.subnueva, e.target); }
-      }));
+      box.querySelector('#ecNueva').addEventListener('click', () => crear(esSub));
     }
 
     // El identificador interno no se edita nunca: cambiarlo dejaría productos
@@ -306,36 +274,49 @@ const EdSitio = (() => {
       return base + '-' + n;
     }
 
-    function agregarSub(i, inp){
-      const nombre = inp.value.trim();
-      if (!nombre) return;
-      estado.arbol[i].subs.push({ slug: nuevoSlug(nombre, estado.arbol[i].slug), nombre });
-      inp.value = '';
-      pintar();
+    function crear(esSub){
+      const cuerpo = `
+        <form id="ecNuevaF">
+          <label class="venta-f venta-ancho"><span>Nombre</span>
+            <input type="text" name="nombre" required placeholder="${esSub ? 'Ej: Ollas y sartenes' : 'Ej: Cocina'}">
+          </label>
+          <p class="venta-vacio" style="margin-top:12px">Se crea vacía y después le ponés la foto.</p>
+        </form>`;
+      const { ov: ov2, cerrar: cerrar2 } = Sesion.panel(
+        esSub ? 'Subcategoría nueva' : 'Categoría nueva', 'Categorías', cuerpo,
+        '<button type="submit" form="ecNuevaF" class="venta-btn">Crear</button>');
+      const f = ov2.querySelector('#ecNuevaF');
+      f.nombre.focus();
+      f.addEventListener('submit', e => {
+        e.preventDefault();
+        const nombre = f.nombre.value.trim();
+        if (!nombre) return;
+        if (esSub) {
+          const padre = estado.arbol[estado.dentro];
+          padre.subs.push({ slug: nuevoSlug(nombre, padre.slug), nombre, img:'' });
+        } else {
+          estado.arbol.push({ slug: nuevoSlug(nombre), nombre, arriba:'Todo en', destacada:false,
+            orden: estado.arbol.length + 1, img:'', medida:'800 × 500', subs:[] });
+        }
+        cerrar2();
+        marcar(); pintar();
+      });
     }
+
+    ov.querySelector('#edCatVolver').addEventListener('click', () => {
+      estado.dentro = null;
+      pintar();
+      ov.querySelector('.venta-body').scrollTop = 0;
+    });
 
     pintar();
 
-    const agregar = () => {
-      const inp = ov.querySelector('#edCatNueva');
-      const nombre = inp.value.trim();
-      if (!nombre) return;
-      estado.arbol.push({ slug: nuevoSlug(nombre), nombre, arriba:'Todo en', destacada:false,
-        orden: estado.arbol.length + 1, img:'', medida:'800 × 500', subs:[] });
-      inp.value = '';
-      estado.abierta = estado.arbol.length - 1;
-      pintar();
-    };
-    ov.querySelector('#edCatAgregar').addEventListener('click', agregar);
-    ov.querySelector('#edCatNueva').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { e.preventDefault(); agregar(); }
-    });
-
     ov.querySelector('#edCatGuardar').addEventListener('click', async e => {
-      const btn = e.target, msg = ov.querySelector('#edCatMsg');
+      const btn = e.target;
+      const aviso = ov.querySelector('#edCatAviso');
       if (estado.arbol.some(c => !c.nombre.trim() || c.subs.some(s => !s.nombre.trim()))) {
-        msg.className = 'venta-msg err';
-        msg.textContent = 'Hay una categoría o subcategoría sin nombre.';
+        aviso.textContent = 'Hay una categoría o subcategoría sin nombre.';
+        aviso.className = 'ed-aviso err';
         return;
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
@@ -351,8 +332,8 @@ const EdSitio = (() => {
         toast('Categorías guardadas');
       } catch (err) {
         btn.disabled = false; btn.textContent = 'Guardar';
-        msg.className = 'venta-msg err';
-        msg.textContent = mensajeError(err);
+        aviso.textContent = mensajeError(err);
+        aviso.className = 'ed-aviso err';
       }
     });
   }

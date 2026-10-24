@@ -7,15 +7,17 @@
  *  Menu.renderMega() y el menú se actualiza solo.
  * ========================================================================== */
 const Menu = (() => {
-  const megaImg = i => 'images/emporio-images/' + ((i % 23) + 1) + '.webp';
+  // Si la categoría todavía no tiene su foto cargada, se usa una del
+  // catálogo para que el menú no quede con huecos.
+  const fallback = i => 'images/emporio-images/' + ((i % 23) + 1) + '.webp';
   let cats = [];
 
   function renderMegaPanel(idx){
     const panel = document.getElementById('megaPanel');
     const c = cats[idx];
     if (!c || !panel) return;
-    const tiles = c.subs.map((s,i)=>`<a class="mega-tile" href="#panel" data-cat-abrir="${s.cat}"><span class="mega-tile-img"><img src="${megaImg(idx+i)}" alt="" loading="lazy"></span><span class="mega-tile-name">${s.name}</span></a>`).join('');
-    panel.innerHTML = `<a class="mega-tile mega-tile--all" href="#panel" data-cat-abrir="${c.cat}"><span class="mega-tile-img"><img src="${megaImg(idx)}" alt="" loading="lazy"></span><span class="mega-tile-name">Ver todo ${c.name}</span></a>${tiles}`;
+    const tiles = c.subs.map((s,i)=>`<a class="mega-tile" href="#panel" data-cat-abrir="${s.cat}"><span class="mega-tile-img"><img src="${s.img || fallback(idx+i)}" alt="" loading="lazy"></span><span class="mega-tile-name">${s.name}</span></a>`).join('');
+    panel.innerHTML = `<a class="mega-tile mega-tile--all" href="#panel" data-cat-abrir="${c.cat}"><span class="mega-tile-img"><img src="${c.img || fallback(idx)}" alt="" loading="lazy"></span><span class="mega-tile-name">Ver todo ${c.name}</span></a>${tiles}`;
   }
 
   function renderMega(){

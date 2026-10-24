@@ -64,7 +64,7 @@ const Cats = (() => {
     ARBOL = arbol.map(c => ({
       ...c,
       img: aWebp(c.img), banner: aWebp(c.banner), bannerMobile: aWebp(c.bannerMobile),
-      subs: Array.isArray(c.subs) ? c.subs : [],
+      subs: (Array.isArray(c.subs) ? c.subs : []).map(s => ({ ...s, img: aWebp(s.img) })),
     }));
     return true;
   }
@@ -100,8 +100,8 @@ const Cats = (() => {
   }
 
   const mega = () => visibles().map(c => ({
-    name: c.nombre, cat: c.slug,
-    subs: c.subs.map(s => ({ name: s.nombre, cat: s.slug })),
+    name: c.nombre, cat: c.slug, img: c.img || '',
+    subs: c.subs.map(s => ({ name: s.nombre, cat: s.slug, img: s.img || '' })),
   }));
 
   const tarjetas = () => visibles().filter(c => c.destacada).map(c => ({
