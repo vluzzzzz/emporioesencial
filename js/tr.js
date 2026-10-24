@@ -94,6 +94,7 @@ const Trust = (() => {
     const items = [
       { i:'envio',   t:'Envío a todo Chile',   s:'Coordinado por WhatsApp' },
       { i:'escudo',  t:'Calidad garantizada',  s:'Cambio por falla de fábrica' },
+      { i:'candado', t:'Compra con confianza',  s:'Atención personalizada' },
       { i:'estrella',t:`${Number(media).toFixed(1).replace('.', ',')} de 5 estrellas`, s:`${total} clientes ya opinaron` },
     ];
     const uno = items.map(x => `<div class="tira-item">

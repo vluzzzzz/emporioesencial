@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://sfcuiptbnsqvnzzraoee.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=29">
+  <link rel="stylesheet" href="style.css?v=30">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="preload" as="image" href="images/bannerdos.webp" fetchpriority="high">
   <script>
@@ -58,69 +58,11 @@
   <div class="bnr-pagination"></div>
 </section>
 
-<nav class="catnav" aria-label="Categorías">
-  <a class="catnav-item" href="#panel" data-cat-abrir="cocina">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M3 2v7a3 3 0 0 0 6 0V2M6 9v13"/><path pathLength="1" d="M14 2c-1.5 1.5-2 4-2 6s.5 3 2 3 2-1 2-3-.5-4.5-2-6zM16 11v11"/></svg></span>
-    <span class="catnav-txt">Cocina</span>
-  </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="belleza">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle pathLength="1" cx="12" cy="8" r="5"/><path pathLength="1" d="M12 13v8M9 21h6"/></svg></span>
-    <span class="catnav-txt">Belleza</span>
-  </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="herramientas">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M14 7a4 4 0 0 1-5 5l-6 6 2 2 6-6a4 4 0 0 0 5-5l-2 2-2-2 2-2z"/></svg></span>
-    <span class="catnav-txt">Herramientas</span>
-  </a>
-  <a class="catnav-item" href="#panel" data-cat-abrir="limpieza">
-    <span class="catnav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path pathLength="1" d="M3 21h18M6 21V8l4-5 4 5v13M10 3v5"/></svg></span>
-    <span class="catnav-txt">Limpieza</span>
-  </a>
-</nav>
-
-
 <section class="tira" id="tiraConfianza" aria-label="Por qué comprar acá"></section>
 
-
-<section class="ofertas-section" id="ofertas" aria-labelledby="ofertasTitulo">
-  <div class="ofertas-header">
-    <h2 class="ofertas-titulo" id="ofertasTitulo">Ofertas del mes</h2>
-  </div>
-  <div class="ofertas-wrap">
-    <div class="oferta-lateral" id="ofertaLateral"></div>
-    <div class="carru">
-      <button class="carru-arr carru-prev" data-carru="ofertasRow" aria-label="Anterior" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/></svg>
-      </button>
-      <div class="ofertas-row carru-pista" id="ofertasRow"></div>
-      <button class="carru-arr carru-next" data-carru="ofertasRow" aria-label="Siguiente" hidden>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 7.4 10 6l6 6-6 6-1.4-1.4 4.6-4.6z"/></svg>
-      </button>
-    </div>
-  </div>
-</section>
-
-<section class="cat-section" id="categorias">
-  <div class="cat-header">
-    <p class="cat-subtitulo">Explorá por tipo</p>
-    <h2 class="cat-titulo-seccion">Categorías</h2>
-  </div>
-  <div class="cat-grid" id="catGrid"></div>
-</section>
-
-
-<section class="mas-section" id="mas" aria-labelledby="masTitulo">
-  <div class="mas-header">
-    <h2 class="mas-titulo" id="masTitulo">Más productos</h2>
-  </div>
-  <div class="carru">
-    <button class="carru-arr carru-prev" data-carru="masRow" aria-label="Anterior" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.4 7.4 14 6l-6 6 6 6 1.4-1.4-4.6-4.6z"/></svg>
-    </button>
-    <div class="mas-row carru-pista" id="masRow"></div>
-    <button class="carru-arr carru-next" data-carru="masRow" aria-label="Siguiente" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.6 7.4 10 6l6 6-6 6-1.4-1.4 4.6-4.6z"/></svg>
-    </button>
-  </div>
+<section class="grid-section" id="mas">
+  <div class="grid-head"><h2 class="grid-titulo">Todos los productos</h2></div>
+  <div class="productos-grid" id="masGrid"></div>
 </section>
 
 

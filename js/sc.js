@@ -143,9 +143,10 @@ const Filas=(()=>{
     Carru.revisar(row);
   }
   function init(){
-    // La fila de ofertas muestra el precio desde 3 unidades y el descuento.
-    una('ofertasRow', OFERTAS, 5, {oferta:true});
-    una('masRow', MAS_PRODUCTOS, 6);
+    const grid=document.getElementById('masGrid');
+    if(!grid)return;
+    pintarProductos(grid, CATALOGO);
+    animarProductos(grid);
   }
   return{init};
 })();

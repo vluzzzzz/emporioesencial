@@ -2482,3 +2482,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .footer{background:#0a0a0a;color:#f1e8cf}
 .footer-logo span{color:#d4af37}
 .footer-nav a:hover{color:#d4af37}
+
+.grid-section{max-width:1400px;margin:0 auto;padding:8px 24px 48px}
+.grid-head{margin:20px 0 16px}
+.grid-titulo{font-family:var(--font-display),sans-serif;font-size:32px;color:var(--black);letter-spacing:.01em}
+@media(max-width:560px){.grid-section{padding:6px 14px 36px}.grid-titulo{font-size:26px}}
