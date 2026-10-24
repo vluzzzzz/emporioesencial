@@ -1,7 +1,7 @@
 // cf — configuración del sitio, traída de Supabase
 'use strict';
 
-/* Lo que se edita desde /admin vive en la tabla site_config. Este archivo la
+/* Lo que se edita en el modo edición vive en la tabla site_config. Este archivo la
    lee y reemplaza las listas que están escritas a mano en js/bn.js, js/sc.js
    y js/rv.js.
 

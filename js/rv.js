@@ -16,7 +16,7 @@
    Están agrupadas por producto para que sea fácil encontrarlas y editarlas.
    El orden de la lista no importa: la portada las ordena por fecha.
 
-   ⚠ Desde que existe /admin, esta lista es solo el punto de partida: si hay
+   ⚠ Esta lista es solo el punto de partida: si hay
    algo guardado en el panel, eso gana y lo de acá no se usa. Editá en el
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */

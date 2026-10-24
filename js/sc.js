@@ -7,7 +7,7 @@ const NavScroll=(()=>{function init(){const nav=document.querySelector('.nav');w
    orden. Son los slugs del catálogo (js/sd.js); si ponés uno que no existe,
    se saltea sin romper nada.
 
-   ⚠ Desde que existe /admin, esta lista es solo el punto de partida: si hay
+   ⚠ Esta lista es solo el punto de partida: si hay
    algo guardado en el panel, eso gana y lo de acá no se usa. Editá en el
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */

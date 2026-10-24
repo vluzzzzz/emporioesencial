@@ -10,12 +10,12 @@
  *      - anon public key   →  SUPABASE_ANON_KEY
  *
  *  Si quedan vacíos o con los placeholders, la web sigue funcionando con su
- *  contenido hardcodeado (fallback) y el panel /admin avisa que falta config.
+ *  contenido hardcodeado (fallback) y no se puede entrar a editar.
  * ========================================================================== */
 // BASE NUEVA — pegá acá los datos del proyecto Supabase NUEVO de Esencial
 // Emporio (Settings → API). Mientras queden con 'TU-PROYECTO', la web funciona
-// con los productos de ejemplo de hogar (las 4 fotos) y /admin avisa que falta
-// configurar. NO uses el proyecto de la web anterior.
+// con los productos de ejemplo de hogar (las 4 fotos) y no se puede editar.
+// NO uses el proyecto de la web anterior.
 window.SUPABASE_URL = 'https://bledwhdyixtasebjrhhb.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_F8ZYeKgNAMRthlzDWHh9Gw_FMgHqDci';
 

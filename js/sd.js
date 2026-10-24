@@ -5,7 +5,7 @@ const HERO_STOCK = {};
 // Si Supabase no está configurado o falla, la web usa estos datos y NO se
 // rompe. loadCatalog() los sobreescribe cuando Supabase responde.
 // Las 4 fotos del emporio, repetidas en todo el catálogo mientras se cargan
-// los productos reales desde /admin.
+// los productos reales con el modo edición.
 const IMG = {
   soplador:'images/emporio-images/1.jpeg',
   cocina:'images/emporio-images/2.jpeg',
@@ -320,7 +320,7 @@ const GALLERY={
 };
 // Variantes de color — SOLO los slugs listados acá muestran colores (dots + selector + validación).
 /* Cada color lleva 'agotado'. En true sigue a la vista pero en gris y no se
-   puede elegir, y desde /admin se vuelve a encender sin perder las fotos. */
+   puede elegir, y se vuelve a encender sin perder las fotos. */
 const COLOR_VARIANTS={};
 const PRODUCT_CONFIG={
   1:{fontSize:'22vw',productScale:1.1,productY:-15,blobYRatio:0.88,blobSpeed:0.030},

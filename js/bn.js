@@ -19,7 +19,7 @@
    ficha de ese producto. 'categoria' abre la sección de esa categoría. Si en
    lugar de los dos ponés 'link', va a esa ancla.
 
-   ⚠ Desde que existe /admin, esta lista es solo el punto de partida: si hay
+   ⚠ Esta lista es solo el punto de partida: si hay
    algo guardado en el panel, eso gana y lo de acá no se usa. Editá en el
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
