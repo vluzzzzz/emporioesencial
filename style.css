@@ -2460,3 +2460,25 @@ svg{ -webkit-user-select:none; user-select:none; }
 .productos-grid{grid-template-columns:repeat(5,1fr);gap:12px}
 @media(max-width:1200px){.productos-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:900px){.productos-grid{grid-template-columns:repeat(3,1fr)}}
+
+:root{
+  --celeste:#c9a227;
+  --celeste-deep:#8a6d12;
+  --celeste-soft:#f6edcf;
+  --azul-cinta:#c9a227;
+  --azul-nav:#0a0a0a;
+}
+.topbar,.topbar-track,.topbar *{color:#1a1a1a}
+.nav-marca{color:#d4af37;letter-spacing:.02em}
+.nav .icon-btn{color:#d4af37}
+.cat-subtitulo,.reviews-subtitulo,.productos-subtitulo{color:var(--celeste-deep)}
+.stars .star.on{color:#d4af37}
+.temu-card .card-stars .stars .star.on{color:#d4af37}
+.temu-card .dcto-chip{color:#d4af37;background:#161616;border-color:#161616}
+.temu-card .card-stars-nuevo .card-stars-n{color:#8a6d12}
+.csl-rect{background:#0a0a0a;color:#d4af37}
+.bnr-arr:hover,.carru-arr:hover{background:#0a0a0a;color:#d4af37}
+.nav-buscador .buscador:focus-within .buscador-lupa{fill:#8a6d12}
+.footer{background:#0a0a0a;color:#f1e8cf}
+.footer-logo span{color:#d4af37}
+.footer-nav a:hover{color:#d4af37}
