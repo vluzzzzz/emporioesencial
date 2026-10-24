@@ -2487,3 +2487,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 .grid-head{margin:20px 0 16px}
 .grid-titulo{font-family:var(--font-display),sans-serif;font-size:32px;color:var(--black);letter-spacing:.01em}
 @media(max-width:560px){.grid-section{padding:6px 14px 36px}.grid-titulo{font-size:26px}}
+
+.nav-logo{opacity:1}
+.nav-logo-img{width:auto!important;height:42px!important;object-fit:contain;display:block}
+.nav-logo a:hover .nav-logo-img{transform:scale(1.04)}
+@media(max-width:560px){.nav-logo-img{height:34px!important}}
+:root{--azul-cinta:#0a0a0a}
+.topbar,.topbar-track,.topbar *{color:#e9d9a8}
+
+.footer-logo-img{height:46px;width:auto;object-fit:contain;display:block}
