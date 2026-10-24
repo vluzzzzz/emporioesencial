@@ -2512,7 +2512,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-thumb{width:76px!important;height:76px!important;background:transparent!important;border:none!important;box-shadow:none!important;border-radius:6px!important}
 .ppage-thumb:hover{box-shadow:none!important;transform:scale(1.04)!important}
 .ppage-thumb img{width:100%!important;height:100%!important;object-fit:cover!important}
-.ppage-thumb--active{border:none!important;box-shadow:none!important;transform:none!important}
+.ppage-thumb{opacity:.6!important}
+.ppage-thumb--active{opacity:1!important;outline:2px solid var(--celeste)!important;outline-offset:1px!important;border:none!important;box-shadow:none!important;transform:none!important}
 .ppage-img-wrap{width:74%!important;height:74%!important}
 @media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{left:10px!important;right:auto!important;top:10px!important;gap:6px!important}.ppage-thumb{width:56px!important;height:56px!important}}
 
