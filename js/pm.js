@@ -258,7 +258,7 @@ const ProductModal=(()=>{
     renderColors(key);
     document.getElementById('ppageColorHint')?.classList.remove('show');
     document.getElementById('ppageColorsRow')?.classList.remove('shake');
-    if(temp&&!colorVars(key)&&imgList.length>1){isTemp=true;updateArrow();renderTempThumbs();}
+    if(!colorVars(key)&&imgList.length>1){isTemp=true;renderTempThumbs();}
   }
 
   // El pie se copia al abrir la primera ficha, no al arrancar, porque

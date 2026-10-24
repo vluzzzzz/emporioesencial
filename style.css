@@ -2500,3 +2500,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 .nav{height:76px!important}
 .nav-logo-img{height:58px!important;width:auto!important;filter:none!important;image-rendering:auto}
 @media(max-width:560px){.nav{height:60px!important}.nav-logo-img{height:42px!important}}
+
+.nav,.nav.scrolled,.nav.nav-on-dark{background:#0a0a0a!important;border-bottom:none!important;box-shadow:none!important}
+.nav-logo img,.nav-logo .nav-logo-img{filter:none!important}
+.nav-logo-img{height:58px!important;width:auto!important}
+.nav-right .icon-btn,.nav .icon,.nav.nav-on-dark .icon{color:#e9d9a8!important}
+.nav-right a.icon-btn svg{fill:none!important;stroke:#e9d9a8!important}
+.ppage-img-next,.ppage-img-prev{display:none!important}
+.ppage-thumbs{left:auto!important;right:20px!important}
+@media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{right:10px!important}}
