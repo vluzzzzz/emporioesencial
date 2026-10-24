@@ -3,10 +3,19 @@
 const sb = window.sb;
 const BUCKET = 'site-images';
 const CATS = [
-  ['audifonos','Audífonos'],
-  ['smartwatch','Smartwatch'],
-  ['celulares','Celulares'],
-  ['cargadores','Cargadores'],
+  ['cocina','Cocina'],
+  ['hogar','Hogar y decoración'],
+  ['belleza','Belleza'],
+  ['herramientas','Herramientas'],
+  ['limpieza','Limpieza'],
+  ['organizacion','Organización'],
+  ['electrodomesticos','Electrodomésticos'],
+  ['bano','Baño'],
+  ['dormitorio','Dormitorio'],
+  ['mascotas','Mascotas'],
+  ['jardin','Jardín'],
+  ['autos','Autos'],
+  ['tecnologia','Tecnología'],
 ];
 
 const $ = (s, r = document) => r.querySelector(s);
@@ -60,8 +69,8 @@ function showApp(){
   loadProducts();
   // Las otras pestañas viven en js/as.js, que se carga después.
   if (typeof Secciones !== 'undefined') Secciones.init().catch(e => console.error('Secciones:', e));
-  if (typeof Pedidos !== 'undefined') Pedidos.init();
   if (typeof Resenas !== 'undefined') Resenas.init();
+  if (typeof Admin !== 'undefined') Admin.init().catch(e => console.error('Admin:', e));
 }
 
 async function onLogin(e){

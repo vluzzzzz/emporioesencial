@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin · Tienda</title>
+  <title>Admin · Esencial Emporio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="admin.css?v=11">
+  <link rel="stylesheet" href="admin.css?v=12">
 </head>
 <body>
 
@@ -38,7 +38,8 @@
   <!-- ── APP ───────────────────────────────────────────── -->
   <div id="app" class="hidden">
     <header class="adm-header">
-      <div class="adm-logo">TIENDA <span>· ADMIN</span></div>
+      <div class="adm-logo">EMPORIO <span>· ADMIN</span></div>
+      <span class="adm-quien" id="admQuien"></span>
       <button class="btn btn-ghost" id="logoutBtn">Cerrar sesión</button>
     </header>
 
@@ -49,7 +50,9 @@
         <button class="tab" data-tab="categorias">Categorías</button>
         <button class="tab" data-tab="filas">Portada</button>
         <button class="tab" data-tab="resenas">Reseñas</button>
-        <button class="tab" data-tab="pedidos">Pedidos</button>
+        <button class="tab adm-solo" data-tab="usuarios">Usuarios</button>
+        <button class="tab adm-solo" data-tab="ventas">Ventas</button>
+        <button class="tab adm-solo" data-tab="despacho">Despacho</button>
       </div>
 
       <!-- Solo aparece si falta correr supabase/add-site-config.sql -->
@@ -154,22 +157,77 @@
         <div id="listResenas"><div class="empty">Cargando…</div></div>
       </section>
 
-      <!-- ── PEDIDOS ─────────────────────────────────────── -->
-      <section id="tab-pedidos" class="hidden">
-        <p class="title-kicker">Compras confirmadas</p>
+      <!-- ── USUARIOS ────────────────────────────────────── -->
+      <section id="tab-usuarios" class="hidden">
+        <p class="title-kicker">Quién entra al sistema</p>
+        <h1 class="title-big">Usuarios</h1>
+
+        <div class="card">
+          <h2>Nuevo vendedor</h2>
+          <p class="hint">
+            El vendedor entra con este correo en la misma web. No puede editar
+            nada: solo ve el catálogo y el botón <b>Producto vendido</b> para
+            registrar sus ventas.
+          </p>
+          <div class="row2">
+            <label class="fld"><span>Nombre y apellido</span>
+              <input type="text" id="nvNombre" placeholder="Ej: Camila Soto">
+            </label>
+            <label class="fld"><span>Correo</span>
+              <input type="email" id="nvEmail" placeholder="vendedor@correo.cl">
+            </label>
+            <label class="fld"><span>Teléfono</span>
+              <input type="tel" id="nvTelefono" placeholder="+56 9 ...">
+            </label>
+            <label class="fld"><span>Contraseña provisoria</span>
+              <input type="text" id="nvClave" placeholder="Mínimo 8 caracteres">
+            </label>
+            <label class="fld"><span>Rol</span>
+              <select id="nvRol">
+                <option value="vendedor">Vendedor</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </label>
+            <label class="fld"><span>Observación</span>
+              <input type="text" id="nvObs" placeholder="Zona, horario, notas internas">
+            </label>
+          </div>
+          <div class="actions">
+            <button class="btn btn-dark" id="nvCrear">Crear vendedor</button>
+          </div>
+        </div>
+
+        <div id="listUsuarios"><div class="empty">Cargando…</div></div>
+      </section>
+
+      <!-- ── VENTAS ──────────────────────────────────────── -->
+      <section id="tab-ventas" class="hidden">
+        <p class="title-kicker">Lo que registran los vendedores</p>
+        <h1 class="title-big">Ventas</h1>
         <div class="card">
           <div class="img-row">
-            <select id="filtroPedido"></select>
-            <button class="btn btn-ghost" id="recargarPedidos" style="flex:none">Actualizar</button>
+            <select id="filtroVendedor"></select>
+            <button class="btn btn-ghost" id="recargarVentas" style="flex:none">Actualizar</button>
           </div>
-          <p class="hint" id="resumenPedidos"></p>
-          <p class="hint">
-            Un pedido aparece acá recién cuando Mercado Pago confirma el pago.
-            Los nuevos van arriba; al marcarlos como enviados bajan y quedan
-            apagados, pero los datos se siguen pudiendo abrir.
-          </p>
+          <p class="hint" id="resumenVentas"></p>
         </div>
-        <div id="listPedidos"><div class="empty">Cargando…</div></div>
+        <div id="listVentas"><div class="empty">Cargando…</div></div>
+      </section>
+
+      <!-- ── DESPACHO ────────────────────────────────────── -->
+      <section id="tab-despacho" class="hidden">
+        <p class="title-kicker">Región de Valparaíso</p>
+        <h1 class="title-big">Despacho</h1>
+        <div class="card">
+          <p class="hint">
+            Es el valor que se suma al precio cuando el vendedor elige la
+            comuna. Si apagás una comuna, deja de aparecer en el formulario.
+          </p>
+          <div class="actions">
+            <button class="btn btn-dark" id="guardarComunas">Guardar comunas</button>
+          </div>
+        </div>
+        <div id="listComunas"><div class="empty">Cargando…</div></div>
       </section>
     </div>
   </div>
@@ -179,9 +237,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabase-config.js"></script>
   <script src="js/ac.js"></script>
-  <script src="js/ap.js"></script>
-  <script src="js/ao.js"></script>
+  <script src="js/ap.js?v=12"></script>
   <script src="js/ar.js?v=11"></script>
-  <script src="js/as.js"></script>
+  <script src="js/as.js?v=12"></script>
+  <script src="js/au.js?v=12"></script>
 </body>
 </html>

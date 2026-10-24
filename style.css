@@ -2659,3 +2659,66 @@ svg{ -webkit-user-select:none; user-select:none; }
 .mega-tile--all .mega-tile-img{border:2px solid var(--celeste)}
 @media(max-width:860px){.nav{grid-template-columns:auto 1fr auto!important;padding:8px 14px!important}.nav-cats-btn span,.nav-login span{display:none}.nav-login{padding:9px!important}.nav .nav-right .nav-buscador{flex:1 1 auto!important;max-width:none!important}.mega{grid-template-columns:150px 1fr;width:min(94vw,640px)}.mega-panel{grid-template-columns:repeat(3,1fr);gap:10px;padding:14px}.mega-tile-img{width:64px;height:64px}}
 @media(max-width:560px){.nav-cats-menu{left:0;right:0;position:fixed;top:64px}.mega{width:100vw;grid-template-columns:130px 1fr}.mega-panel{grid-template-columns:repeat(2,1fr)}}
+
+/* ===========================================================================
+   V57 — Cuenta en la barra, botón de venta y formulario del vendedor
+   ======================================================================== */
+.nav-cuenta{position:relative}
+.nav-cuenta-btn{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;cursor:pointer;padding:6px 14px 6px 6px;border-radius:999px;font-family:inherit;transition:background .18s,border-color .18s}
+.nav-cuenta-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.nav-cuenta-ini{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#e9d9a8;color:#111;font-weight:700;font-size:14px;flex:none}
+.nav-cuenta-txt{display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
+.nav-cuenta-txt b{font-size:13.5px;font-weight:700}
+.nav-cuenta-txt small{font-size:11px;opacity:.65;font-weight:500}
+.nav-cuenta-menu{position:absolute;top:calc(100% + 10px);right:0;min-width:220px;background:#fff;border:1px solid var(--gray-light);border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.18);padding:6px;z-index:200}
+.nav-cuenta-menu a,.nav-cuenta-menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:11px 14px;border-radius:10px;font:inherit;font-size:14px;color:var(--black);cursor:pointer;text-decoration:none}
+.nav-cuenta-menu a:hover,.nav-cuenta-menu button:hover{background:var(--off-white)}
+
+.venta-fab{position:fixed;left:24px;bottom:24px;z-index:900;display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border:0;border-radius:999px;background:#111;color:#e9d9a8;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;box-shadow:0 14px 34px rgba(0,0,0,.28);transition:transform .18s var(--ease-spring),box-shadow .18s}
+.venta-fab:hover{transform:translateY(-2px);box-shadow:0 18px 40px rgba(0,0,0,.34)}
+.venta-fab svg{width:19px;height:19px}
+
+.venta-ov{position:fixed;inset:0;z-index:1200;background:rgba(17,17,17,.55);backdrop-filter:blur(4px);display:grid;place-items:center;padding:20px;overflow-y:auto}
+.venta-card{width:min(760px,100%);max-height:92vh;display:flex;flex-direction:column;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.35)}
+.venta-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:24px 26px 18px;background:#111;color:#fff}
+.venta-head h2{margin:2px 0 0;font-family:var(--font-display);font-size:30px;letter-spacing:.03em;font-weight:400}
+.venta-kicker{margin:0;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#e9d9a8}
+.venta-x{background:rgba(255,255,255,.1);border:0;color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+.venta-x:hover{background:rgba(255,255,255,.2)}
+.venta-x svg{width:18px;height:18px}
+.venta-body{padding:22px 26px;overflow-y:auto}
+.venta-sec{margin:22px 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
+.venta-body .venta-sec:first-child{margin-top:0}
+.venta-g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.venta-f{display:flex;flex-direction:column;gap:6px}
+.venta-f.venta-ancho{grid-column:1/-1}
+.venta-f span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
+.venta-f input,.venta-f select,.venta-f textarea{font:inherit;font-size:14.5px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff;color:var(--black);width:100%;box-sizing:border-box}
+.venta-f input:focus,.venta-f select:focus,.venta-f textarea:focus{outline:none;border-color:#111}
+.venta-f textarea{resize:vertical}
+.venta-pie{border-top:1px solid var(--gray-light);padding:18px 26px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.venta-total{display:flex;flex-direction:column;line-height:1.2;margin-right:auto}
+.venta-total span{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
+.venta-total b{font-size:26px;font-weight:700}
+.venta-acc{display:flex;gap:10px}
+.venta-btn{font:inherit;font-size:14px;font-weight:700;padding:13px 24px;border-radius:999px;border:0;background:#111;color:#e9d9a8;cursor:pointer}
+.venta-btn:hover{background:#000}
+.venta-btn:disabled{opacity:.6;cursor:default}
+.venta-btn.ghost{background:transparent;color:var(--black);border:1.5px solid var(--gray-light)}
+.venta-msg{flex-basis:100%;margin:0;font-size:13px;color:var(--gray-mid)}
+.venta-msg.err{color:#c0392b}
+.venta-resumen{margin:0 0 14px;font-size:13.5px;color:var(--gray-mid)}
+.venta-vacio{margin:0;color:var(--gray-mid);font-size:14px}
+.venta-lista{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.venta-lista li{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border:1px solid var(--gray-light);border-radius:12px}
+.venta-lista b{display:block;font-size:14.5px}
+.venta-lista small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:3px}
+.venta-lista span{font-weight:700;white-space:nowrap}
+@media(max-width:700px){
+  .venta-g2{grid-template-columns:1fr}
+  .venta-card{max-height:100vh;border-radius:0;width:100%}
+  .venta-ov{padding:0}
+  .venta-fab{left:16px;right:16px;bottom:16px;justify-content:center}
+  .nav-cuenta-txt{display:none}
+  .nav-cuenta-btn{padding:6px}
+}

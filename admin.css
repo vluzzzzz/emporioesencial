@@ -437,3 +437,12 @@ input[type=date]{
 .rr-pend-img{width:100%;max-height:160px;object-fit:cover;border-radius:10px}
 .rr-pend-acc{display:flex;gap:8px;margin-top:4px}
 .rr-pend-acc .btn{flex:1;padding:9px 10px;font-size:13px}
+
+/* ── Usuarios, ventas y comunas ─────────────────────────── */
+.adm-quien{margin-right:auto;margin-left:18px;font-size:13px;color:var(--muted)}
+.comunas-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.comuna{display:grid;grid-template-columns:1fr 110px auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px}
+.comuna span{font-size:14px;font-weight:500}
+.comuna input[type=number]{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:14px}
+.venta-fila .hint{line-height:1.7}
+@media(max-width:560px){.adm-quien{display:none}}

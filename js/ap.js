@@ -11,7 +11,7 @@ function freshWork(p){
     }
   });
   const copy = {
-    id:p.id, slug:p.slug, name:p.name, category:p.category || 'audifonos',
+    id:p.id, slug:p.slug, name:p.name, category:p.category || 'cocina',
     description:p.description || '', image:p.image || '', image_scale:p.image_scale ?? 0.85,
     in_stock:p.in_stock !== false, features:[...(p.features||[])],
     compare_at_price:p.compare_at_price ?? null, stock_qty:p.stock_qty ?? null,
@@ -60,8 +60,8 @@ function buildCard(p){
     <div class="row2">
       <label class="fld"><span>Categoría</span>
         <select data-f="category">
-          ${CATS.map(([v,t])=>`<option value="${v}"${(p.category||'audifonos')===v?' selected':''}>${escH(t)}</option>`).join('')}
-          ${CATS.some(([v])=>v===(p.category||'audifonos'))?'':`<option value="${escH(p.category)}" selected>${escH(p.category)} (fuera de la lista)</option>`}
+          ${CATS.map(([v,t])=>`<option value="${v}"${(p.category||'cocina')===v?' selected':''}>${escH(t)}</option>`).join('')}
+          ${CATS.some(([v])=>v===(p.category||'cocina'))?'':`<option value="${escH(p.category)}" selected>${escH(p.category)} (fuera de la lista)</option>`}
         </select>
         <p class="note-stock">Es la que se abre al tocar la tarjeta de categoría en la portada.</p>
       </label>
@@ -252,8 +252,12 @@ function renderGallery(card, st){
 }
 
 /* ── Subida de imágenes a Storage ───────────────────────── */
-async function uploadFile(file, prefijo){
+async function uploadFile(archivo, prefijo){
   const carpeta = prefijo || 'catalog/';
+  let file = archivo;
+  if (file.type && /^image\/(jpeg|png|webp|bmp)$/.test(file.type)) {
+    try { file = await comprimirImagen(file); } catch {}
+  }
   const esBlob = !file.name;
   const ext = esBlob ? 'webp' : ((file.name.split('.').pop() || 'jpg').toLowerCase());
   const path = `${carpeta}${Date.now()}-${rid()}.${ext}`;
@@ -378,7 +382,7 @@ async function createProduct(){
     const slug = (slugify(name) || 'producto') + '-' + rid();
     const nextPos = (products.reduce((m,p)=>Math.max(m, p.position||0), 0)) + 1;
     const { data, error } = await sb.from('products')
-      .insert({ slug, name, category:'audifonos', image_scale:0.85, in_stock:true, position:nextPos })
+      .insert({ slug, name, category:'cocina', image_scale:0.85, in_stock:true, position:nextPos })
       .select('*, price_tiers(id,qty,price,active)').single();
     if (error) throw error;
     await sb.from('price_tiers').insert({ product_id:data.id, qty:1, price:0, active:true });

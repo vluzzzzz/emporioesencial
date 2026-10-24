@@ -223,7 +223,7 @@ const Secciones = (() => {
             <input type="text" data-f="desde" value="${escH(c.desde || '')}" placeholder="$14.000">
           </label>
           <label class="fld"><span>Categoría del catálogo</span>
-            <input type="text" data-f="cat" value="${escH(c.cat || '')}" placeholder="audifonos" list="catsUsadas">
+            <input type="text" data-f="cat" value="${escH(c.cat || '')}" placeholder="cocina" list="catsUsadas">
           </label>
         </div>
         ${aviso}
@@ -404,8 +404,10 @@ const Secciones = (() => {
     // Pestañas
     $$('.tab').forEach(t => t.addEventListener('click', () => {
       $$('.tab').forEach(x => x.classList.toggle('active', x === t));
-      ['catalogo','banners','categorias','filas','resenas','pedidos'].forEach(n =>
-        $('#tab-' + n).classList.toggle('hidden', n !== t.dataset.tab));
+      $$('.tab').map(x => x.dataset.tab).forEach(n => {
+        const sec = $('#tab-' + n);
+        if (sec) sec.classList.toggle('hidden', n !== t.dataset.tab);
+      });
     }));
 
     // Agregar

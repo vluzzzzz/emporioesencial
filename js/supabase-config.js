@@ -16,8 +16,8 @@
 // Emporio (Settings → API). Mientras queden con 'TU-PROYECTO', la web funciona
 // con los productos de ejemplo de hogar (las 4 fotos) y /admin avisa que falta
 // configurar. NO uses el proyecto de la web anterior.
-window.SUPABASE_URL = 'https://TU-PROYECTO.supabase.co';
-window.SUPABASE_ANON_KEY = 'TU_ANON_PUBLIC_KEY';
+window.SUPABASE_URL = 'https://bledwhdyixtasebjrhhb.supabase.co';
+window.SUPABASE_ANON_KEY = 'sb_publishable_F8ZYeKgNAMRthlzDWHh9Gw_FMgHqDci';
 
 // ¿Está configurado de verdad (no son los placeholders)?
 window.SB_CONFIGURED = (function () {
