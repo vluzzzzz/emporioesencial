@@ -12,6 +12,10 @@
 
 const SiteConfig = (() => {
 
+  // Claves que vinieron de la base en esta carga. Sirve para que el formato
+  // viejo de categorías no pise al nuevo.
+  const crudas = new Set();
+
   // Cada clave sabe cómo aplicarse. Si una clave no está en la base, no se
   // toca nada y queda lo del archivo.
   const APLICAR = {
@@ -20,10 +24,21 @@ const SiteConfig = (() => {
       BANNERS = v;
       return true;
     },
+    categorias_arbol(v) {
+      return Cats.aplicar(v);
+    },
+    // Formato viejo: solo las tarjetas de la portada. Se respeta mientras no
+    // esté cargado el árbol nuevo, así el deploy no depende de correr el SQL.
     categorias(v) {
       if (!Array.isArray(v) || !v.length) return false;
-      CATEGORIAS = v;
-      return true;
+      if (crudas.has('categorias_arbol')) return false;
+      return Cats.aplicar(Cats.lista().map(c => {
+        const t = v.find(x => x.cat === c.slug);
+        return t ? { ...c, destacada:true, arriba:t.arriba, nombre:t.titulo || c.nombre,
+                     img:t.img, medida:t.medida, banner:t.banner,
+                     bannerMobile:t.bannerMobile, bannerArchivo:t.bannerArchivo }
+                 : { ...c, destacada:false };
+      }));
     },
     filas(v) {
       if (!v || typeof v !== 'object') return false;
@@ -55,7 +70,8 @@ const SiteConfig = (() => {
   // Qué hay que repintar según lo que cambió. Repintar de más es barato;
   // repintar de menos deja la página mostrando datos viejos.
   function repintar(claves) {
-    if (claves.has('banners') || claves.has('categorias')) Banners.init();
+    if (claves.has('banners') || claves.has('categorias') || claves.has('categorias_arbol')) Banners.init();
+    if (claves.has('categorias') || claves.has('categorias_arbol')) Menu.renderMega();
     if (claves.has('filas'))   Filas.init();
   }
 
@@ -67,8 +83,14 @@ const SiteConfig = (() => {
       // de la tienda: simplemente se queda con lo de los archivos.
       if (error) { console.info('site_config no disponible:', error.message); return false; }
 
+      crudas.clear();
+      (data || []).forEach(({ key }) => crudas.add(key));
+
       const tocadas = new Set();
-      (data || []).forEach(({ key, value }) => {
+      // El árbol nuevo primero: si está, el formato viejo se saltea solo.
+      const orden = (data || []).slice().sort((a, b) =>
+        (a.key === 'categorias_arbol' ? -1 : 0) - (b.key === 'categorias_arbol' ? -1 : 0));
+      orden.forEach(({ key, value }) => {
         const fn = APLICAR[key];
         if (fn && fn(value)) tocadas.add(key);
       });

@@ -204,22 +204,7 @@ const CatPage=(()=>{
   let sec,overlay,banner,sub,titulo,grid,masWrap,masGrid,vacio;
   let abierta=false;
 
-  const NOMBRES={
-    cocina:'Cocina',
-    belleza:'Belleza',
-    herramientas:'Herramientas',
-    limpieza:'Limpieza',
-    hogar:'Hogar y decoración',
-    organizacion:'Organización',
-    electrodomesticos:'Electrodomésticos',
-    bano:'Baño',
-    dormitorio:'Dormitorio',
-    mascotas:'Mascotas',
-    jardin:'Jardín y exterior',
-    autos:'Autos',
-    tecnologia:'Tecnología',
-    todos:'Todo el catálogo',
-  };
+
 
   const lock  =()=>{document.documentElement.style.overflow='hidden';document.body.style.overflow='hidden';};
   const unlock=()=>{document.documentElement.style.overflow='';document.body.style.overflow='';};
@@ -276,7 +261,7 @@ const CatPage=(()=>{
     const fuera  = cat==='todos' ? []               : CATALOGO.filter(p=>p.cat!==cat);
     pintar(
       cat==='todos' ? 'Todo el catálogo' : 'Categoría',
-      NOMBRES[cat]||cat, dentro, fuera,
+      Cats.nombre(cat), dentro, fuera,
       'Todavía no hay productos en esta categoría.', cat
     );
     mostrar();

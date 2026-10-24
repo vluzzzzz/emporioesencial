@@ -65,12 +65,6 @@ const CINTA_SEPARADOR = 'images/logo-cinta.webp';
    va sola arriba de todo, sin nada más. Medida → 1920 × 558 px.
    'bannerMobile' es la del teléfono → 1080 × 810 px. Vacío = usa la de arriba.
    Cada hueco dice qué archivo espera y en qué medida exportarlo.          */
-let CATEGORIAS = [
-  { arriba:'Todo en', titulo:'Cocina',       cat:'cocina',       img:'images/emporio-images/2.jpeg', medida:'800 × 1000', banner:'images/emporio-images/2.jpeg', bannerMobile:'images/emporio-images/2.jpeg', bannerArchivo:'banner-cocina.webp'  },
-  { arriba:'Todo en', titulo:'Belleza',      cat:'belleza',      img:'images/emporio-images/3.jpeg', medida:'800 × 500',  banner:'images/emporio-images/3.jpeg', bannerMobile:'images/emporio-images/3.jpeg', bannerArchivo:'banner-belleza.webp' },
-  { arriba:'Todo en', titulo:'Herramientas', cat:'herramientas', img:'images/emporio-images/1.jpeg', medida:'800 × 500',  banner:'images/emporio-images/1.jpeg', bannerMobile:'images/emporio-images/1.jpeg', bannerArchivo:'banner-herramientas.webp'  },
-  { arriba:'Todo en', titulo:'Limpieza',     cat:'limpieza',     img:'images/emporio-images/4.jpeg', medida:'800 × 1000', banner:'images/emporio-images/4.jpeg', bannerMobile:'images/emporio-images/4.jpeg', bannerArchivo:'banner-limpieza.webp' },
-];
 
 // Banner de la sección "todo el catálogo" (el enlace Productos de la nav).
 const BANNER_TODOS = { banner:'images/emporio-images/2.jpeg', bannerMobile:'images/emporio-images/2.jpeg', bannerArchivo:'banner-catalogo.webp' };
@@ -145,6 +139,7 @@ const Banners = (() => {
     wrap.innerHTML = BANNERS.map(slide).join('');
 
     if (typeof Swiper === 'undefined') return;
+    if (swiper) { swiper.destroy(true, true); swiper = null; }
     swiper = new Swiper('.bnr-swiper', {
       loop: BANNERS.length > 1,
       speed: 650,
@@ -169,13 +164,13 @@ const Banners = (() => {
 
   function renderCategorias() {
     const el = document.getElementById('catGrid');
-    if (el) el.innerHTML = CATEGORIAS.map(categoria).join('');
+    if (el) el.innerHTML = Cats.tarjetas().map(categoria).join('');
   }
 
   // Banner que encabeza la sección de una categoría. Mientras no haya imagen
   // se ve el hueco punteado con la medida, igual que los demás.
   function bannerCategoria(cat) {
-    const c = CATEGORIAS.find(x => x.cat === cat) || BANNER_TODOS;
+    const c = Cats.tarjetas().find(x => x.cat === cat) || BANNER_TODOS;
     const item = { desktop: c.banner || '', mobile: c.bannerMobile || '', archivo: c.bannerArchivo, alt: c.titulo || 'Catálogo' };
     return media(item, '1920', '558', 'cpage-banner-media', true);
   }

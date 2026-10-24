@@ -362,7 +362,14 @@ const Sesion = (() => {
       </div>`;
   }
 
-  return { init, ficha };
+  return {
+    init, ficha,
+    // El chasis de paneles y el desplegable propio los reusan los módulos de
+    // edición: una sola implementación, cero CSS repetido.
+    panel, desplegable, conectarDesplegables,
+    perfil: () => perfil,
+    esAdmin: () => !!perfil && perfil.rol === 'admin',
+  };
 })();
 
 document.addEventListener('DOMContentLoaded', () => Sesion.init().catch(e => console.error('Sesion:', e)));

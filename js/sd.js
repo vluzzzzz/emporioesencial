@@ -51,7 +51,7 @@ const getUnitPrice=(key,qty)=>{const t=PRICE_TIERS[key];if(!t||!t.length)return 
    leía del HTML de la otra; por eso al abrir un similar se armaba una tarjeta
    distinta en vez de reusar la misma. Ahora todas salen del mismo lugar.
    loadCatalog() lo reemplaza entero si Supabase responde.                   */
-let CATALOGO = [
+const CATALOGO = [
   {slug:'soplador-bateria',               cat:'herramientas', name:'Soplador / Ventilador a Batería 18V',        image:'images/emporio-images/1.jpeg',  desc:'Soplador inalámbrico potente de 18V. Ideal para limpieza y secado. Incluye batería y cargador.'},
   {slug:'set-cocina-silicona',            cat:'cocina',       name:'Set de Cocina de Silicona 12 Piezas',        image:'images/emporio-images/2.jpeg',  desc:'Set completo de utensilios de cocina de silicona con mango de madera. Resistentes al calor y antiadherentes.'},
   {slug:'calentador-cera',                cat:'belleza',      name:'Calentador de Cera Profesional',             image:'images/emporio-images/3.jpeg',  desc:'Calentador de cera profesional para todo tipo de ceras. Incluye contenedor de aluminio y control de temperatura.'},
@@ -82,7 +82,7 @@ const FAMILIAS = {set:'cocina', calentador:'belleza', kit:'belleza', espejo:'bel
 const familiaDe = slug => FAMILIAS[String(slug||'').split('-')[0]] || 'otros';
 
 const findProduct  = slug => CATALOGO.find(p => p.slug === slug) || null;
-const porCategoria = cat  => CATALOGO.filter(p => p.cat === cat);
+const porCategoria = cat  => CATALOGO.filter(p => Cats.incluye(cat, p.cat));
 
 function fmt(n){ return '$'+n.toLocaleString('es-CL'); }
 
@@ -204,6 +204,50 @@ function slideHTML(p,i){
     </div>`;
 }
 
+// Vuelca UNA fila de products a todo lo que la web tiene en memoria. La usa
+// loadCatalog al arrancar, y el modo edición para refrescar un solo producto
+// sin recargar la página.
+function aplicarProducto(p){
+  const tiers = (p.price_tiers || [])
+    .filter(t => t.active !== false && t.price > 0)
+    .sort((a,b)=>a.qty-b.qty)
+    .map(t=>({ qty:t.qty, price:t.price }));
+  if (tiers.length) PRICE_TIERS[p.slug] = tiers; else delete PRICE_TIERS[p.slug];
+  FEATURES[p.slug] = p.features || [];
+  // imágenes del detalle = principal + secundarias (galería)
+  GALLERY[p.slug] = [p.image, ...(p.gallery || [])].filter(Boolean);
+  // Colores desde el panel. Sin ellos se respeta lo que esté escrito acá
+  // abajo en COLOR_VARIANTS, si no los colores aparecían un instante y se
+  // borraban al llegar la respuesta de la base.
+  const cols = Array.isArray(p.colors) ? p.colors.filter(c => c && c.img) : [];
+  if (cols.length) COLOR_VARIANTS[p.slug] = cols;
+
+  const fila = {
+    id: p.id,
+    slug: p.slug,
+    cat: p.category || familiaDe(p.slug),
+    name: p.name,
+    image: p.image,
+    desc: p.description || '',
+    imgScale: p.image_scale ?? 0.75,
+    compare: p.compare_at_price,
+    stock: p.stock_qty,
+    inStock: p.in_stock !== false,
+  };
+  const i = CATALOGO.findIndex(x => x.slug === p.slug);
+  if (i >= 0) CATALOGO[i] = fila; else CATALOGO.push(fila);
+  return fila;
+}
+
+function quitarProducto(slug){
+  const i = CATALOGO.findIndex(x => x.slug === slug);
+  if (i >= 0) CATALOGO.splice(i, 1);
+  delete PRICE_TIERS[slug];
+  delete FEATURES[slug];
+  delete GALLERY[slug];
+  delete COLOR_VARIANTS[slug];
+}
+
 async function loadCatalog(){
   if (!window.sb) return false;   // Supabase no configurado → se queda el fallback (demo de hogar)
   try {
@@ -215,25 +259,12 @@ async function loadCatalog(){
     const products = data || [];
     if (!products.length) return false;   // sin datos → se queda el fallback
 
-    // PRICE_TIERS + FEATURES por slug (solo tramos activos con precio > 0)
-    products.forEach(p => {
-      const tiers = (p.price_tiers || [])
-        .filter(t => t.active !== false && t.price > 0)
-        .sort((a,b)=>a.qty-b.qty)
-        .map(t=>({ qty:t.qty, price:t.price }));
-      if (tiers.length) PRICE_TIERS[p.slug] = tiers;
-      FEATURES[p.slug] = p.features || [];
-      // imágenes del detalle = principal + secundarias (galería)
-      GALLERY[p.slug] = [p.image, ...(p.gallery || [])].filter(Boolean);
-      // Colores desde el panel. Sin ellos se respeta lo que esté escrito acá
-      // abajo en COLOR_VARIANTS, si no los colores aparecían un instante y se
-      // borraban al llegar la respuesta de la base.
-      const cols = Array.isArray(p.colors) ? p.colors.filter(c => c && c.img) : [];
-      if (cols.length) COLOR_VARIANTS[p.slug] = cols;
-    });
+    CATALOGO.length = 0;
+    products.forEach(aplicarProducto);
 
     // HERO (carrusel principal)
     PRODUCTS.length = 0;
+    Object.keys(HERO_STOCK).forEach(k => delete HERO_STOCK[k]);
     products.filter(p => p.is_hero)
       .sort((a,b)=>(a.hero_order||0)-(b.hero_order||0))
       .forEach((p, idx) => {
@@ -247,19 +278,6 @@ async function loadCatalog(){
         });
         HERO_STOCK[heroName] = p.in_stock !== false;
       });
-
-    // Catálogo completo. Las secciones se repintan solas desde acá.
-    CATALOGO = products.map(p => ({
-      slug: p.slug,
-      cat: p.category || familiaDe(p.slug),
-      name: p.name,
-      image: p.image,
-      desc: p.description || '',
-      imgScale: p.image_scale ?? 0.75,
-      compare: p.compare_at_price,
-      stock: p.stock_qty,
-      inStock: p.in_stock !== false,
-    }));
 
     document.body.classList.add('sheet-ready');
     return true;
