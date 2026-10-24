@@ -136,12 +136,21 @@ const Banners = (() => {
   function renderBanners() {
     const wrap = document.getElementById('bnrWrapper');
     if (!wrap) return;
-    wrap.innerHTML = BANNERS.map(slide).join('');
+    // Los ocultos se guardan pero no se dibujan. Sin ninguno visible, la
+    // sección entera desaparece y la página arranca por el catálogo.
+    const visibles = BANNERS.filter(b => b.oculto !== true && b.desktop);
+    const sec = document.querySelector('.bnr-section');
+    if (sec) sec.hidden = !visibles.length;
+    wrap.innerHTML = visibles.map(slide).join('');
+    if (!visibles.length) {
+      if (swiper) { swiper.destroy(true, true); swiper = null; }
+      return;
+    }
 
     if (typeof Swiper === 'undefined') return;
     if (swiper) { swiper.destroy(true, true); swiper = null; }
     swiper = new Swiper('.bnr-swiper', {
-      loop: BANNERS.length > 1,
+      loop: visibles.length > 1,
       speed: 650,
       // Sin pauseOnMouseEnter: la cinta de banners nunca se detiene, ni al
       // pasar el ratón por encima. Antes se frenaba y parecía trabada.

@@ -133,3 +133,39 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
   .ed-lista-fila>.ed-btn{flex:1 1 auto}
   .ed-bloque .ed-subir.ancho{box-sizing:border-box}
 }
+
+/* Editor de banners: las dos fotos de cada banner, lado a lado */
+.eb-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:16px;margin-bottom:14px}
+.eb-card.oculta{opacity:.55}
+.eb-cab{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.eb-cab b{font-size:15px;margin-right:auto}
+.eb-huecos{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.eb-hueco-cab{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.eb-hueco-cab b{font-size:13px;font-weight:600}
+.eb-hueco-cab small{font-size:11.5px;color:var(--gray-mid)}
+.eb-hueco.falta .eb-hueco-cab b{color:#c0392b}
+.eb-foto{position:relative;aspect-ratio:16/5;background:var(--off-white);border-radius:12px;overflow:hidden;display:grid;place-items:center}
+.eb-foto.celu{aspect-ratio:1/1}
+.eb-foto img{width:100%;height:100%;object-fit:cover}
+.eb-hueco.falta .eb-foto{border:1.5px dashed rgba(192,57,43,.45)}
+.eb-sinfoto{font-size:12.5px;color:var(--gray-mid)}
+.eb-subir{position:absolute;right:8px;bottom:8px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(17,17,17,.82);color:#e9d9a8;cursor:pointer;transition:background .16s}
+.eb-subir:hover{background:#111}
+.eb-subir svg{width:17px;height:17px}
+@media(max-width:700px){
+  .eb-huecos{grid-template-columns:1fr}
+  .eb-foto.celu{aspect-ratio:4/3}
+}
+
+/* Sin banners visibles la sección se oculta, pero el admin necesita seguir
+   viendo el botón para volver a prenderlos. */
+body.editando .bnr-section[hidden]{display:block!important}
+body.editando .bnr-section[hidden] .bnr-swiper,
+body.editando .bnr-section[hidden] .bnr-arr,
+body.editando .bnr-section[hidden] .bnr-pagination{display:none}
+body.editando .bnr-section[hidden] .ed-ancla::before{
+  content:'La portada está sin banner';
+  display:block;width:100%;text-align:center;
+  font-size:13.5px;color:var(--gray-mid);margin-bottom:12px;
+}
+body.editando .bnr-section[hidden] .ed-ancla{flex-wrap:wrap;padding-top:26px}

@@ -34,66 +34,114 @@ const EdSitio = (() => {
   }
 
   /* ── Banners ──────────────────────────────────────────── */
+  /* ── Banners ──────────────────────────────────────────── */
+  // Cada banner necesita sus dos fotos: la ancha de computadora y la
+  // cuadrada de teléfono. Con una sola, en el celular se recorta mal.
   function abrirBanners(){
-    const estado = { lista: BANNERS.map(b => ({ ...b })) };
+    const estado = { lista: BANNERS.map(b => ({ ...b })), sucio: false };
 
     const { ov, cerrar } = Sesion.panel('Banner', 'Portada',
-      '<div id="edBanners"></div>' +
-      '<button type="button" class="ed-btn ghost" id="edMasBanner" style="margin-top:14px">+ Agregar banner</button>' +
-      '<p class="venta-msg" id="edBanMsg"></p>',
-      '<button type="button" class="venta-btn" id="edBanGuardar">Guardar</button>');
+      '<div class="venta-wrap" id="edBanners"></div>',
+      '<span class="ed-aviso" id="edBanAviso"></span>' +
+      '<button type="button" class="venta-btn" id="edBanGuardar">Guardar</button>',
+      true);
+
+    const marcar = () => {
+      estado.sucio = true;
+      const a = ov.querySelector('#edBanAviso');
+      a.className = 'ed-aviso';
+      a.textContent = 'Hay cambios sin guardar';
+    };
+
+    function hueco(b, i, campo, titulo, medida){
+      const url = b[campo] || '';
+      return `
+        <div class="eb-hueco${url ? '' : ' falta'}">
+          <div class="eb-hueco-cab">
+            <b>${titulo}</b>
+            <small>${medida}</small>
+          </div>
+          <div class="eb-foto ${campo === 'mobile' ? 'celu' : ''}">
+            ${url ? `<img src="${escH(url)}" alt="">` : '<span class="eb-sinfoto">Falta esta imagen</span>'}
+            <label class="eb-subir" title="${url ? 'Cambiar' : 'Subir'}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h2l1.5-2h7L17 7h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              <input type="file" accept="image/*" data-sube="${i}-${campo}" hidden>
+            </label>
+          </div>
+        </div>`;
+    }
 
     function pintar(){
       const box = ov.querySelector('#edBanners');
-      box.innerHTML = estado.lista.map((b, i) => `
-        <div class="ed-bloque" data-i="${i}">
-          <div class="ed-bloque-head">
-            <b>Banner ${i + 1}</b>
-            <button type="button" class="ed-mini" data-quitar="${i}">Quitar</button>
-          </div>
-          <div class="ed-foto-ancha">
-            <img src="${escH(b.desktop || '')}" alt="" onerror="this.style.visibility='hidden'">
-          </div>
-          <label class="ed-subir ancho">Subir imagen · 1920 × 560
-            <input type="file" accept="image/*" data-sube="${i}">
-          </label>
-          <label class="venta-f" style="margin-top:10px"><span>Texto alternativo</span>
-            <input type="text" data-alt="${i}" value="${escH(b.alt || '')}" placeholder="Qué muestra la imagen">
-          </label>
-        </div>`).join('') || '<p class="venta-vacio">Sin banners. Agregá el primero.</p>';
+      box.innerHTML = `
+        <p class="ec-intro">Cada banner lleva <b>dos imágenes</b>: la ancha para computadora y la cuadrada para teléfono. El ojo decide si se muestra; lo que apagás se guarda igual. Sin ningún banner visible, la página arranca directo por el catálogo.</p>
+        ${estado.lista.map((b, i) => `
+          <div class="eb-card${b.oculto ? ' oculta' : ''}" data-i="${i}">
+            <div class="eb-cab">
+              <b>Banner ${i + 1}</b>
+              <label class="ec-ojo" title="${b.oculto ? 'Mostrar' : 'Ocultar'}">
+                <input type="checkbox" data-ver="${i}" ${b.oculto ? '' : 'checked'}>
+                <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+                <span>${b.oculto ? 'Oculto' : 'Se muestra'}</span>
+              </label>
+              <button type="button" class="ec-borrar" data-borrar="${i}" aria-label="Eliminar banner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+              </button>
+            </div>
+            <div class="eb-huecos">
+              ${hueco(b, i, 'desktop', 'Computadora', '1920 × 560')}
+              ${hueco(b, i, 'mobile', 'Teléfono', '1080 × 1080')}
+            </div>
+            <label class="venta-f" style="margin-top:12px"><span>Texto alternativo</span>
+              <input type="text" data-alt="${i}" value="${escH(b.alt || '')}" placeholder="Qué muestra la imagen">
+            </label>
+          </div>`).join('') || '<p class="venta-vacio">Sin banners. La portada arranca por el catálogo.</p>'}
+        <button type="button" class="ec-nueva" id="ebNuevo" style="margin-top:16px;min-height:120px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          <span>Banner nuevo</span>
+        </button>`;
 
-      box.querySelectorAll('[data-quitar]').forEach(b => b.addEventListener('click', () => {
-        estado.lista.splice(+b.dataset.quitar, 1); pintar();
-      }));
-      box.querySelectorAll('[data-alt]').forEach(i => i.addEventListener('input', e => {
+      box.querySelectorAll('[data-alt]').forEach(x => x.addEventListener('input', e => {
         estado.lista[+e.target.dataset.alt].alt = e.target.value;
+        marcar();
       }));
-      box.querySelectorAll('[data-sube]').forEach(i => i.addEventListener('change', async e => {
+      box.querySelectorAll('[data-ver]').forEach(x => x.addEventListener('change', e => {
+        estado.lista[+e.target.dataset.ver].oculto = !e.target.checked;
+        marcar(); pintar();
+      }));
+      box.querySelectorAll('[data-borrar]').forEach(b => b.addEventListener('click', async () => {
+        if (await confirmar('¿Eliminar este banner? Se van sus dos imágenes.', 'Eliminar')) {
+          estado.lista.splice(+b.dataset.borrar, 1);
+          marcar(); pintar();
+        }
+      }));
+      box.querySelectorAll('[data-sube]').forEach(inp => inp.addEventListener('change', async e => {
         const file = e.target.files[0];
         if (!file) return;
+        const [i, campo] = e.target.dataset.sube.split('-');
         toast('Subiendo imagen…');
         try {
-          const url = await uploadFile(file, 'banners/');
-          const b = estado.lista[+e.target.dataset.sube];
-          b.desktop = url; b.mobile = url;
-          pintar();
+          estado.lista[+i][campo] = await uploadFile(file, 'banners/');
+          marcar(); pintar();
           toast('Imagen lista');
         } catch (err) { toast(mensajeError(err), true); }
         e.target.value = '';
       }));
+      box.querySelector('#ebNuevo').addEventListener('click', () => {
+        estado.lista.push({ desktop:'', mobile:'', alt:'' });
+        marcar(); pintar();
+      });
     }
     pintar();
 
-    ov.querySelector('#edMasBanner').addEventListener('click', () => {
-      estado.lista.push({ desktop:'', mobile:'', alt:'' });
-      pintar();
-    });
-
     ov.querySelector('#edBanGuardar').addEventListener('click', async e => {
-      const btn = e.target, msg = ov.querySelector('#edBanMsg');
-      if (!estado.lista.length || estado.lista.some(b => !b.desktop)) {
-        msg.className = 'venta-msg err';
-        msg.textContent = 'Dejá al menos un banner, y que todos tengan imagen.';
+      const btn = e.target, aviso = ov.querySelector('#edBanAviso');
+      // Sin las dos fotos el banner se vería recortado en un teléfono.
+      const incompleto = estado.lista.findIndex(b => !b.desktop || !b.mobile);
+      if (incompleto >= 0) {
+        aviso.className = 'ed-aviso err';
+        aviso.textContent = 'Al banner ' + (incompleto + 1) + ' le falta una imagen: necesita la de computadora y la de teléfono.';
         return;
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
@@ -103,16 +151,15 @@ const EdSitio = (() => {
         Banners.init();
         Edicion.remontar();
         cerrar();
-        toast('Banner actualizado');
+        toast(estado.lista.some(b => !b.oculto) ? 'Banner actualizado' : 'La portada queda sin banner');
       } catch (err) {
         btn.disabled = false; btn.textContent = 'Guardar';
-        msg.className = 'venta-msg err';
-        msg.textContent = mensajeError(err);
+        aviso.className = 'ed-aviso err';
+        aviso.textContent = mensajeError(err);
       }
     });
   }
 
-  /* ── Categorías ───────────────────────────────────────── */
   /* ── Categorías ───────────────────────────────────────── */
   // A pantalla completa y en dos niveles: primero la grilla de categorías,
   // y al entrar en una, la grilla de sus subcategorías. Cada tarjeta muestra
