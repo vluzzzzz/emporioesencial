@@ -19,13 +19,55 @@ const Sesion = (() => {
   async function init(){
     if (!sb) return;
     const { data:{ session } } = await sb.auth.getSession();
-    if (!session) return;
+    if (!session) { montarBotonLogin(); return; }
     const { data } = await sb.from('profiles')
       .select('id,nombre,email,rol,activo').eq('id', session.user.id).maybeSingle();
     perfil = data && data.activo ? data : null;
-    if (!perfil) return;
+    if (!perfil) { montarBotonLogin(); return; }
     pintarNav();
     montarBotonFicha();
+    if (typeof Edicion !== 'undefined') Edicion.init(perfil);
+  }
+
+  function montarBotonLogin(){
+    const b = $('.nav-login');
+    if (b) b.addEventListener('click', abrirLogin);
+  }
+
+  function abrirLogin(){
+    const cuerpo = `
+      <form id="loginForm" autocomplete="on">
+        <div class="venta-g2">
+          <label class="venta-f venta-ancho"><span>Correo</span>
+            <input type="email" name="email" required autocomplete="username" placeholder="tu@correo.cl">
+          </label>
+          <label class="venta-f venta-ancho"><span>Contraseña</span>
+            <input type="password" name="clave" required autocomplete="current-password">
+          </label>
+        </div>
+        <p class="venta-msg" id="loginMsg"></p>
+      </form>`;
+    const pie = '<button type="submit" form="loginForm" class="venta-btn">Entrar</button>';
+    const { ov, cerrar } = panel('Ingresar', 'Equipo Esencial Emporio', cuerpo, pie);
+    const f = ov.querySelector('#loginForm');
+    f.email.focus();
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = ov.querySelector('.venta-btn');
+      const msg = ov.querySelector('#loginMsg');
+      btn.disabled = true; btn.textContent = 'Entrando…'; msg.className = 'venta-msg';
+      const { error } = await sb.auth.signInWithPassword({
+        email: f.email.value.trim(), password: f.clave.value,
+      });
+      if (error) {
+        btn.disabled = false; btn.textContent = 'Entrar';
+        msg.className = 'venta-msg err';
+        msg.textContent = 'No se pudo entrar: ' + error.message;
+        return;
+      }
+      cerrar();
+      location.reload();
+    });
   }
 
   // pm.js la llama cada vez que se abre una ficha de producto.
@@ -66,7 +108,6 @@ const Sesion = (() => {
         </span>
       </button>
       <div class="nav-cuenta-menu" id="navCuentaMenu" hidden>
-        ${perfil.rol === 'admin' ? '<a href="/admin">Panel de administración</a>' : ''}
         <button type="button" data-acc="ventas">Mis ventas</button>
         <button type="button" data-acc="salir">Cerrar sesión</button>
       </div>`;

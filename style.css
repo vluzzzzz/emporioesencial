@@ -2782,3 +2782,12 @@ svg{ -webkit-user-select:none; user-select:none; }
   .venta-tarjetas{grid-template-columns:repeat(2,1fr)}
   .venta-ov.venta-full .venta-head h2{font-size:30px}
 }
+
+/* ===========================================================================
+   V61 — Interruptor del modo edición (el resto vive en css/edicion.css)
+   ======================================================================== */
+.ed-toggle{display:inline-flex;align-items:center;gap:8px;margin-right:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s,color .18s}
+.ed-toggle:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.ed-toggle.on{background:#e9d9a8;border-color:#e9d9a8;color:#111}
+.ed-toggle svg{width:17px;height:17px}
+@media(max-width:860px){.ed-toggle span{display:none}.ed-toggle{padding:9px;margin-right:6px}}
