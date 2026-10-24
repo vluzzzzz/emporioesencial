@@ -2823,3 +2823,35 @@ svg{ -webkit-user-select:none; user-select:none; }
   .nav-vendedores-btn{padding:9px;margin-left:6px}
   .ev-comunas{grid-template-columns:1fr}
 }
+
+/* Vendedores en grilla de tres: en una sola columna la lista se hacia larguisima */
+.ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
+.ev-grid .ev-vendedor{margin-bottom:0;min-width:0}
+.ev-grid .ev-head{gap:11px;padding-bottom:12px}
+.ev-grid .ev-ini{width:38px;height:38px;font-size:16px}
+.ev-grid .ev-txt b{font-size:15.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-grid .ev-txt small{font-size:12.5px}
+.ev-grid .ev-ver{font-size:12px}
+.ev-grid .venta-lista{gap:8px}
+.ev-grid .venta-lista li{flex-wrap:wrap;gap:10px;padding:11px}
+.ev-grid .venta-lista li img{width:46px;height:46px}
+.ev-grid .vl-info b{font-size:13.5px}
+.ev-grid .vl-info small{font-size:11.5px}
+.ev-grid .vl-cuenta{width:100%;border-left:0;border-top:1px solid var(--gray-light);padding-left:0;padding-top:9px}
+.ev-grid .vl-linea{font-size:12px;padding:2px 0}
+.ev-grid .vl-linea b{font-size:12.5px}
+.ev-grid .vl-final b{font-size:16px}
+@media(max-width:1100px){.ev-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.ev-grid{grid-template-columns:1fr}}
+
+/* La barra del admin lleva cuatro botones mas que la del cliente. El logo
+   esta centrado en una columna 1fr que se puede colapsar a cero, y entonces
+   la imagen se desbordaba encima de los botones. */
+.nav-logo{min-width:96px;display:flex;justify-content:center}
+.nav-logo-img{max-width:100%;object-fit:contain}
+.nav-left,.nav-right{min-width:0}
+@media(max-width:1200px){
+  .nav-cats-btn span,.nav-ventas-btn span,.nav-vendedores-btn span,.ed-toggle span{display:none}
+  .nav-cats-btn,.nav-ventas-btn,.nav-vendedores-btn,.ed-toggle{padding:9px}
+  .nav-cats-chev{display:none}
+}

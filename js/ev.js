@@ -126,6 +126,7 @@ const EdVendedores = (() => {
         <div class="vt"><span>Envíos</span><b>${plata(envios)}</b></div>
         <div class="vt destacada"><span>Total</span><b>${plata(total)}</b></div>
       </div>
+      <div class="ev-grid">
       ${grupos.map(g => {
         const t = g.lista.reduce((a, v) => a + (v.total || 0), 0);
         return `
@@ -142,7 +143,8 @@ const EdVendedores = (() => {
             ? `<ul class="venta-lista">${g.lista.slice(0, 3).map(filaVenta).join('')}</ul>`
             : '<p class="venta-vacio">Todavía no registró ninguna venta.</p>'}
         </div>`;
-      }).join('')}`;
+      }).join('')}
+      </div>`;
 
     box.querySelectorAll('[data-abrir]').forEach(b =>
       b.addEventListener('click', () => historial(b.dataset.abrir)));
