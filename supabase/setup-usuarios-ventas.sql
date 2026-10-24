@@ -87,7 +87,20 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 
 
--- ── 4 · Asegurar perfil y rol del dueño ─────────────────────────────────────
+-- ── 4 · Perfil para los usuarios que ya existían ────────────────────────────
+--  Los usuarios creados ANTES de correr este archivo no pasaron por el
+--  trigger. Esto les arma el perfil que falta. Por defecto quedan como
+--  vendedores; el rol se cambia después desde /admin → Usuarios.
+insert into public.profiles (id, email, nombre, telefono, observacion, rol)
+select u.id, lower(u.email),
+       coalesce(u.raw_user_meta_data ->> 'nombre', ''),
+       coalesce(u.raw_user_meta_data ->> 'telefono', ''),
+       coalesce(u.raw_user_meta_data ->> 'observacion', ''),
+       coalesce(u.raw_user_meta_data ->> 'rol', 'vendedor')
+from auth.users u
+on conflict (id) do nothing;
+
+-- Asegurar perfil y rol del dueño
 insert into public.profiles (id, email, nombre, rol)
 select u.id, lower(u.email), coalesce(u.raw_user_meta_data ->> 'nombre',''), 'admin'
 from auth.users u

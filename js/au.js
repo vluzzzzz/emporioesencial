@@ -11,16 +11,23 @@ const Admin = (() => {
     if (!session) return;
     const { data } = await sb.from('profiles')
       .select('id,nombre,email,rol').eq('id', session.user.id).maybeSingle();
-    yo = data || { nombre:'', email:session.user.email, rol:'admin' };
+    if (!data) {
+      await sb.auth.signOut();
+      $('#app').classList.add('hidden');
+      $('#login').classList.remove('hidden');
+      $('#loginErr').textContent = 'Esta cuenta no tiene perfil. Corré supabase/setup-usuarios-ventas.sql y volvé a entrar.';
+      return;
+    }
+    yo = data;
 
     const quien = $('#admQuien');
     if (quien) quien.textContent = (yo.nombre || yo.email) + ' · ' + (yo.rol === 'admin' ? 'Administrador' : 'Vendedor');
 
     if (yo.rol !== 'admin') {
-      await sb.auth.signOut();
       $('#app').classList.add('hidden');
       $('#login').classList.remove('hidden');
-      $('#loginErr').textContent = 'Esta cuenta es de vendedor. Entrá desde la tienda y usá el botón Producto vendido.';
+      $('#loginErr').textContent = 'Hola ' + (yo.nombre || yo.email) + '. Te llevamos a la tienda…';
+      setTimeout(() => location.replace('/'), 900);
       return;
     }
     $$('.adm-solo').forEach(t => t.classList.remove('hidden'));
