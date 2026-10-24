@@ -18,6 +18,23 @@ document.addEventListener('DOMContentLoaded', () => {
   Filas.init();
   ProtegerImagenes.init();
 
+  const navCats=document.getElementById('navCats');
+  const navCatsBtn=document.getElementById('navCatsBtn');
+  const navCatsMenu=document.getElementById('navCatsMenu');
+  if(navCats&&navCatsBtn&&navCatsMenu){
+    const cerrarCats=()=>{navCats.classList.remove('open');navCatsMenu.hidden=true;navCatsBtn.setAttribute('aria-expanded','false');};
+    navCatsBtn.addEventListener('click',e=>{
+      e.stopPropagation();
+      const abrir=navCatsMenu.hidden;
+      navCats.classList.toggle('open',abrir);
+      navCatsMenu.hidden=!abrir;
+      navCatsBtn.setAttribute('aria-expanded',String(abrir));
+    });
+    navCatsMenu.addEventListener('click',cerrarCats);
+    document.addEventListener('click',e=>{if(!navCats.contains(e.target))cerrarCats();});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape')cerrarCats();});
+  }
+
   // ── 2. Después, sin bloquear. Las dos consultas salen juntas, no una tras
   //    otra: no dependen entre sí y en serie tardarían el doble.
   //
