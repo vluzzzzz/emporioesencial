@@ -51,7 +51,9 @@ const EdVendedores = (() => {
       sb.from('ventas').select('*').order('created_at', { ascending:false }).limit(500),
       sb.from('comunas').select('*').order('position'),
     ]);
-    usuarios = u.data || [];
+    // La cuenta técnica entra como admin pero no se muestra en el equipo.
+    // La regla de RLS ya la esconde; esto es por si alguna vez llega igual.
+    usuarios = (u.data || []).filter(x => !x.oculto);
     ventas = v.data || [];
     comunas = c.data || [];
   }
