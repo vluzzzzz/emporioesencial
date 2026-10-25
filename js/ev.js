@@ -319,7 +319,7 @@ const EdVendedores = (() => {
     const v = ventas.find(x => String(x.id) === String(id));
     if (!v) return;
     const estado = estadoDe(v);
-    const linea = (t, d) => `<div class="ev-ficha-l"><span>${t}</span><b>${esc(d || '—')}</b></div>`;
+    const linea = (t, d) => `<div class="ev-datos-l"><span>${t}</span><b>${esc(d || '—')}</b></div>`;
 
     const cuerpo = `
       <div class="ev-resumen-pedido">
@@ -333,7 +333,7 @@ const EdVendedores = (() => {
       </div>
 
       <p class="venta-sec">A quién se lo enviamos</p>
-      <div class="ev-ficha">
+      <div class="ev-datos">
         ${linea('Cliente', v.cliente_nombre)}
         ${linea('Teléfono', v.cliente_telefono)}
         ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
@@ -342,7 +342,7 @@ const EdVendedores = (() => {
       </div>
 
       <p class="venta-sec">Quién lo vendió</p>
-      <div class="ev-ficha">
+      <div class="ev-datos">
         ${linea('Vendedor', v.vendedor_nombre)}
         ${linea('Forma de pago', v.metodo_pago)}
         ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
