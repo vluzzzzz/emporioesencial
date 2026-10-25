@@ -2904,7 +2904,7 @@ svg{ -webkit-user-select:none; user-select:none; }
   .nav-bus-movil .buscador{width:100%;max-width:none}
   .nav{align-items:center}
   .nav-logo{min-width:0}
-  .nav-logo-img{height:34px!important}
+  .nav-logo-img{height:46px!important;max-width:none!important}
 }
 
 /* ===========================================================================
