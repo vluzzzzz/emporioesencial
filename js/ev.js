@@ -119,14 +119,6 @@ const EdVendedores = (() => {
   let diaVisto = null;
   let vendedorVisto = '';
 
-  // Todos los años que tengan ventas, más el actual. Dentro de cada uno
-  // están los doce meses, aunque no haya nada registrado.
-  function anios(){
-    const s = new Set(ventas.map(v => new Date(v.created_at).getFullYear()));
-    s.add(new Date().getFullYear());
-    return [...s].sort((a, b) => b - a);
-  }
-  const conVentas = c => ventas.some(v => clave(new Date(v.created_at)) === c);
   function correrMes(pasos){
     const [a, m] = mesVisto.split('-').map(Number);
     const d = new Date(a, m - 1 + pasos, 1);
@@ -211,9 +203,8 @@ const EdVendedores = (() => {
     if (filtros) filtros.innerHTML = `
       <div class="ev-filtro">
         <span>Mes</span>
-        ${Sesion.desplegable('mes', anios().flatMap(a => MESES.map((n, k) => {
-          const c = a + '-' + String(k + 1).padStart(2, '0');
-          return { valor:c, texto:n + ' ' + a, nota: conVentas(c) ? 'con ventas' : '' };
+        ${Sesion.desplegable('mes', MESES.map((n, k) => ({
+          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
         })), 'Elegí el mes', mesVisto, false, ICO.calendario)}
       </div>
       <div class="ev-filtro">
