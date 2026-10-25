@@ -349,11 +349,11 @@ const EdVendedores = (() => {
       </div>
 
       <p class="venta-sec">La plata</p>
-      <div class="vl-cuenta" style="width:100%;border:0;padding:0">
-        <div class="vl-linea"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
-        <div class="vl-linea vl-gana"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-        <div class="vl-linea"><span>Envío · lo cobra el vendedor</span><b>${plata(v.costo_despacho)}</b></div>
-        <div class="vl-linea vl-final vl-pagar"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comisionDe(v))}</b></div>
+      <div class="ev-datos">
+        ${linea('Cobrado al cliente', plata(v.total))}
+        <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+        ${linea('Envío · lo cobra el vendedor', plata(v.costo_despacho))}
+        <div class="ev-datos-l total"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comisionDe(v))}</b></div>
       </div>
 
       ${v.motivo ? `<div class="ev-previo">
@@ -426,11 +426,11 @@ const EdVendedores = (() => {
             <small>${esc(v.vendedor_nombre)} · ${cuando(v.created_at)}</small>
           </div>
         </div>
-        <div class="vl-cuenta" style="width:100%;border:0;padding:0;margin-top:16px">
-          <div class="vl-linea"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
-          <div class="vl-linea vl-gana"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div class="vl-linea"><span>Envío · lo cobra el vendedor</span><b>${plata(v.costo_despacho)}</b></div>
-          <div class="vl-linea vl-final vl-pagar"><span>Pagar al vendedor</span><b>${plata(comisionDe(v))}</b></div>
+        <div class="ev-datos" style="margin-top:16px">
+          <div class="ev-datos-l"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
+          <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+          <div class="ev-datos-l"><span>Envío · lo cobra el vendedor</span><b>${plata(v.costo_despacho)}</b></div>
+          <div class="ev-datos-l total"><span>Pagar al vendedor</span><b>${plata(comisionDe(v))}</b></div>
         </div>
         ${rever && v.motivo ? `<div class="ev-previo">
           <span>${previo === 'denegado' ? 'Se había denegado por' : 'Nota anterior'}</span>
