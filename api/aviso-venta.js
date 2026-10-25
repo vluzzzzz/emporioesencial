@@ -17,6 +17,7 @@ const RESEND = () => process.env.RESEND_API_KEY || '';
 const PARA = () => String(process.env.AVISO_EMAIL_TO || '').split(',').map(s => s.trim()).filter(Boolean);
 const DESDE = () => process.env.AVISO_EMAIL_FROM || 'Esencial Emporio <onboarding@resend.dev>';
 
+const plata = n => '$' + Number(n || 0).toLocaleString('es-CL');
 const esc = s => String(s == null ? '' : s)
   .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -29,12 +30,13 @@ async function usuarioDelToken(token) {
 }
 
 // El correo es la etiqueta que se imprime y se pega en el paquete: solo lo
-// que el repartidor necesita leer. Nada de plata del negocio ni botones.
+// que el repartidor necesita leer: a dónde va y cuánto cobra. Nada de la
+// comisión del vendedor ni de la ganancia del negocio.
 function cuerpoHtml(v) {
-  const fila = (rot, dato, ultima) => dato
+  const fila = (rot, dato) => dato
     ? `<tr>
-         <td style="width:34%;padding:10px 14px;${ultima ? '' : 'border-bottom:1px solid #d2d2d7;'}color:#6b6b72;font-size:12.5px;vertical-align:middle">${esc(rot)}</td>
-         <td style="padding:10px 14px;${ultima ? '' : 'border-bottom:1px solid #d2d2d7;'}border-left:1px solid #d2d2d7;text-align:right;font-size:15px;font-weight:700;vertical-align:middle">${esc(dato)}</td>
+         <td style="width:34%;padding:10px 14px;border-bottom:1px solid #d2d2d7;color:#6b6b72;font-size:12.5px;vertical-align:middle">${esc(rot)}</td>
+         <td style="padding:10px 14px;border-bottom:1px solid #d2d2d7;border-left:1px solid #d2d2d7;text-align:right;font-size:15px;font-weight:700;vertical-align:middle">${esc(dato)}</td>
        </tr>` : '';
 
   const filas = [
@@ -63,7 +65,11 @@ function cuerpoHtml(v) {
 
       <tr><td style="padding:0">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
-          ${filas.map(([r, d], i) => fila(r, d, i === filas.length - 1)).join('')}
+          ${filas.map(([r, d]) => fila(r, d)).join('')}
+          <tr>
+            <td style="width:34%;padding:14px;background:#f5f5f7;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle">Total</td>
+            <td style="padding:14px;background:#f5f5f7;border-left:1px solid #d2d2d7;text-align:right;font-size:22px;font-weight:700;vertical-align:middle">${plata(v.total)}</td>
+          </tr>
         </table>
       </td></tr>
 
