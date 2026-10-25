@@ -2986,13 +2986,18 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 /* En la tarjeta, "Agotado" va donde iría el precio: a un producto sin stock
    no tiene sentido mostrarle el valor. La foto queda a color. */
+/* La etiqueta ocupa todo el ancho de la tarjeta, con la palabra al centro:
+   suelta a la izquierda quedaba descolgada. */
+.temu-card.out-of-stock .card-foot{display:block}
+.temu-card.out-of-stock .card-precio-col{display:block;width:100%}
 .card-precio-col .oos-tag{
   position:static;transform:none;box-shadow:none;
-  display:inline-block;
+  display:flex;align-items:center;justify-content:center;
+  width:100%;box-sizing:border-box;
   background:#e01b1b;color:#fff;
   font-family:var(--font-body);
-  font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
-  padding:7px 14px;border-radius:8px;margin:0;
+  font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:11px 14px;border-radius:10px;margin:0;
   -webkit-font-smoothing:antialiased;
 }
 /* En el carrusel sigue siendo la etiqueta sobre la foto */
