@@ -69,10 +69,12 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 
 .ec-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
 .ec-card.oculta{opacity:.55}
+/* La vista previa es un círculo igual que en el menú: antes se mostraba en
+   4:3 y al guardar la foto salía recortada distinto de lo que se veía acá. */
 .ec-foto{position:relative;aspect-ratio:4/3;background:var(--off-white);display:grid;place-items:center;overflow:hidden}
-.ec-foto img{width:100%;height:100%;object-fit:cover}
+.ec-foto img{width:118px;height:118px;border-radius:50%;object-fit:cover;background:#f2eddf}
 .ec-foto.vacia img{display:none}
-.ec-sinfoto{font-size:13px;color:var(--gray-mid)}
+.ec-sinfoto{display:grid;place-items:center;width:118px;height:118px;border-radius:50%;border:1.5px dashed var(--gray-light);font-size:12.5px;color:var(--gray-mid);text-align:center}
 .ec-subir{position:absolute;right:8px;bottom:8px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(17,17,17,.82);color:#e9d9a8;cursor:pointer;transition:background .16s}
 .ec-subir:hover{background:#111}
 .ec-subir svg{width:17px;height:17px}

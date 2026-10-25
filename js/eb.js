@@ -233,8 +233,8 @@ const EdSitio = (() => {
 
       box.innerHTML = `
         <p class="ec-intro">${dentro
-          ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. Cada una tiene su foto, la que se ve al abrir el menú.'
-          : 'Cambiá la foto y el nombre de cada una. El ojo decide si aparece en el menú de la tienda: lo que apagás se guarda igual, solo deja de verse.'}</p>
+          ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. La foto se ve en círculo dentro del menú, así que conviene <b>cuadrada, de 400 × 400</b>, con el producto al centro.'
+          : 'Cambiá la foto y el nombre de cada una. La foto se ve en círculo dentro del menú: conviene <b>cuadrada, de 400 × 400</b>. El ojo decide si aparece en la tienda: lo que apagás se guarda igual, solo deja de verse.'}</p>
         <div class="ec-grid">
           ${items.map((it, i) => tarjeta(it, i, esSub)).join('')}
           <button type="button" class="ec-nueva" id="ecNueva">
