@@ -146,6 +146,7 @@ const EdVendedores = (() => {
     calendario: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
     ok: '<circle cx="12" cy="12" r="8.6"/><path d="m8.4 12.2 2.5 2.5 4.7-5"/>',
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
+    rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
@@ -370,7 +371,11 @@ const EdVendedores = (() => {
           <div class="ev-resolver">
             <button type="button" class="ev-ok" data-resolver="${esc(v.id)}" data-como="aceptado">${svg(ICO.ok)}Aceptar comisión</button>
             <button type="button" class="ev-no" data-resolver="${esc(v.id)}" data-como="denegado">${svg(ICO.no)}Denegar pedido</button>
-          </div>` : (v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : '')}
+          </div>` : `
+          ${v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : ''}
+          <div class="ev-resolver">
+            <button type="button" class="ev-rever" data-resolver="${esc(v.id)}" data-como="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar de nuevo y aceptar' : 'Revisar de nuevo y denegar'}</button>
+          </div>`}
       </article>`;
   }
 
@@ -378,6 +383,8 @@ const EdVendedores = (() => {
     const v = ventas.find(x => String(x.id) === String(id));
     if (!v) return;
     const acepta = como === 'aceptado';
+    const previo = estadoDe(v);
+    const rever = previo !== 'pendiente';
 
     const cuerpo = `
       <form id="evResolver">
@@ -395,8 +402,12 @@ const EdVendedores = (() => {
           <div class="vl-linea"><span>Envío · lo cobra el vendedor</span><b>${plata(v.costo_despacho)}</b></div>
           <div class="vl-linea vl-final vl-pagar"><span>Pagar al vendedor</span><b>${plata(comisionDe(v))}</b></div>
         </div>
+        ${rever && v.motivo ? `<div class="ev-previo">
+          <span>${previo === 'denegado' ? 'Se había denegado por' : 'Nota anterior'}</span>
+          <p>${esc(v.motivo)}</p>
+        </div>` : ''}
         <label class="venta-f venta-ancho" style="margin-top:18px"><span>Observación${acepta ? ' (opcional)' : ''}</span>
-          <textarea name="motivo" rows="3" placeholder="${acepta ? 'Alguna nota sobre este pedido' : 'Por qué se deniega: no llegó, el cliente se arrepintió…'}">${esc(v.motivo || '')}</textarea>
+          <textarea name="motivo" rows="3" placeholder="${acepta ? 'Alguna nota sobre este pedido' : 'Por qué se deniega: no llegó, el cliente se arrepintió…'}">${esc(previo === como ? (v.motivo || '') : '')}</textarea>
         </label>
         <p class="venta-msg" id="evResMsg"></p>
       </form>`;
@@ -404,7 +415,8 @@ const EdVendedores = (() => {
     const pie = `<button type="submit" form="evResolver" class="venta-btn${acepta ? '' : ' peligro'}">${acepta ? 'Aceptar comisión' : 'Denegar pedido'}</button>`;
     const { ov, cerrar } = Sesion.panel(
       acepta ? 'Aceptar comisión' : 'Denegar pedido',
-      'Pedido de ' + (v.vendedor_nombre || 'el vendedor'), cuerpo, pie);
+      (rever ? 'Revisión · pedido de ' : 'Pedido de ') + (v.vendedor_nombre || 'el vendedor'),
+      cuerpo, pie);
     const f = ov.querySelector('#evResolver');
     f.motivo.focus();
 

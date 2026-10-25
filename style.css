@@ -3121,8 +3121,13 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-cifras .pagar{background:var(--off-white)}
 
 .ev-resolver{display:flex;gap:10px;margin-top:14px}
-.ev-ok,.ev-no{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:13.5px;font-weight:700;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
-.ev-ok svg,.ev-no svg{width:17px;height:17px}
+.ev-ok,.ev-no,.ev-rever{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:13.5px;font-weight:700;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
+.ev-ok svg,.ev-no svg,.ev-rever svg{width:17px;height:17px}
+.ev-rever{background:#fff;color:var(--gray-mid);border-color:var(--gray-light);font-weight:600}
+.ev-rever:hover{background:var(--off-white);color:#111;border-color:#c9c9c9}
+.ev-previo{margin-top:16px;padding:12px 14px;border-radius:12px;background:rgba(192,57,43,.06);border:1px solid rgba(192,57,43,.2)}
+.ev-previo span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c0392b}
+.ev-previo p{margin:5px 0 0;font-size:13px;line-height:1.5;color:#444}
 .ev-ok{background:#111;color:#e9d9a8}
 .ev-ok:hover{background:#000}
 .ev-no{background:#fff;color:#c0392b;border-color:rgba(192,57,43,.45)}
