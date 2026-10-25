@@ -191,15 +191,14 @@ function slideHTML(p,i){
   const tag  = p.featured_tag || 'Destacado';   // etiqueta opcional del carrusel
   const out = p.in_stock === false ? ' out-of-stock' : '';
   const dis = p.in_stock === false ? ' aria-disabled="true"' : '';
-  const btn = p.in_stock === false ? 'Sin stock' : 'Ver más';
-  const oos = p.in_stock === false ? '<div class="oos-tag">AGOTADO</div>' : '';
+  const btn = p.in_stock === false ? 'Agotado' : 'Ver más';
   const mid = 'mfx' + i;
   return `<div class="swiper-slide csl-slide${out}" data-id="${escAttr(p.slug)}" data-name="${escAttr(name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.image_scale ?? 0.75}" data-desc="${escAttr(p.description)}"${dis}>
       <div class="csl-corner"><svg width="31" height="31" viewBox="0 0 31 31" fill="none"><g opacity="0.35"><mask id="${mid}" fill="white"><path d="M30.6 1L1.6 0L0.7 29L29.7 30L30.6 1Z"/></mask><path d="M30.6 1L30.65 -0.47L32.2 -0.42L32.15 1.09L30.6 1ZM30.55 2.55L1.6 1.59L1.7 -1.43L30.65 -0.47L30.55 2.55ZM28.17 29.98L29.13 0.99L32.15 1.09L31.19 30.08L28.17 29.98Z" fill="white" mask="url(#${mid})"/></g></svg></div>
       <span class="csl-tag">${escAttr(tag)}</span>
-      <div class="csl-img"><img src="${escAttr(img)}" alt="${escAttr(name)}" loading="lazy">${oos}</div>
+      <div class="csl-img"><img src="${escAttr(img)}" alt="${escAttr(name)}" loading="lazy"></div>
       <h3 class="csl-name">${escAttr(name)}</h3>
-      <span class="csl-price">${fmt(p1)}</span>
+      ${p.in_stock === false ? '<span class="oos-tag">Agotado</span>' : `<span class="csl-price">${fmt(p1)}</span>`}
       <button class="csl-rect">${btn}</button>
     </div>`;
 }

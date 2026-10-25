@@ -281,10 +281,10 @@ body:not(.sheet-ready) .csl-price {
 /* ══ AGOTADO: cartel diagonal sobre la foto, hover-zoom intacto ══ */
 .out-of-stock{cursor:default}
 .out-of-stock .csl-img{position:relative}
-.out-of-stock .card-name,.out-of-stock .card-price,.out-of-stock .csl-name,.out-of-stock .csl-price{color:#9a9a9f}
+.out-of-stock .card-name,.out-of-stock .csl-name{color:var(--black)}
 .out-of-stock .card-btn,.out-of-stock .csl-rect{
-  pointer-events:none;background:#b9b9be!important;color:#fff!important;
-  border-color:#b9b9be!important;box-shadow:none!important;background-image:none!important;
+  pointer-events:none;background:#e01b1b!important;color:#fff!important;
+  border-color:#e01b1b!important;box-shadow:none!important;background-image:none!important;
 }
 .oos-tag{
   position:absolute;top:50%;left:50%;
@@ -3020,11 +3020,14 @@ svg{ -webkit-user-select:none; user-select:none; }
   padding:11px 14px;border-radius:10px;margin:0;
   -webkit-font-smoothing:antialiased;
 }
-/* En el carrusel sigue siendo la etiqueta sobre la foto */
-.csl-img .oos-tag{
-  background:#e01b1b!important;
-  box-shadow:0 10px 26px rgba(224,27,27,.45)!important;
-  font-weight:800;font-size:16px;letter-spacing:.14em;padding:9px 24px;
+/* En el carrusel, la etiqueta también reemplaza al precio */
+.csl-slide .oos-tag{
+  position:static;transform:none;box-shadow:none;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:#e01b1b;color:#fff;
+  font-family:var(--font-body);
+  font-size:14px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;
+  padding:9px 20px;border-radius:10px;margin:0;
   -webkit-font-smoothing:antialiased;
 }
 .out-of-stock .card-img-wrap img,
