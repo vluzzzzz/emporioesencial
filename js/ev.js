@@ -225,10 +225,6 @@ const EdVendedores = (() => {
 
       <div class="ev-resumen">
         <div class="vt2">
-          <span class="vt2-ico">${svg(ICO.pedidos)}</span>
-          <div><span>Pedidos</span><b>${resumen.pedidos}</b></div>
-        </div>
-        <div class="vt2">
           <span class="vt2-ico">${svg(ICO.caja)}</span>
           <div><span>Productos vendidos</span><b>${resumen.unidades}</b></div>
         </div>

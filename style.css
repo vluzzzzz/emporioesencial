@@ -3040,7 +3040,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* ===========================================================================
    V94 — Ventas: resumen con íconos, calendario y detalle del día
    ======================================================================== */
-.ev-resumen{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px}
+.ev-resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:20px}
 .vt2{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--gray-light);border-radius:18px;padding:20px 22px}
 .vt2>.vt2-ico{flex:none;width:30px;height:30px;display:grid;place-items:center;color:#8a6508;font-size:0}
 .vt2>.vt2-ico svg{display:block;width:30px;height:30px}
