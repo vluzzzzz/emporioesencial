@@ -133,14 +133,40 @@ const Banners = (() => {
       </a>`;
   }
 
+  // Con Supabase conectado, los banners del archivo son solo un respaldo: lo
+  // que manda es lo guardado. Dibujarlos antes de que llegue la respuesta
+  // hacía que un banner oculto apareciera medio segundo en cada recarga.
+  let esperandoConfig = !!window.SB_CONFIGURED;
+  let relojEspera = null;
+  const MEMORIA = 'emporio-banner-visible';
+  const recordado = () => { try { return localStorage.getItem(MEMORIA); } catch { return null; } };
+
+  function listo() {
+    if (!esperandoConfig) return;
+    esperandoConfig = false;
+    clearTimeout(relojEspera);
+    renderBanners();
+  }
+
   function renderBanners() {
     const wrap = document.getElementById('bnrWrapper');
     if (!wrap) return;
+    if (esperandoConfig) {
+      const sec = document.querySelector('.bnr-section');
+      if (sec) sec.hidden = true;
+      // Si la base tarda demasiado se dibuja lo del archivo, salvo que la
+      // última vez el banner estuviera apagado: entonces se sigue esperando
+      // antes que mostrar algo que el administrador no quiere mostrar.
+      clearTimeout(relojEspera);
+      if (recordado() !== '0') relojEspera = setTimeout(listo, 2500);
+      return;
+    }
     // Los ocultos se guardan pero no se dibujan. Sin ninguno visible, la
     // sección entera desaparece y la página arranca por el catálogo.
     const visibles = BANNERS.filter(b => b.oculto !== true && b.desktop);
     const sec = document.querySelector('.bnr-section');
     if (sec) sec.hidden = !visibles.length;
+    try { localStorage.setItem(MEMORIA, visibles.length ? '1' : '0'); } catch {}
     wrap.innerHTML = visibles.map(slide).join('');
     if (!visibles.length) {
       if (swiper) { swiper.destroy(true, true); swiper = null; }
@@ -231,5 +257,5 @@ const Banners = (() => {
     renderPromo();
   }
 
-  return { init, bannerCategoria, get swiper(){ return swiper; } };
+  return { init, listo, bannerCategoria, get swiper(){ return swiper; } };
 })();

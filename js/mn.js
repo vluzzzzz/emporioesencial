@@ -30,7 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
     .catch(err => console.error('Catálogo:', err));
 
   SiteConfig.cargar()
-    .catch(err => console.error('Configuración:', err));
+    .catch(err => console.error('Configuración:', err))
+    // Pase lo que pase, el banner deja de esperar y se dibuja.
+    .finally(() => Banners.listo());
 
   SiteConfig.cargarReviews()
     .catch(err => console.error('Reseñas:', err));
