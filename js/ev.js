@@ -640,7 +640,7 @@ const EdVendedores = (() => {
         <div class="venta-g2">
           <label class="venta-f"><span>Nombre y apellido <i class="req">obligatorio</i></span><input type="text" id="nvNombre" placeholder="Ej: Camila Soto" required></label>
           <label class="venta-f"><span>Correo <i class="req">obligatorio</i></span><input type="email" id="nvEmail" placeholder="vendedor@correo.cl" required></label>
-          <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span><input type="tel" id="nvTel" placeholder="+56 9 ..." required></label>
+          <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span>${Sesion.campoTel('id="nvTel" required')}</label>
           <label class="venta-f"><span>Contraseña provisoria <i class="req">obligatorio</i></span><input type="text" id="nvClave" placeholder="Mínimo 8 caracteres" required></label>
           <label class="venta-f venta-ancho"><span>Observación</span><input type="text" id="nvObs" placeholder="Zona, horario, notas internas"></label>
         </div>
@@ -715,7 +715,7 @@ const EdVendedores = (() => {
             <small class="ev-nota">El correo con el que entra no se puede cambiar.</small>
           </label>
           <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span>
-            <input type="tel" data-uf="telefono" value="${esc(u.telefono)}" required>
+            ${Sesion.campoTel('data-uf="telefono" required', u.telefono)}
           </label>
           <div class="venta-f"><span>Rol</span>
             ${Sesion.desplegable('rol', [
@@ -790,7 +790,7 @@ const EdVendedores = (() => {
   async function crearVendedor(ov, btn){
     const g = id => ov.querySelector(id).value.trim();
     const cuerpo = {
-      nombre: g('#nvNombre'), email: g('#nvEmail'), telefono: g('#nvTel'),
+      nombre: g('#nvNombre'), email: g('#nvEmail'), telefono: Sesion.telGuardar(g('#nvTel')),
       password: ov.querySelector('#nvClave').value, observacion: g('#nvObs'), rol: 'vendedor',
     };
     const msg = ov.querySelector('#nvMsg');
@@ -827,7 +827,7 @@ const EdVendedores = (() => {
     const clave = val('clave');
 
     const { error } = await sb.from('profiles').update({
-      nombre: val('nombre'), telefono: val('telefono'),
+      nombre: val('nombre'), telefono: Sesion.telGuardar(val('telefono')),
       observacion: val('observacion'),
       rol: f.querySelector('[name=rol]').value || 'vendedor',
     }).eq('id', id);

@@ -345,7 +345,7 @@ const Sesion = (() => {
             <input type="text" name="cliente" required placeholder="Ej: María Pérez">
           </label>
           <label class="venta-f"><span>Teléfono</span>
-            <input type="tel" name="telefono" required placeholder="+56 9 ...">
+            ${campoTel('name="telefono" required')}
           </label>
           <label class="venta-f"><span>Correo (opcional)</span>
             <input type="email" name="email" placeholder="cliente@correo.cl">
@@ -410,7 +410,7 @@ const Sesion = (() => {
       costo_despacho: despacho,
       total: cantidad * precio + despacho,
       cliente_nombre: f.cliente.value.trim(),
-      cliente_telefono: f.telefono.value.trim(),
+      cliente_telefono: telGuardar(f.telefono.value),
       cliente_email: f.email.value.trim(),
       cliente_direccion: f.direccion.value.trim(),
       metodo_pago: f.pago.value,
@@ -485,6 +485,31 @@ const Sesion = (() => {
   // edición, y una sola versión evita que los números se armen distinto.
   const WA_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/></svg>';
 
+  /* ── Teléfonos ────────────────────────────────────────── */
+  // El +56 va pegado al campo y no se escribe: así nadie lo olvida ni lo
+  // pone dos veces, y todos los números quedan guardados igual.
+  function campoTel(attrs, valor){
+    return `<span class="tel-campo">
+      <span class="tel-pais">+56</span>
+      <input type="tel" inputmode="tel" ${attrs} value="${esc(telLocal(valor))}" placeholder="9 1234 5678">
+    </span>`;
+  }
+
+  // Saca el +56 de lo que esté guardado, para mostrar solo la parte local.
+  function telLocal(tel){
+    const n = String(tel || '').replace(/\D/g, '');
+    if (!n) return '';
+    const s = n.startsWith('56') ? n.slice(2) : n;
+    return s.length === 9 ? s.replace(/^(\d)(\d{4})(\d{4})$/, '$1 $2 $3') : s;
+  }
+
+  // Lo que se guarda: siempre con el país adelante.
+  function telGuardar(valor){
+    const n = String(valor || '').replace(/\D/g, '');
+    if (!n) return '';
+    return '+56 ' + telLocal(n);
+  }
+
   // WhatsApp quiere el número sin signos y con código de país.
   function wasap(tel, texto){
     let n = String(tel || '').replace(/\D/g, '');
@@ -509,7 +534,7 @@ const Sesion = (() => {
     // El chasis de paneles y el desplegable propio los reusan los módulos de
     // edición: una sola implementación, cero CSS repetido.
     panel, desplegable, conectarDesplegables,
-    wasap, waChip,
+    wasap, waChip, campoTel, telGuardar, telLocal,
     perfil: () => perfil,
     esAdmin: () => !!perfil && perfil.rol === 'admin',
   };
