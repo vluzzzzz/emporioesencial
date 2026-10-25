@@ -35,6 +35,16 @@ const EdVendedores = (() => {
 
   const fotoDe = slug => (CATALOGO.find(p => p.slug === slug) || {}).image || '';
 
+  // El teléfono vive en el perfil, no en la venta: la venta solo guarda el
+  // nombre con que se registró.
+  function vendedorDe(v){
+    const u = usuarios.find(x => x.id === v.vendedor_id) || {};
+    return {
+      nombre: u.nombre || v.vendedor_nombre || u.email || 'Sin nombre',
+      telefono: u.telefono || 'Sin teléfono',
+    };
+  }
+
   async function cargar(){
     const [u, v, c] = await Promise.all([
       sb.from('profiles').select('*').order('created_at', { ascending:false }),
@@ -344,7 +354,8 @@ const EdVendedores = (() => {
 
       <p class="venta-sec">Quién lo vendió</p>
       <div class="ev-datos">
-        ${linea('Vendedor', v.vendedor_nombre)}
+        ${linea('Vendedor', vendedorDe(v).nombre)}
+        ${linea('Teléfono', vendedorDe(v).telefono)}
         ${linea('Forma de pago', v.metodo_pago)}
         ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
       </div>
@@ -384,11 +395,20 @@ const EdVendedores = (() => {
   // Borrar es definitivo: avisa, y el botón recién se habilita a los 5
   // segundos para que nadie se lleve un pedido por delante de un clic.
   async function borrarPedido(box, v, cerrar){
+    const ficha = `
+      <div class="ev-resumen-pedido">
+        <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+        <div>
+          <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+          <small>${plata(v.precio_unitario)} por unidad · ${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</small>
+          <small>${cuando(v.created_at)} · ${hora(v.created_at)}</small>
+        </div>
+      </div>
+      <p class="ev-conf-venta">Venta de: <b>${esc(vendedorDe(v).nombre)}</b></p>`;
+
     const ok = await confirmarFn(
-      '¿Seguro que querés eliminar este pedido? Se borra para siempre: ' +
-      v.producto_nombre + ' de ' + (v.cliente_nombre || 'el cliente') +
-      ', por ' + plata(v.total) + '. No se puede deshacer.',
-      'Eliminar pedido', 5);
+      '¿Seguro que querés eliminar este pedido? Se borra para siempre y no se puede deshacer.',
+      'Eliminar pedido', 5, ficha);
     if (!ok) return;
     try {
       const { error } = await sb.from('ventas').delete().eq('id', v.id);
@@ -509,10 +529,10 @@ const EdVendedores = (() => {
       <div class="ev-nuevo">
         <p class="venta-sec" style="margin-top:0">Vendedor nuevo</p>
         <div class="venta-g2">
-          <label class="venta-f"><span>Nombre y apellido</span><input type="text" id="nvNombre" placeholder="Ej: Camila Soto"></label>
-          <label class="venta-f"><span>Correo</span><input type="email" id="nvEmail" placeholder="vendedor@correo.cl"></label>
-          <label class="venta-f"><span>Teléfono</span><input type="tel" id="nvTel" placeholder="+56 9 ..."></label>
-          <label class="venta-f"><span>Contraseña provisoria</span><input type="text" id="nvClave" placeholder="Mínimo 8 caracteres"></label>
+          <label class="venta-f"><span>Nombre y apellido <i class="req">obligatorio</i></span><input type="text" id="nvNombre" placeholder="Ej: Camila Soto" required></label>
+          <label class="venta-f"><span>Correo <i class="req">obligatorio</i></span><input type="email" id="nvEmail" placeholder="vendedor@correo.cl" required></label>
+          <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span><input type="tel" id="nvTel" placeholder="+56 9 ..." required></label>
+          <label class="venta-f"><span>Contraseña provisoria <i class="req">obligatorio</i></span><input type="text" id="nvClave" placeholder="Mínimo 8 caracteres" required></label>
           <label class="venta-f venta-ancho"><span>Observación</span><input type="text" id="nvObs" placeholder="Zona, horario, notas internas"></label>
         </div>
         <button type="button" class="venta-btn" id="nvCrear" style="margin-top:14px">Crear vendedor</button>
@@ -546,17 +566,17 @@ const EdVendedores = (() => {
     if (!u) return;
 
     const cuerpo = `
-      <form id="evPersona">
+      <form id="evPersona" novalidate>
         <div class="venta-g2">
-          <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
-            <input type="text" data-uf="nombre" value="${esc(u.nombre)}">
+          <label class="venta-f venta-ancho"><span>Nombre y apellido <i class="req">obligatorio</i></span>
+            <input type="text" data-uf="nombre" value="${esc(u.nombre)}" required>
           </label>
           <label class="venta-f venta-ancho"><span>Correo</span>
             <input type="text" value="${esc(u.email)}" disabled>
             <small class="ev-nota">El correo con el que entra no se puede cambiar.</small>
           </label>
-          <label class="venta-f"><span>Teléfono</span>
-            <input type="tel" data-uf="telefono" value="${esc(u.telefono)}">
+          <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span>
+            <input type="tel" data-uf="telefono" value="${esc(u.telefono)}" required>
           </label>
           <div class="venta-f"><span>Rol</span>
             ${Sesion.desplegable('rol', [
@@ -591,6 +611,12 @@ const EdVendedores = (() => {
       e.preventDefault();
       const btn = ov.querySelector('button[type=submit]');
       const msg = ov.querySelector('#evPersonaMsg');
+      const dato = c => f.querySelector('[data-uf=' + c + ']').value.trim();
+      if (!dato('nombre') || !dato('telefono')) {
+        msg.className = 'venta-msg err';
+        msg.textContent = 'El nombre y el teléfono son obligatorios: salen en cada pedido.';
+        return;
+      }
       btn.disabled = true; btn.textContent = 'Guardando…';
       msg.className = 'venta-msg'; msg.textContent = '';
       try {
@@ -618,8 +644,13 @@ const EdVendedores = (() => {
     };
     const msg = ov.querySelector('#nvMsg');
     msg.className = 'venta-msg';
-    if (!cuerpo.nombre || !cuerpo.email) { msg.className = 'venta-msg err'; msg.textContent = 'Falta el nombre o el correo.'; return; }
-    if (cuerpo.password.length < 8) { msg.className = 'venta-msg err'; msg.textContent = 'La contraseña necesita 8 caracteres o más.'; return; }
+    const falla = t => { msg.className = 'venta-msg err'; msg.textContent = t; };
+    // El nombre y el teléfono salen en cada pedido, así que son obligatorios.
+    if (!cuerpo.nombre) return falla('Escribí el nombre y el apellido del vendedor.');
+    if (!cuerpo.email) return falla('Falta el correo.');
+    if (!cuerpo.telefono) return falla('Escribí el teléfono: sale en cada pedido que registre.');
+    if (cuerpo.telefono.replace(/\D/g, '').length < 8) return falla('Ese teléfono parece incompleto.');
+    if (cuerpo.password.length < 8) return falla('La contraseña necesita 8 caracteres o más.');
 
     btn.disabled = true; btn.textContent = 'Creando…';
     try {

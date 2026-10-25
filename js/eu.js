@@ -37,8 +37,9 @@ const EdUtil = (() => {
 
   // confirm() del navegador desentona en la tienda; este usa el mismo panel.
   // `espera` son los segundos que el botón queda bloqueado, para que nadie
-  // borre algo importante de un clic apurado.
-  function confirmar(texto, textoBoton, espera){
+  // borre algo importante de un clic apurado. `ficha` es HTML ya armado por
+  // quien llama, para mostrar qué se está por borrar.
+  function confirmar(texto, textoBoton, espera, ficha){
     return new Promise(resolve => {
       const seg = Number(espera) || 0;
       const nombre = escH(textoBoton || 'Eliminar');
@@ -47,6 +48,7 @@ const EdUtil = (() => {
       ov.innerHTML = `
         <div class="ed-conf-caja">
           <p>${escH(texto)}</p>
+          ${ficha || ''}
           <div class="ed-conf-acc">
             <button type="button" class="venta-btn ghost" data-r="0">Cancelar</button>
             <button type="button" class="venta-btn peligro" data-r="1"${seg ? ' disabled' : ''}>${seg ? nombre + ' (' + seg + ')' : nombre}</button>

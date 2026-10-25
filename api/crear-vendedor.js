@@ -78,6 +78,7 @@ module.exports = async (req, res) => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Correo no válido' });
     if (password.length < 8) return res.status(400).json({ error: 'La contraseña necesita 8 caracteres o más' });
     if (!nombre) return res.status(400).json({ error: 'Falta el nombre del vendedor' });
+    if (telefono.replace(/\D/g, '').length < 8) return res.status(400).json({ error: 'Falta el teléfono del vendedor' });
 
     const creado = await crearUsuario({
       email,
