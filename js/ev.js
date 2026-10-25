@@ -29,8 +29,15 @@ const EdVendedores = (() => {
         <path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20"/><circle cx="9" cy="7" r="3.2"/><path d="M17 11a3.2 3.2 0 1 0-2-5.7"/><path d="M22 20v-1.5a4 4 0 0 0-3-3.8"/>
       </svg>
       <span>Vendedores</span>`;
-    b.addEventListener('click', abrir);
+    b.addEventListener('click', () => abrir());
     izq.appendChild(b);
+
+    // El botón "Revisar pedido" del correo trae ?pedido=... en la dirección.
+    const pedido = new URLSearchParams(location.search).get('pedido');
+    if (pedido) {
+      history.replaceState(null, '', location.pathname);
+      abrir(pedido);
+    }
   }
 
   const fotoDe = slug => (CATALOGO.find(p => p.slug === slug) || {}).image || '';
@@ -61,7 +68,9 @@ const EdVendedores = (() => {
 
 
   /* ── Panel ────────────────────────────────────────────── */
-  async function abrir(){
+  // `verPedidoId` viene del link del correo: abre el panel ya parado en el
+  // día de ese pedido y con su ficha arriba.
+  async function abrir(verPedidoId){
     if (typeof EdUtil !== 'undefined') {
       toast = EdUtil.toast; mensajeError = EdUtil.mensajeError; confirmarFn = EdUtil.confirmar;
     }
@@ -86,7 +95,17 @@ const EdVendedores = (() => {
       return;
     }
     pestana = 'ventas';
+
+    const buscado = verPedidoId && ventas.find(v => String(v.id) === String(verPedidoId));
+    if (buscado) {
+      const d = new Date(buscado.created_at);
+      mesVisto = clave(d);
+      diaVisto = claveDia(d);
+      vendedorVisto = '';
+    }
     pintar(ov);
+    if (buscado) verPedido(ov.querySelector('#evCuerpo'), buscado.id);
+    else if (verPedidoId) toast('Ese pedido ya no está');
   }
 
   function pintar(ov){

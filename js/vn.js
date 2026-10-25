@@ -400,7 +400,7 @@ const Sesion = (() => {
     if (!f.comuna.value) { msg.className = 'venta-msg err'; msg.textContent = 'Elegí la comuna de despacho.'; return; }
     btn.disabled = true; btn.textContent = 'Guardando…';
 
-    const { error } = await sb.from('ventas').insert({
+    const { data: creada, error } = await sb.from('ventas').insert({
       vendedor_id: perfil.id,
       vendedor_nombre: perfil.nombre || perfil.email,
       producto_slug: prod.slug,
@@ -415,7 +415,7 @@ const Sesion = (() => {
       cliente_direccion: f.direccion.value.trim(),
       metodo_pago: f.pago.value,
       notas: f.notas.value.trim(),
-    });
+    }).select('id').single();
 
     if (error) {
       btn.disabled = false; btn.textContent = 'Registrar venta';
@@ -424,7 +424,24 @@ const Sesion = (() => {
       return;
     }
     btn.textContent = 'Venta registrada';
+    if (creada && creada.id) avisarPorCorreo(creada.id);
     setTimeout(cerrar, 700);
+  }
+
+  // El aviso al dueño va aparte y sin esperarlo: la venta ya quedó guardada,
+  // así que un problema con el correo no tiene por qué frenar al vendedor.
+  async function avisarPorCorreo(id){
+    try {
+      const { data:{ session } } = await sb.auth.getSession();
+      if (!session) return;
+      await fetch('/api/aviso-venta', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + session.access_token },
+        body: JSON.stringify({ id }),
+      });
+    } catch (e) {
+      console.warn('No se pudo avisar por correo:', e);
+    }
   }
 
   /* ── Mis ventas ───────────────────────────────────────── */
