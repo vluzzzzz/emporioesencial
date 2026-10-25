@@ -944,15 +944,38 @@ const EdVendedores = (() => {
       aviso.textContent = 'Hay una comuna sin nombre.';
       return;
     }
+    // El nombre es único en la base: avisar aquí es más claro que el error que
+    // devuelve la base.
+    const vistos = new Set();
+    const repetida = todas.map(c => c.nombre.trim().toLowerCase())
+      .find(n => vistos.has(n) ? true : (vistos.add(n), false));
+    if (repetida) {
+      aviso.className = 'ed-aviso err';
+      aviso.textContent = 'Hay dos comunas con el mismo nombre.';
+      return;
+    }
     btn.disabled = true; btn.textContent = 'Guardando…';
     try {
       if (borradas.length) {
         const { error } = await sb.from('comunas').delete().in('id', borradas);
         if (error) throw error;
       }
-      const { error } = await sb.from('comunas')
-        .upsert(todas.map((c, i) => ({ ...c, position: i + 1 })), { onConflict: 'id' });
-      if (error) throw error;
+      // Las que ya existen se actualizan por id; las nuevas van sin id, para
+      // que la base les genere el suyo. Mandarlas juntas hacía que la fila
+      // nueva viajara con id nulo y la base la rechazaba.
+      const conId = [], sinId = [];
+      todas.forEach((c, i) => {
+        const fila = { nombre: c.nombre.trim(), costo: c.costo, activa: c.activa, position: i + 1 };
+        if (c.id) { fila.id = c.id; conId.push(fila); } else sinId.push(fila);
+      });
+      if (conId.length) {
+        const { error } = await sb.from('comunas').upsert(conId, { onConflict: 'id' });
+        if (error) throw error;
+      }
+      if (sinId.length) {
+        const { error } = await sb.from('comunas').insert(sinId);
+        if (error) throw error;
+      }
       await cargar();
       pintar(ov);
       toast('Comunas guardadas');
