@@ -107,7 +107,7 @@ const EdProducto = (() => {
     const pintarAyuda = () => {
       const n = unidades(f);
       if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
-      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
+      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel AGOTADO.'; ayuda.className = 'ep-stock-ayuda sin'; }
       else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
       else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
     };
@@ -170,18 +170,7 @@ const EdProducto = (() => {
 
     box.querySelectorAll('button[data-i]').forEach(b => b.addEventListener('click', () => {
       estado.fotos.splice(+b.dataset.i, 1);
-      const ayuda = ov.querySelector('#epStockAyuda');
-    const pintarAyuda = () => {
-      const n = unidades(f);
-      if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
-      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
-      else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
-      else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
-    };
-    f.unidades.addEventListener('input', pintarAyuda);
-    pintarAyuda();
-
-    pintarFotos(ov, estado);
+      pintarFotos(ov, estado);
     }));
     box.querySelector('.ed-subir input').addEventListener('change', async e => {
       const files = [...e.target.files];
@@ -189,18 +178,7 @@ const EdProducto = (() => {
       toast('Subiendo ' + files.length + (files.length === 1 ? ' foto…' : ' fotos…'));
       try {
         for (const file of files) estado.fotos.push(await uploadFile(file, 'catalog/'));
-        const ayuda = ov.querySelector('#epStockAyuda');
-    const pintarAyuda = () => {
-      const n = unidades(f);
-      if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
-      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
-      else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
-      else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
-    };
-    f.unidades.addEventListener('input', pintarAyuda);
-    pintarAyuda();
-
-    pintarFotos(ov, estado);
+        pintarFotos(ov, estado);
         toast('Fotos listas');
       } catch (err) { toast(mensajeError(err), true); }
       e.target.value = '';

@@ -24,7 +24,7 @@ const ProductNav=(()=>{
     gsap.delayedCall(0.32,()=>{
       state.current=index; applyWrapVars(product);
       DOM.bgText.textContent=DOM.bgTextBlue.textContent=DOM.bgTextZoom.textContent=product.bgLabel;
-      DOM.productPrice.textContent=HERO_STOCK[product.name] !== false ? product.price : 'SIN STOCK'; updateDots();
+      DOM.productPrice.textContent=HERO_STOCK[product.name] !== false ? product.price : 'AGOTADO'; updateDots();
       gsap.set(stage,{x:-70*imgSign,opacity:0}); gsap.set(DOM.bgTextPerspective,{x:-70*textSign,opacity:0});
       if(priceEl)gsap.set(priceEl,{y:'110%',opacity:1});
       function runEntrance(){

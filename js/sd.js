@@ -168,7 +168,7 @@ function cardHTML(p, opts){
   const hayDcto = oferta && p3 > 0 && p3 < p1;
   const precioBase = hayDcto ? p3 : p1;
   const sin = p.inStock === false;
-  const oos = sin ? '<div class="oos-tag">SIN STOCK</div>' : '';
+  const oos = sin ? '<div class="oos-tag">AGOTADO</div>' : '';
   return `<div class="product-card temu-card${sin ? ' out-of-stock' : ''}" data-id="${escAttr(p.slug)}" data-name="${escAttr(p.name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.imgScale ?? 0.75}" data-desc="${escAttr(p.desc)}"${sin ? ' aria-disabled="true"' : ''}>
       <div class="card-img-wrap"><img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="card-img-placeholder" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>${oos}</div>
       <div class="card-info">
@@ -192,7 +192,7 @@ function slideHTML(p,i){
   const out = p.in_stock === false ? ' out-of-stock' : '';
   const dis = p.in_stock === false ? ' aria-disabled="true"' : '';
   const btn = p.in_stock === false ? 'Sin stock' : 'Ver más';
-  const oos = p.in_stock === false ? '<div class="oos-tag">SIN STOCK</div>' : '';
+  const oos = p.in_stock === false ? '<div class="oos-tag">AGOTADO</div>' : '';
   const mid = 'mfx' + i;
   return `<div class="swiper-slide csl-slide${out}" data-id="${escAttr(p.slug)}" data-name="${escAttr(name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.image_scale ?? 0.75}" data-desc="${escAttr(p.description)}"${dis}>
       <div class="csl-corner"><svg width="31" height="31" viewBox="0 0 31 31" fill="none"><g opacity="0.35"><mask id="${mid}" fill="white"><path d="M30.6 1L1.6 0L0.7 29L29.7 30L30.6 1Z"/></mask><path d="M30.6 1L30.65 -0.47L32.2 -0.42L32.15 1.09L30.6 1ZM30.55 2.55L1.6 1.59L1.7 -1.43L30.65 -0.47L30.55 2.55ZM28.17 29.98L29.13 0.99L32.15 1.09L31.19 30.08L28.17 29.98Z" fill="white" mask="url(#${mid})"/></g></svg></div>

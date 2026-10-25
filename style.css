@@ -278,7 +278,7 @@ body:not(.sheet-ready) .csl-price {
 .swiper-slide-shadow,.swiper-slide-shadow-left,.swiper-slide-shadow-right,.swiper-slide-shadow-top,.swiper-slide-shadow-bottom{display:none!important;opacity:0!important}
 
 
-/* ══ SIN STOCK: imagen en blanco y negro + cartel diagonal, hover-zoom intacto ══ */
+/* ══ AGOTADO: imagen en blanco y negro + cartel diagonal, hover-zoom intacto ══ */
 .out-of-stock{cursor:default}
 .out-of-stock .card-img-wrap img,.out-of-stock .csl-img img{filter:grayscale(1)}
 .out-of-stock .csl-img{position:relative}
@@ -2984,4 +2984,11 @@ svg{ -webkit-user-select:none; user-select:none; }
 @media(max-width:860px){
   .nav-cats-velo{display:block;position:fixed;inset:0;background:rgba(17,17,17,.5);z-index:10990}
   .nav-cats-velo[hidden]{display:none}
+}
+
+/* El cartel de agotado en rojo: se lee de lejos sin confundirse con el chip
+   de descuento, que es el otro cartel de la tarjeta. */
+.oos-tag{
+  background:#c0392b!important;
+  box-shadow:0 10px 26px rgba(192,57,43,.4)!important;
 }
