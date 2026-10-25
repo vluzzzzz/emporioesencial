@@ -54,7 +54,7 @@
       ? `<a class="g-wa" href="${esc(wa(dato, msg))}" target="_blank" rel="noopener" aria-label="Escribir por WhatsApp">${WA}</a>` +
         `<a href="tel:${esc(limpio)}">${esc(dato)}</a>`
       : esc(dato);
-    return `<div class="g-l${clase === 'grande' ? ' grande' : ''}"><span>${esc(rot)}</span><b>${cuerpo}</b></div>`;
+    return `<div class="g-l"><span>${esc(rot)}</span><b>${cuerpo}</b></div>`;
   };
 
   function pintar(d){
@@ -69,8 +69,8 @@
     $('gCliente').innerHTML =
       linea('Nombre', d.cliente) +
       linea('Teléfono', d.cliente_tel, 'tel', 'Hola' + (d.cliente ? ' ' + d.cliente : '') + ', te escribo de Esencial Emporio por la entrega de tu pedido.') +
-      linea('Dirección', d.direccion, 'grande') +
-      linea('Comuna', d.comuna, 'grande') +
+      linea('Dirección', d.direccion) +
+      linea('Comuna', d.comuna) +
       linea('Observación', d.observacion);
 
     $('gVendedor').innerHTML =

@@ -41,11 +41,9 @@ body{
 .g-l{display:grid;grid-template-columns:minmax(0,1fr) 54%;background:#fff}
 .g-l>span{align-self:center;padding:11px 14px;font-size:12.5px;color:var(--gris)}
 .g-l>b{display:flex;align-items:center;justify-content:flex-end;padding:11px 14px;border-left:1px solid var(--linea);font-size:15px;font-weight:600;text-align:right;word-break:break-word}
-/* La dirección y la observación son lo que más mira el repartidor */
-.g-l.grande>b{font-size:17px;font-weight:700}
 .g-l a{color:inherit;text-decoration:none}
-.g-wa{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-right:9px;flex:none;border-radius:50%;background:#25d366;color:#fff}
-.g-wa svg{width:17px;height:17px}
+.g-l a.g-wa{display:inline-flex;align-items:center;margin-right:8px;flex:none;color:#25d366}
+.g-wa svg{width:20px;height:20px}
 
 .g-pie{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--linea);font-size:11.5px;color:var(--gris)}
 
