@@ -270,9 +270,13 @@ const Sesion = (() => {
           <label class="venta-f"><span>Cantidad</span>
             <input type="number" name="cantidad" min="1" step="1" value="1" required>
           </label>
-          <label class="venta-f"><span>Precio por unidad</span>
-            <input type="number" name="precio" min="0" step="1" value="${precioDe(slug)}" required>
-          </label>
+          <div class="venta-f"><span>Precio por unidad</span>
+            <p class="venta-fijo">
+              ${fmt(precioDe(slug))}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            </p>
+            <input type="hidden" name="precio" value="${precioDe(slug)}">
+          </div>
         </div>
 
         <p class="venta-sec">Despacho</p>
@@ -280,9 +284,13 @@ const Sesion = (() => {
           <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
             ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elegí la comuna')}
           </div>
-          <label class="venta-f"><span>Costo de despacho</span>
-            <input type="number" name="despacho" min="0" step="1" value="0" required>
-          </label>
+          <div class="venta-f"><span>Costo de despacho</span>
+            <p class="venta-fijo" id="ventaDespacho">
+              Elegí la comuna
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            </p>
+            <input type="hidden" name="despacho" value="0">
+          </div>
         </div>
 
         <p class="venta-sec">Datos del cliente</p>
@@ -324,9 +332,12 @@ const Sesion = (() => {
       ov.querySelector('#ventaTotal').textContent = fmt(n * p + d);
     };
     conectarDesplegables(ov, (campo, valor, extra) => {
-      if (campo === 'comuna') { f.despacho.value = extra || 0; total(); }
+      if (campo !== 'comuna') return;
+      f.despacho.value = extra || 0;
+      ov.querySelector('#ventaDespacho').childNodes[0].nodeValue = fmt(extra || 0) + ' ';
+      total();
     });
-    ['cantidad','precio','despacho'].forEach(n => f[n].addEventListener('input', total));
+    f.cantidad.addEventListener('input', total);
     total();
 
     f.addEventListener('submit', e => { e.preventDefault(); guardar(ov, f, prod, cerrar); });

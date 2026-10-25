@@ -3005,3 +3005,16 @@ svg{ -webkit-user-select:none; user-select:none; }
 .out-of-stock .csl-img img{filter:none!important}
 /* El nombre no se apaga: el "Agotado" rojo ya lo dice */
 .out-of-stock .card-name{color:var(--black)}
+
+/* El precio y el despacho los fija el administrador: el vendedor los ve
+   pero no los escribe. */
+.venta-fijo{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin:0;font-size:14.5px;font-weight:600;
+  padding:12px 14px;border:1.5px solid var(--gray-light);border-radius:12px;
+  background:var(--off-white);color:var(--black);
+}
+.venta-fijo svg{width:15px;height:15px;color:var(--gray-mid);flex:none}
+
+/* Arranca oculto para que no parpadee antes de que el JS sepa si hay banner */
+.bnr-section[hidden]{display:none}
