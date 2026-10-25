@@ -234,8 +234,7 @@ const EdVendedores = (() => {
         </div>
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.persona)}</span>
-          <div><span>Pagar al vendedor</span><b>${plata(resumen.comision)}</b>
-            <small class="vt-nota">en comisiones · ${plata(resumen.envios)} de envíos los cobró él</small></div>
+          <div><span>Pagar al vendedor</span><b>${plata(resumen.comision)}</b></div>
         </div>
       </div>
 

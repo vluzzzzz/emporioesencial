@@ -3051,7 +3051,6 @@ svg{ -webkit-user-select:none; user-select:none; }
 .vt2.destacada span{color:#e9d9a8}
 .vt2.destacada b{color:#fff}
 .vt2.destacada>.vt2-ico{color:#e9d9a8}
-.vt-nota{display:block;margin-top:6px;font-size:11.5px;color:var(--gray-mid);font-weight:500;letter-spacing:0;text-transform:none;line-height:1.4}
 
 .ev-columnas{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
 
