@@ -70,18 +70,31 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true });
     }
 
-    // Borrar a alguien del equipo. Sus ventas quedan: son plata registrada,
-    // no se van con la persona. El nombre con que vendió ya está copiado en
-    // cada venta, así que el historial se sigue leyendo igual.
+    // Borrar a alguien del equipo, con todo su historial. Las ventas van
+    // primero porque la base no deja borrar a quien todavía tiene alguna
+    // (ventas.vendedor_id es on delete restrict).
     if (b.accion === 'borrar') {
       if (!b.id) return res.status(400).json({ error: 'Falta el usuario' });
       if (b.id === quien.id) return res.status(400).json({ error: 'No te podés borrar a vos mismo' });
+      const suyo = `?vendedor_id=eq.${encodeURIComponent(b.id)}`;
+
+      // Las guías de despacho apuntan a las ventas: se van con ellas.
+      const suyas = await sbRest('ventas', { method: 'GET', query: suyo + '&select=id' });
+      const ids = (Array.isArray(suyas) ? suyas : []).map(v => v.id);
+      if (ids.length) {
+        await sbRest('guias', {
+          method: 'DELETE',
+          query: `?venta_id=in.(${ids.map(encodeURIComponent).join(',')})`,
+        });
+      }
+      await sbRest('ventas', { method: 'DELETE', query: suyo });
+
       const r = await fetch(`${SB_URL()}/auth/v1/admin/users/${encodeURIComponent(b.id)}`, {
         method: 'DELETE',
         headers: { apikey: SB_KEY(), Authorization: `Bearer ${SB_KEY()}` },
       });
       if (!r.ok) return res.status(r.status).json({ error: await r.text() });
-      return res.status(200).json({ ok: true });
+      return res.status(200).json({ ok: true, ventas: ids.length });
     }
 
     const nombre = String(b.nombre || '').trim().slice(0, 120);

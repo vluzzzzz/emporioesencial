@@ -736,11 +736,10 @@ const EdVendedores = (() => {
       <div class="ev-zona-roja">
         <b>Sacar del equipo</b>
         ${conVentas
-          ? `<p>${esc(u.nombre || u.email)} tiene ${conVentas} venta${conVentas === 1 ? '' : 's'} registrada${conVentas === 1 ? '' : 's'}.
-             No se puede borrar sin perder esa plata del historial. Usá <b>Desactivar</b>:
-             deja de poder entrar, y sus ventas quedan.</p>`
-          : `<p>Se borra la cuenta y no puede entrar nunca más. No se puede deshacer.</p>
-             <button type="button" class="ev-borrar" id="evBorrarU">${svg(ICO.tacho)}Eliminar vendedor</button>`}
+          ? `<p><b>Desactivar</b> le saca la entrada y deja sus ${conVentas} venta${conVentas === 1 ? '' : 's'} en el historial.
+             <b>Eliminar</b> borra la cuenta y también esas ventas.</p>`
+          : `<p>Se borra la cuenta y no puede entrar nunca más. No se puede deshacer.</p>`}
+        <button type="button" class="ev-borrar" id="evBorrarU">${svg(ICO.tacho)}Eliminar vendedor</button>
       </div>`;
 
     const pie = `
@@ -749,7 +748,7 @@ const EdVendedores = (() => {
 
     const { ov, cerrar } = Sesion.panel(u.nombre || u.email, 'Editar persona', cuerpo, pie);
     const borrarBtn = ov.querySelector('#evBorrarU');
-    if (borrarBtn) borrarBtn.addEventListener('click', () => borrarVendedor(padre, u, cerrar));
+    if (borrarBtn) borrarBtn.addEventListener("click", () => borrarVendedor(padre, u, conVentas, cerrar));
     const f = ov.querySelector('#evPersona');
     Sesion.conectarDesplegables(ov);
 
@@ -848,7 +847,10 @@ const EdVendedores = (() => {
 
   // Borrar a alguien del equipo es definitivo: avisa con su ficha y el
   // botón espera 5 segundos, igual que al borrar un pedido.
-  async function borrarVendedor(padre, u, cerrar){
+  async function borrarVendedor(padre, u, conVentas, cerrar){
+    const suyas = ventas.filter(v => v.vendedor_id === u.id);
+    const plata_ = suyas.filter(cuentaParaPago).reduce((a, v) => a + comisionDe(v), 0);
+
     const ficha = `
       <div class="ev-resumen-pedido">
         <span class="ev-ini">${esc((u.nombre || u.email).trim().charAt(0).toUpperCase())}</span>
@@ -857,11 +859,17 @@ const EdVendedores = (() => {
           <small>${esc(u.email)}</small>
           <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.telefono ? ' · ' + esc(u.telefono) : ''}</small>
         </div>
-      </div>`;
+      </div>
+      ${conVentas ? `<div class="ev-previo">
+        <span>También se borra su historial</span>
+        <p>${conVentas} venta${conVentas === 1 ? '' : 's'} registrada${conVentas === 1 ? '' : 's'}${plata_ ? ', con ' + plata(plata_) + ' en comisiones' : ''}.
+          Esas ventas van a desaparecer de los totales de cada mes.</p>
+      </div>` : ''}`;
 
     const ok = await confirmarFn(
-      '¿Seguro que querés eliminar a esta persona del equipo? Se borra su cuenta ' +
-      'y no va a poder entrar nunca más. No se puede deshacer.',
+      conVentas
+        ? 'Todas las ventas y el historial de esta persona van a ser eliminados. ¿Estás seguro? No se puede deshacer.'
+        : '¿Seguro que querés eliminar a esta persona del equipo? Se borra su cuenta y no va a poder entrar nunca más. No se puede deshacer.',
       'Eliminar vendedor', 5, ficha);
     if (!ok) return;
 
@@ -876,7 +884,9 @@ const EdVendedores = (() => {
       await cargar();
       cerrar();
       pintar(padre);
-      toast('Vendedor eliminado');
+      toast(out.ventas
+        ? 'Vendedor eliminado, con sus ' + out.ventas + ' venta' + (out.ventas === 1 ? '' : 's')
+        : 'Vendedor eliminado');
     } catch (err) {
       toast(mensajeError(err));
     }
