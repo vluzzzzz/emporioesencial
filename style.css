@@ -2985,10 +2985,17 @@ svg{ -webkit-user-select:none; user-select:none; }
 }
 
 /* El cartel de agotado en rojo: se lee de lejos sin confundirse con el chip
-   de descuento, que es el otro cartel de la tarjeta. La foto queda a color. */
+   de descuento, que es el otro cartel de la tarjeta. La foto queda a color.
+   El peso 800 pedía una fuente que no estaba cargada, así que el navegador
+   la engordaba a mano y la letra salía deforme. */
 .oos-tag{
   background:#c0392b!important;
   box-shadow:0 10px 26px rgba(192,57,43,.4)!important;
+  font-weight:800;
+  font-size:16px;
+  letter-spacing:.14em;
+  padding:9px 24px;
+  -webkit-font-smoothing:antialiased;
 }
 .out-of-stock .card-img-wrap img,
 .out-of-stock .csl-img img{filter:none!important}
