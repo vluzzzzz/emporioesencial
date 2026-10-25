@@ -2714,7 +2714,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .vsel.abierto .vsel-btn{border-color:#111}
 .vsel-btn svg{width:18px;height:18px;color:var(--gray-mid);flex:none;transition:transform .2s var(--ease-smooth)}
 .vsel.abierto .vsel-btn svg{transform:rotate(180deg)}
-.vsel-txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vsel-txt{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vsel-ico{width:17px;height:17px;flex:none;color:var(--gray-mid)}
 .vsel-txt.vacio{color:var(--gray-mid)}
 .vsel-lista{position:absolute;top:calc(100% + 6px);left:0;right:0;max-height:260px;overflow-y:auto;list-style:none;margin:0;padding:6px;background:#fff;border:1px solid var(--gray-light);border-radius:14px;box-shadow:0 20px 48px rgba(0,0,0,.18);z-index:40}
 .vsel-lista li[hidden]{display:none}
@@ -2796,8 +2797,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .nav-vendedores-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
 .nav-vendedores-btn svg{width:18px;height:18px}
 
-.ev-tabs{display:flex;gap:8px;max-width:1460px;margin:0 auto 22px;flex-wrap:wrap}
-.ev-tab{font:inherit;font-size:14px;font-weight:600;padding:10px 20px;border-radius:999px;border:1.5px solid var(--gray-light);background:#fff;color:var(--black);cursor:pointer}
+.ev-tabs{display:flex;align-items:flex-end;gap:8px;max-width:1460px;margin:0 auto 22px;flex-wrap:wrap}
+.ev-tab{flex:none;font:inherit;font-size:14px;font-weight:600;padding:10px 20px;border-radius:999px;border:1.5px solid var(--gray-light);background:#fff;color:var(--black);cursor:pointer}
 .ev-tab:hover{border-color:var(--gray-mid)}
 .ev-tab.activa{background:#111;border-color:#111;color:#e9d9a8}
 
@@ -3180,12 +3181,16 @@ svg{ -webkit-user-select:none; user-select:none; }
 .venta-lista .ev-sello{display:inline-block;margin-top:8px}
 .ev-motivo{display:block;margin-top:7px;font-size:12px;color:var(--gray-mid);font-style:italic}
 
-/* Filtros arriba de todo, con el desplegable propio de la web */
-.ev-filtros{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-.ev-filtro{display:flex;flex-direction:column;gap:6px;min-width:220px}
-.ev-filtro>span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
-.ev-filtro .vsel-btn{background:#fff}
-.ev-filtros .ev-aviso-pend{margin-bottom:11px}
+/* Filtros en la misma fila que las pestañas, pegados a la derecha */
+.ev-filtros{display:flex;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-left:auto}
+.ev-filtros:empty{display:none}
+.ev-filtro{display:flex;flex-direction:column;gap:5px;min-width:200px}
+.ev-filtro>span{font-size:12px;font-weight:600;color:var(--gray-mid)}
+.ev-filtro .vsel-btn{background:#fff;padding-top:9px;padding-bottom:9px}
+.ev-filtros .ev-aviso-pend{margin-bottom:5px}
+@media(max-width:1100px){
+  .ev-filtros{margin-left:0;flex:1 1 100%;margin-top:4px}
+}
 @media(max-width:700px){
   .ev-filtro{flex:1 1 100%;min-width:0}
 }
@@ -3200,16 +3205,3 @@ svg{ -webkit-user-select:none; user-select:none; }
 .vsel-nada{display:block;padding:14px 13px;font-size:13.5px;color:var(--gray-mid);text-align:center}
 .vsel-nada[hidden]{display:none}
 
-/* Ficha del vendedor elegido, al lado de los filtros */
-.ev-perfil{display:flex;align-items:center;gap:13px;margin-left:auto;padding:11px 18px 11px 13px;border:1px solid var(--gray-light);border-radius:16px;background:#fff}
-.ev-perfil.equipo{background:var(--off-white);border-style:dashed}
-.ev-perfil-ini{flex:none;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;background:#111;color:#e9d9a8;font-weight:700;font-size:17px}
-.ev-perfil-txt{min-width:0}
-.ev-perfil-txt b{display:block;font-size:15px;font-weight:700;line-height:1.25;white-space:nowrap}
-.ev-perfil-txt small{display:block;margin-top:2px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap}
-.ev-perfil-monto{text-align:right;padding-left:14px;border-left:1px solid var(--gray-light)}
-.ev-perfil-monto b{display:block;font-size:19px;font-weight:700;color:#1e7a3a;white-space:nowrap;line-height:1.1}
-.ev-perfil-monto small{display:block;margin-top:1px;font-size:10.5px;color:var(--gray-mid);letter-spacing:.07em;text-transform:uppercase}
-@media(max-width:900px){
-  .ev-perfil{margin-left:0;flex:1 1 100%}
-}

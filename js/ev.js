@@ -58,6 +58,7 @@ const EdVendedores = (() => {
          <button type="button" class="ev-tab activa" data-p="ventas">Ventas</button>
          <button type="button" class="ev-tab" data-p="equipo">Equipo</button>
          <button type="button" class="ev-tab" data-p="despacho">Despacho</button>
+         <div class="ev-filtros" id="evFiltros"></div>
        </div>
        <div class="venta-wrap" id="evCuerpo"><p class="venta-vacio">Cargando…</p></div>`,
       '', true);
@@ -78,6 +79,8 @@ const EdVendedores = (() => {
 
   function pintar(ov){
     const box = ov.querySelector('#evCuerpo');
+    const filtros = ov.querySelector('#evFiltros');
+    if (filtros) filtros.innerHTML = '';
     if (pestana === 'ventas')   return pintarVentas(box);
     if (pestana === 'equipo')   return pintarEquipo(ov, box);
     if (pestana === 'despacho') return pintarDespacho(ov, box);
@@ -204,26 +207,25 @@ const EdVendedores = (() => {
     const sobran = (7 - (celdas.length % 7)) % 7;
     for (let i = 1; i <= sobran; i++) celdas.push(`<div class="ev-dia fuera"><span class="ev-dia-n">${i}</span></div>`);
 
-    box.innerHTML = `
-      <div class="ev-filtros">
-        <div class="ev-filtro">
-          <span>Mes</span>
-          ${Sesion.desplegable('mes', anios().flatMap(a => MESES.map((n, k) => {
-            const c = a + '-' + String(k + 1).padStart(2, '0');
-            return { valor:c, texto:n + ' ' + a, nota: conVentas(c) ? 'con ventas' : '' };
-          })), 'Elegí el mes', mesVisto)}
-        </div>
-        <div class="ev-filtro">
-          <span>Vendedor</span>
-          ${Sesion.desplegable('quien', [{ valor:'', texto:'Todo el equipo' }].concat(
-            usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
-                    .map(u => ({ valor:u.id, texto:u.nombre || u.email }))),
-            'Todo el equipo', vendedorVisto, true)}
-        </div>
-        ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
-        ${perfilVendedor()}
+    const filtros = box.parentNode && box.parentNode.querySelector('#evFiltros');
+    if (filtros) filtros.innerHTML = `
+      <div class="ev-filtro">
+        <span>Mes</span>
+        ${Sesion.desplegable('mes', anios().flatMap(a => MESES.map((n, k) => {
+          const c = a + '-' + String(k + 1).padStart(2, '0');
+          return { valor:c, texto:n + ' ' + a, nota: conVentas(c) ? 'con ventas' : '' };
+        })), 'Elegí el mes', mesVisto, false, ICO.calendario)}
       </div>
+      <div class="ev-filtro">
+        <span>Vendedor</span>
+        ${Sesion.desplegable('quien', [{ valor:'', texto:'Todo el equipo' }].concat(
+          usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
+                  .map(u => ({ valor:u.id, texto:u.nombre || u.email }))),
+          'Todo el equipo', vendedorVisto, true, ICO.persona)}
+      </div>
+      ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}`;
 
+    box.innerHTML = `
       <div class="ev-resumen">
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.caja)}</span>
@@ -268,7 +270,7 @@ const EdVendedores = (() => {
 
       `;
 
-    Sesion.conectarDesplegables(box, (campo, valor) => {
+    if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
       if (campo === 'mes') mesVisto = valor;
       if (campo === 'quien') vendedorVisto = valor;
       diaVisto = null;
@@ -316,33 +318,6 @@ const EdVendedores = (() => {
       resolver(box, b.dataset.resolver, b.dataset.como)));
   }
 
-  // La ficha del vendedor elegido, al lado del desplegable. Sin nadie
-  // elegido muestra el total del equipo.
-  function perfilVendedor(){
-    const mes = ventas.filter(v => clave(new Date(v.created_at)) === mesVisto
-      && (!vendedorVisto || v.vendedor_id === vendedorVisto));
-    const ok = mes.filter(cuentaParaPago);
-    const pend = mes.filter(v => estadoDe(v) === 'pendiente').length;
-    const comision = ok.reduce((a, v) => a + comisionDe(v), 0);
-    const unidades = ok.reduce((a, v) => a + (v.cantidad || 1), 0);
-
-    const u = vendedorVisto && usuarios.find(x => x.id === vendedorVisto);
-    const nombre = u ? (u.nombre || u.email)
-      : (mes[0] && vendedorVisto ? mes[0].vendedor_nombre : 'Todo el equipo');
-
-    return `
-      <div class="ev-perfil${vendedorVisto ? '' : ' equipo'}">
-        <span class="ev-perfil-ini">${esc((nombre || '?').trim().charAt(0).toUpperCase())}</span>
-        <div class="ev-perfil-txt">
-          <b>${esc(nombre)}</b>
-          <small>${ok.length} pedido${ok.length === 1 ? '' : 's'} · ${unidades} producto${unidades === 1 ? '' : 's'}${pend ? ' · ' + pend + ' sin aprobar' : ''}</small>
-        </div>
-        <div class="ev-perfil-monto">
-          <b>${plata(comision)}</b>
-          <small>a pagar</small>
-        </div>
-      </div>`;
-  }
 
   function tarjetaVenta(v){
     const estado = estadoDe(v);

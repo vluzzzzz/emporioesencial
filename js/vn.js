@@ -162,12 +162,13 @@ const Sesion = (() => {
   // Reemplaza al <select> del navegador, que no se puede diseñar.
   // `elegido` deja una opción ya marcada, para los campos que vienen con valor.
   // `buscar` suma una casilla para filtrar cuando la lista es larga.
-  function desplegable(nombre, opciones, textoVacio, elegido, buscar){
+  function desplegable(nombre, opciones, textoVacio, elegido, buscar, ico){
     const actual = opciones.find(o => o.valor === elegido);
     return `
       <div class="vsel${buscar ? ' con-busca' : ''}" data-sel="${esc(nombre)}">
         <input type="hidden" name="${esc(nombre)}" value="${esc(actual ? actual.valor : '')}">
         <button type="button" class="vsel-btn" aria-haspopup="listbox" aria-expanded="false">
+          ${ico ? `<svg class="vsel-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ico}</svg>` : ''}
           <span class="vsel-txt${actual ? '' : ' vacio'}">${esc(actual ? actual.texto : textoVacio)}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
