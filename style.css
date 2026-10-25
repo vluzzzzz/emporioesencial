@@ -278,9 +278,8 @@ body:not(.sheet-ready) .csl-price {
 .swiper-slide-shadow,.swiper-slide-shadow-left,.swiper-slide-shadow-right,.swiper-slide-shadow-top,.swiper-slide-shadow-bottom{display:none!important;opacity:0!important}
 
 
-/* ══ AGOTADO: imagen en blanco y negro + cartel diagonal, hover-zoom intacto ══ */
+/* ══ AGOTADO: cartel diagonal sobre la foto, hover-zoom intacto ══ */
 .out-of-stock{cursor:default}
-.out-of-stock .card-img-wrap img,.out-of-stock .csl-img img{filter:grayscale(1)}
 .out-of-stock .csl-img{position:relative}
 .out-of-stock .card-name,.out-of-stock .card-price,.out-of-stock .csl-name,.out-of-stock .csl-price{color:#9a9a9f}
 .out-of-stock .card-btn,.out-of-stock .csl-rect{
@@ -2987,8 +2986,10 @@ svg{ -webkit-user-select:none; user-select:none; }
 }
 
 /* El cartel de agotado en rojo: se lee de lejos sin confundirse con el chip
-   de descuento, que es el otro cartel de la tarjeta. */
+   de descuento, que es el otro cartel de la tarjeta. La foto queda a color. */
 .oos-tag{
   background:#c0392b!important;
   box-shadow:0 10px 26px rgba(192,57,43,.4)!important;
 }
+.out-of-stock .card-img-wrap img,
+.out-of-stock .csl-img img{filter:none!important}
