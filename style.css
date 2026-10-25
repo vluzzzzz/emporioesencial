@@ -2987,12 +2987,13 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* En la tarjeta, "Agotado" va donde iría el precio: a un producto sin stock
    no tiene sentido mostrarle el valor. La foto queda a color. */
 .card-precio-col .oos-tag{
-  position:static;transform:none;
-  background:none;box-shadow:none;padding:0;border-radius:0;
-  color:#e01b1b;
+  position:static;transform:none;box-shadow:none;
+  display:inline-block;
+  background:#e01b1b;color:#fff;
   font-family:var(--font-body);
-  font-size:21px;font-weight:800;letter-spacing:-.01em;text-transform:none;
-  margin:0;-webkit-font-smoothing:antialiased;
+  font-size:14px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  padding:7px 14px;border-radius:8px;margin:0;
+  -webkit-font-smoothing:antialiased;
 }
 /* En el carrusel sigue siendo la etiqueta sobre la foto */
 .csl-img .oos-tag{
