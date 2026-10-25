@@ -461,7 +461,7 @@ const Sesion = (() => {
               <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
               <div class="vl-info">
                 <b>${esc(v.producto_nombre)}</b>
-                <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}${v.cliente_email ? ' · ' + esc(v.cliente_email) : ''}</small>
+                <small>${esc(v.cliente_nombre)} · ${waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}${v.cliente_email ? ' · ' + esc(v.cliente_email) : ''}</small>
                 <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
                 <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
                 ${v.notas ? `<small>${esc(v.notas)}</small>` : ''}
@@ -479,11 +479,37 @@ const Sesion = (() => {
       </div>`;
   }
 
+  /* ── WhatsApp ─────────────────────────────────────────── */
+  // Un teléfono suelto no sirve de nada: acá siempre se puede tocar para
+  // escribir. Vive en Sesion porque lo usan la tienda y los módulos de
+  // edición, y una sola versión evita que los números se armen distinto.
+  const WA_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/></svg>';
+
+  // WhatsApp quiere el número sin signos y con código de país.
+  function wasap(tel, texto){
+    let n = String(tel || '').replace(/\D/g, '');
+    if (!n) return '';
+    if (n.length === 9 && n.charAt(0) === '9') n = '56' + n;
+    else if (n.length === 8) n = '569' + n;
+    return 'https://wa.me/' + n + (texto ? '?text=' + encodeURIComponent(texto) : '');
+  }
+
+  // El globito verde más el número al lado. Si el teléfono no sirve,
+  // devuelve el texto pelado y no un botón roto.
+  function waChip(tel, texto, quien){
+    const limpio = String(tel || '').replace(/\D/g, '');
+    if (limpio.length < 8) return esc(tel || '—');
+    return `<a class="wa-chip" href="${esc(wasap(tel, texto))}" target="_blank" rel="noopener"` +
+      ` aria-label="Escribirle por WhatsApp${quien ? ' a ' + esc(quien) : ''}"` +
+      ` onclick="event.stopPropagation()">${WA_SVG}<span>${esc(tel)}</span></a>`;
+  }
+
   return {
     init, ficha,
     // El chasis de paneles y el desplegable propio los reusan los módulos de
     // edición: una sola implementación, cero CSS repetido.
     panel, desplegable, conectarDesplegables,
+    wasap, waChip,
     perfil: () => perfil,
     esAdmin: () => !!perfil && perfil.rol === 'admin',
   };

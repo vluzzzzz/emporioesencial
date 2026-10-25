@@ -335,15 +335,9 @@ const EdVendedores = (() => {
     if (!v) return;
     const estado = estadoDe(v);
     const linea = (t, d) => `<div class="ev-datos-l"><span>${t}</span><b>${esc(d || '—')}</b></div>`;
-    // El teléfono del vendedor lleva su botón de WhatsApp al lado.
-    const telLinea = (t, tel, quien, venta) => {
-      if (!tel || tel === 'Sin teléfono') return linea(t, tel);
-      const msg = 'Hola ' + quien + ', te escribo por el pedido de ' +
-        venta.producto_nombre + ' para ' + (venta.cliente_nombre || 'el cliente') + '.';
-      return `<div class="ev-datos-l"><span>${t}</span><b>
-        <a class="ev-wa" href="${esc(wa(tel, msg))}" target="_blank" rel="noopener" aria-label="Escribirle por WhatsApp">${svg(ICO.wasap)}</a>
-        ${esc(tel)}</b></div>`;
-    };
+    // Todo teléfono se puede tocar para escribir por WhatsApp.
+    const telLinea = (t, tel, msg, quien) =>
+      `<div class="ev-datos-l"><span>${t}</span><b>${Sesion.waChip(tel, msg, quien)}</b></div>`;
 
     const cuerpo = `
       <div class="ev-resumen-pedido">
@@ -359,7 +353,9 @@ const EdVendedores = (() => {
       <p class="venta-sec">A quién se lo enviamos</p>
       <div class="ev-datos">
         ${linea('Cliente', v.cliente_nombre)}
-        ${linea('Teléfono', v.cliente_telefono)}
+        ${telLinea('Teléfono', v.cliente_telefono,
+          'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.',
+          v.cliente_nombre)}
         ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
         ${linea('Dirección', v.cliente_direccion)}
         ${linea('Comuna', v.comuna)}
@@ -368,7 +364,9 @@ const EdVendedores = (() => {
       <p class="venta-sec">Quién lo vendió</p>
       <div class="ev-datos">
         ${linea('Vendedor', vendedorDe(v).nombre)}
-        ${telLinea('Teléfono', vendedorDe(v).telefono, vendedorDe(v).nombre, v)}
+        ${telLinea('Teléfono', vendedorDe(v).telefono,
+          'Hola ' + vendedorDe(v).nombre + ', te escribo por el pedido de ' + v.producto_nombre +
+          ' para ' + (v.cliente_nombre || 'el cliente') + '.', vendedorDe(v).nombre)}
         ${linea('Forma de pago', v.metodo_pago)}
         ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
       </div>
@@ -473,7 +471,7 @@ const EdVendedores = (() => {
 
       <div class="ev-guia-acc">
         <a class="ev-guia-btn" href="${esc(link)}" target="_blank" rel="noopener">${svg(ICO.ojo)}Ver la guía</a>
-        ${u.telefono !== 'Sin teléfono' ? `<a class="ev-guia-btn wa" href="${esc(wa(u.telefono, 'Hola ' + u.nombre + ', te escribo por el pedido de ' + v.producto_nombre + ' para ' + (v.cliente_nombre || 'el cliente') + '.'))}" target="_blank" rel="noopener">${svg(ICO.wasap)}WhatsApp al vendedor</a>` : ''}
+        ${u.telefono !== 'Sin teléfono' ? `<a class="ev-guia-btn wa" href="${esc(Sesion.wasap(u.telefono, 'Hola ' + u.nombre + ', te escribo por el pedido de ' + v.producto_nombre + ' para ' + (v.cliente_nombre || 'el cliente') + '.'))}" target="_blank" rel="noopener">${svg(ICO.wasap)}WhatsApp al vendedor</a>` : ''}
       </div>
 
       <label class="ev-interruptor">
@@ -501,13 +499,6 @@ const EdVendedores = (() => {
     });
   }
 
-  // WhatsApp quiere el número sin signos y con código de país.
-  function wa(tel, texto){
-    let n = String(tel || '').replace(/\D/g, '');
-    if (n.length === 9 && n.charAt(0) === '9') n = '56' + n;
-    else if (n.length === 8) n = '569' + n;
-    return 'https://wa.me/' + n + (texto ? '?text=' + encodeURIComponent(texto) : '');
-  }
 
   // Borrar es definitivo: avisa, y el botón recién se habilita a los 5
   // segundos para que nadie se lleve un pedido por delante de un clic.
@@ -549,7 +540,7 @@ const EdVendedores = (() => {
           <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
           <div class="ev-venta-datos">
             <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-            <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}</small>
+            <small>${esc(v.cliente_nombre)} · ${Sesion.waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
             <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
             <small>${esc(v.metodo_pago)} · ${esc(v.vendedor_nombre)} · ${hora(v.created_at)}</small>
           </div>
@@ -664,6 +655,7 @@ const EdVendedores = (() => {
             <span class="ev-txt">
               <b>${esc(u.nombre || u.email)}</b>
               <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.activo ? '' : ' · desactivado'}</small>
+              ${u.telefono ? `<small>${Sesion.waChip(u.telefono, 'Hola ' + (u.nombre || '') + ', te escribo de Esencial Emporio.', u.nombre)}</small>` : ''}
             </span>
             <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
