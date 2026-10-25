@@ -361,7 +361,7 @@ const Sesion = (() => {
             <input type="email" name="email" placeholder="cliente@correo.cl">
           </label>
           <div class="venta-f venta-ancho"><span>Método de pago</span>
-            ${desplegable('pago', ['Transferencia','Efectivo','Débito o crédito','Otro'].map(v => ({ valor:v, texto:v })), 'Elige el método')}
+            ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método')}
           </div>
           <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
             <input type="text" name="direccion" required placeholder="Calle, número, depto">

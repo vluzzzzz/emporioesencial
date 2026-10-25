@@ -33,6 +33,15 @@ async function usuarioDelToken(token) {
 // la misma que ve el repartidor en guia.html. A dónde va, a quién le
 // entrega, a quién le pregunta y cuánto cobra. Nada de la comisión del
 // vendedor ni de la ganancia del negocio.
+// Va en todas las ventas, sea transferencia o efectivo.
+const CUENTA = {
+  titular: 'Macarena Paz Fernández Vargas',
+  rut: '18746772-1',
+  banco: 'Mercado Pago',
+  tipo: 'Cuenta Vista',
+  numero: '1054078997',
+};
+
 function cuerpoHtml(v, vendedor) {
   const BORDE = '1px solid #d2d2d7';
   const fila = (rot, dato) => dato
@@ -71,6 +80,11 @@ function cuerpoHtml(v, vendedor) {
 
       ${titulo('Pago')}
       ${fila('Forma de pago', v.metodo_pago)}
+      ${fila('Titular', CUENTA.titular)}
+      ${fila('RUT', CUENTA.rut)}
+      ${fila('Banco', CUENTA.banco)}
+      ${fila('Tipo de cuenta', CUENTA.tipo)}
+      ${fila('Número de cuenta', CUENTA.numero)}
       <tr>
         <td style="width:34%;padding:14px;background:#f5f5f7;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle">Total</td>
         <td style="padding:14px;background:#f5f5f7;border-left:${BORDE};text-align:right;font-size:22px;font-weight:700;vertical-align:middle">${plata(v.total)}</td>
