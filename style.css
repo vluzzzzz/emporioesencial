@@ -3037,71 +3037,156 @@ svg{ -webkit-user-select:none; user-select:none; }
 .bnr-section[hidden]{display:none}
 
 /* ===========================================================================
-   V91 — Ventas como calendario, con comisiones y pedidos por aprobar
+   V94 — Ventas: resumen con íconos, calendario y detalle del día
    ======================================================================== */
-.ev-barra{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
-.ev-sel{display:flex;gap:12px;flex-wrap:wrap}
-.ev-sel label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--gray-mid)}
-.ev-sel select{font:inherit;font-size:14px;font-weight:600;color:var(--black);padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff}
-.ev-aviso-pend{font-size:13px;font-weight:700;color:#b8860b;background:rgba(184,134,11,.12);padding:8px 14px;border-radius:999px}
+.ev-resumen{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.vt2{display:flex;align-items:flex-start;gap:14px;background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:16px 18px}
+.vt2-ico{flex:none;width:46px;height:46px;display:grid;place-items:center;border-radius:13px;background:#faf4e4;color:#8a6508}
+.vt2-ico svg{width:22px;height:22px}
+.vt2>div{min-width:0}
+.vt2 span{display:block;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-mid)}
+.vt2 b{display:block;margin-top:5px;font-size:27px;font-weight:700;line-height:1.1}
+.vt2.destacada{background:#111;border-color:#111}
+.vt2.destacada span{color:#e9d9a8}
+.vt2.destacada b{color:#fff}
+.vt2.destacada .vt2-ico{background:rgba(233,217,168,.16);color:#e9d9a8}
+.vt2.destacada .vt-vs{color:rgba(255,255,255,.55)}
+.vt-tend{display:inline-flex!important;align-items:center;gap:3px;margin-top:7px;font-size:12.5px;font-weight:700;letter-spacing:0;text-transform:none}
+.vt-tend svg{width:14px;height:14px}
+.vt-tend.sube{color:#1e9e4a}
+.vt-tend.baja{color:#c0392b}
+.vt-vs{display:block;margin-top:2px;font-size:11px;color:var(--gray-mid);font-weight:500;letter-spacing:0;text-transform:none}
+.vt-nota{display:block;margin-top:6px;font-size:11.5px;color:var(--gray-mid);font-weight:500;letter-spacing:0;text-transform:none;line-height:1.4}
 
-.ev-cal{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:14px;margin-bottom:20px}
-.ev-cal-cab{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
-.ev-cal-cab span{text-align:center;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid);padding:4px 0}
-.ev-cal-grilla{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.ev-dia{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:68px;padding:8px;border:1.5px solid transparent;border-radius:11px;background:var(--off-white);font:inherit;cursor:default;text-align:left}
-.ev-dia.vacia{background:none}
-.ev-dia-n{font-size:13px;font-weight:600;color:var(--gray-mid)}
-.ev-dia.con{background:#fff;border-color:var(--gray-light);cursor:pointer}
+.ev-columnas{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
+
+/* Calendario */
+.ev-cal{background:#fff;border:1px solid var(--gray-light);border-radius:18px;padding:20px}
+.ev-cal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ev-cal-top h3{margin:0;font-size:23px;font-weight:700;text-transform:capitalize}
+.ev-cal-nav{display:flex;align-items:center;gap:6px}
+.ev-flecha{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff;color:var(--black);cursor:pointer;transition:background .16s,border-color .16s,color .16s}
+.ev-flecha:hover{border-color:#111;background:#111;color:#e9d9a8}
+.ev-flecha svg{width:15px;height:15px}
+.ev-hoy{font:inherit;font-size:13px;font-weight:600;padding:9px 16px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff;color:var(--black);cursor:pointer}
+.ev-hoy:hover{border-color:#111}
+.ev-cal-cab{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;margin-bottom:7px}
+.ev-cal-cab span{text-align:center;font-size:10.5px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;color:var(--gray-mid)}
+.ev-cal-grilla{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.ev-dia{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-height:74px;padding:9px;border:1.5px solid transparent;border-radius:13px;background:var(--off-white);font:inherit;text-align:left;cursor:pointer}
+.ev-dia.fuera{background:none;cursor:default}
+.ev-dia.fuera .ev-dia-n{color:#c8c8cd}
+.ev-dia-n{font-size:14px;font-weight:600;color:var(--gray-mid)}
+.ev-dia:hover:not(.fuera){background:#fff;border-color:var(--gray-light)}
+.ev-dia.con{background:#fff;border-color:var(--gray-light)}
+.ev-dia.con .ev-dia-n{color:var(--black);font-weight:700}
 .ev-dia.con:hover{border-color:#111}
-.ev-dia.con .ev-dia-n{color:var(--black)}
-.ev-dia.hoy .ev-dia-n{background:#111;color:#e9d9a8;border-radius:999px;padding:1px 7px}
-.ev-dia.elegido{border-color:#111;background:#111}
-.ev-dia.elegido .ev-dia-n,.ev-dia.elegido .ev-dia-c,.ev-dia.elegido .ev-dia-p{color:#e9d9a8}
-.ev-dia.elegido.hoy .ev-dia-n{background:#e9d9a8;color:#111}
-.ev-dia-c{font-size:11.5px;font-weight:700;color:var(--black)}
-.ev-dia-p{font-size:11px;color:var(--gray-mid);font-weight:600}
-.ev-dia-pend{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#b8860b}
+.ev-dia.hoy .ev-dia-n{color:#8a6508}
+.ev-dia.elegido{background:#fdf3dc;border-color:#e0b84a}
+.ev-dia-c{font-size:11.5px;color:var(--gray-mid);font-weight:600;margin-top:3px}
+.ev-dia-p{font-size:12px;color:var(--black);font-weight:700}
+.ev-dia-pend{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;background:#e0a21a}
+.ev-leyenda{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;padding-top:14px;border-top:1px solid var(--gray-light)}
+.ev-leyenda span{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--gray-mid)}
+.ev-leyenda i{width:15px;height:15px;border-radius:5px;flex:none}
+.lg-pend{background:#e0a21a;border-radius:50%!important;width:10px!important;height:10px!important}
+.lg-con{background:#fff;border:1.5px solid var(--gray-light)}
+.lg-sel{background:#fdf3dc;border:1.5px solid #e0b84a}
+.lg-sin{background:var(--off-white)}
 
-.ev-pista{margin:0;padding:22px;text-align:center;font-size:13.5px;color:var(--gray-mid);background:#fff;border:1px dashed var(--gray-light);border-radius:14px}
-.ev-dia-cab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
-.ev-dia-cab h3{margin:0;font-family:var(--font-display);font-size:24px;font-weight:400;letter-spacing:.03em;text-transform:capitalize}
-.ev-dia-cab span{font-size:13px;color:var(--gray-mid)}
+/* Detalle del día */
+.ev-detalle{background:#fff;border:1px solid var(--gray-light);border-radius:18px;overflow:hidden}
+.ev-det-cab{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:20px 22px;background:#111;color:#fff}
+.ev-det-cab h3{margin:0;font-family:var(--font-display);font-size:26px;font-weight:400;letter-spacing:.03em;text-transform:uppercase}
+.ev-det-cab small{display:block;margin-top:3px;font-size:13px;color:rgba(255,255,255,.65)}
+.ev-chip-pend{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:#e9d9a8;border:1.5px solid rgba(233,217,168,.45);border-radius:999px;padding:8px 15px}
+.ev-chip-pend i{width:8px;height:8px;border-radius:50%;background:#e0a21a}
+.ev-det-cuerpo{padding:18px}
+.ev-det-vacio{display:grid;place-items:center;gap:10px;padding:46px 20px;color:var(--gray-mid)}
+.ev-det-vacio svg{width:34px;height:34px;opacity:.5}
+.ev-det-vacio p{margin:0;font-size:14px}
 
-.ev-venta.pendiente{border-color:rgba(184,134,11,.5);background:rgba(184,134,11,.04)}
-.ev-venta.denegado{opacity:.55}
-.ev-resolver{display:flex;gap:8px;margin-top:9px}
-.ev-ok,.ev-no{font:inherit;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer;border:1.5px solid transparent}
-.ev-ok{background:#111;color:#e9d9a8}
-.ev-ok:hover{background:#000}
-.ev-no{background:transparent;color:#c0392b;border-color:rgba(192,57,43,.4)}
-.ev-no:hover{background:rgba(192,57,43,.08);border-color:#c0392b}
-.ev-sello{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px}
+.ev-venta{border:1px solid var(--gray-light);border-radius:15px;padding:16px;margin-bottom:12px}
+.ev-venta.pendiente{border-color:#e8cf92;background:#fffdf7}
+.ev-venta.denegado{opacity:.6}
+.ev-venta-top{display:flex;align-items:flex-start;gap:14px}
+.ev-venta-top img{width:64px;height:64px;object-fit:contain;border-radius:11px;background:var(--off-white);flex:none}
+.ev-venta-datos{flex:1;min-width:0}
+.ev-venta-datos b{display:block;font-size:15.5px;line-height:1.3}
+.ev-venta-datos small{display:block;font-size:12.5px;color:var(--gray-mid);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev-sello{flex:none;display:inline-block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:5px 12px;border-radius:999px;white-space:nowrap}
+.ev-sello.pendiente{background:#fdf0d2;color:#8a6508}
 .ev-sello.aceptado{background:rgba(52,199,89,.14);color:#1e7a3a}
 .ev-sello.denegado{background:rgba(192,57,43,.12);color:#c0392b}
-.vl-linea.vl-comision{margin-top:6px;padding-top:7px;border-top:1px dashed var(--gray-light)}
-.vl-linea.vl-comision b{color:#1e7a3a}
 
-@media(max-width:700px){
-  .ev-cal{padding:9px}
-  .ev-cal-grilla,.ev-cal-cab{gap:4px}
-  .ev-dia{min-height:54px;padding:5px}
-  .ev-dia-p{display:none}
-  .ev-sel{width:100%}
-  .ev-sel label{flex:1 1 140px}
-  .ev-sel select{width:100%}
+.ev-cifras{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
+.ev-cifras>div{border:1px solid var(--gray-light);border-radius:11px;padding:10px 12px;min-width:0}
+.ev-cifras span{display:block;font-size:10.5px;color:var(--gray-mid);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.ev-cifras b{display:block;margin-top:4px;font-size:15.5px;font-weight:700;white-space:nowrap}
+.ev-cifras .gana b{color:#1e9e4a}
+.ev-cifras .pagar{background:var(--off-white)}
+
+.ev-resolver{display:flex;gap:10px;margin-top:14px}
+.ev-ok,.ev-no{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:13.5px;font-weight:700;padding:12px 16px;border-radius:12px;cursor:pointer;border:1.5px solid transparent}
+.ev-ok svg,.ev-no svg{width:17px;height:17px}
+.ev-ok{background:#111;color:#e9d9a8}
+.ev-ok:hover{background:#000}
+.ev-no{background:#fff;color:#c0392b;border-color:rgba(192,57,43,.45)}
+.ev-no:hover{background:rgba(192,57,43,.06);border-color:#c0392b}
+.ev-motivo{margin:12px 0 0;font-size:12.5px;color:var(--gray-mid);font-style:italic}
+
+.ev-otros{margin-top:18px;border:1px solid var(--gray-light);border-radius:15px;padding:6px 14px 10px}
+.ev-otros-tit{margin:12px 0 4px;font-size:10.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--gray-mid)}
+.ev-otro{display:flex;align-items:center;gap:12px;width:100%;padding:12px 0;border:0;border-top:1px solid var(--gray-light);background:none;font:inherit;text-align:left;cursor:pointer}
+.ev-otro:hover b{text-decoration:underline}
+.ev-otro-ico{flex:none;width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:var(--off-white);color:var(--gray-mid)}
+.ev-otro-ico svg{width:17px;height:17px}
+.ev-otro b{font-size:14px;white-space:nowrap}
+.ev-otro small{flex:1;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-otro>svg{width:15px;height:15px;color:var(--gray-mid);flex:none}
+
+.ev-pie-mes{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:18px}
+.ev-pie-mes label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--gray-mid)}
+.ev-pie-mes select{font:inherit;font-size:14px;font-weight:600;color:var(--black);padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff;text-transform:capitalize}
+.ev-aviso-pend{font-size:13px;font-weight:700;color:#8a6508;background:#fdf0d2;padding:8px 14px;border-radius:999px}
+
+@media(max-width:1100px){
+  .ev-resumen{grid-template-columns:repeat(2,1fr)}
+  .ev-columnas{grid-template-columns:1fr}
 }
-.ev-sello.pendiente{background:rgba(184,134,11,.14);color:#8a6508}
+@media(max-width:700px){
+  .ev-resumen{grid-template-columns:1fr;gap:10px}
+  .vt2{padding:13px 15px}
+  .vt2 b{font-size:23px}
+  .ev-cal{padding:13px}
+  .ev-cal-grilla,.ev-cal-cab{gap:4px}
+  /* Sin el monto ni el conteo, el día elegido se marca con el número */
+  .ev-dia{min-height:52px;padding:6px;align-items:center;justify-content:center}
+  .ev-dia-p,.ev-dia-c{display:none}
+  .ev-dia.elegido .ev-dia-n{background:#111;color:#e9d9a8;border-radius:50%;width:26px;height:26px;display:grid;place-items:center}
+  .ev-dia-pend{top:5px;right:5px;width:7px;height:7px}
+  .ev-cifras{grid-template-columns:repeat(2,1fr)}
+  .ev-resolver{flex-direction:column}
+  .ev-pie-mes label{flex:1 1 100%}
+  .ev-pie-mes select{width:100%}
+  .ev-venta-top{flex-wrap:wrap}
+}
 
-/* La tarjeta de lo que se lleva el vendedor, al lado de la ganancia */
-.vt.vendedor{background:#fff;border-color:var(--gray-light)}
-.vt.vendedor small{display:block;margin-top:5px;font-size:11.5px;color:var(--gray-mid);font-weight:500;letter-spacing:0;text-transform:none}
-.vl-linea.vl-gana{margin-top:6px;padding-top:7px;border-top:1px dashed var(--gray-light)}
-.vl-linea.vl-gana b{color:#1e7a3a}
-.vl-linea.vl-comision{margin-top:0;padding-top:3px;border-top:0}
-.vl-linea.vl-comision b{color:var(--black)}
-.ev-motivo{display:block;margin-top:7px;font-size:12px;color:var(--gray-mid);font-style:italic}
+/* Aviso de cambios sin guardar, en el pie de los paneles */
+.ed-aviso{margin-right:auto;font-size:13px;color:var(--gray-mid)}
+.ed-aviso.err{color:#c0392b}
+
+/* Resumen del pedido al aceptar o denegar la comisión */
 .ev-resumen-pedido{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--gray-light);border-radius:14px;background:var(--off-white)}
 .ev-resumen-pedido img{width:62px;height:62px;object-fit:contain;border-radius:10px;background:#fff;flex:none}
 .ev-resumen-pedido b{display:block;font-size:15px;line-height:1.3}
 .ev-resumen-pedido small{display:block;margin-top:3px;font-size:12.5px;color:var(--gray-mid)}
+.vl-linea.vl-gana{margin-top:6px;padding-top:7px;border-top:1px dashed var(--gray-light)}
+.vl-linea.vl-gana b{color:#1e7a3a}
+.vl-linea.vl-pagar b{color:#1e7a3a}
+
+/* Historial del vendedor: el estado de cada pedido suyo */
+.ev-venta.pendiente .ev-sello{margin-top:8px}
+.venta-lista li.ev-venta{display:flex}
+.venta-lista .ev-sello{display:inline-block;margin-top:8px}
+.ev-motivo{display:block;margin-top:7px;font-size:12px;color:var(--gray-mid);font-style:italic}

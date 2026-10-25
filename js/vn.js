@@ -417,7 +417,7 @@ const Sesion = (() => {
           <div class="vt"><span>Aceptadas</span><b>${pagables.length}</b></div>
           <div class="vt"><span>Productos vendidos</span><b>${unidades}</b></div>
           <div class="vt"><span>Vendido</span><b>${fmt(suma)}</b></div>
-          <div class="vt destacada"><span>Tu comisión</span><b>${fmt(comision)}</b></div>
+          <div class="vt destacada"><span>Te deben pagar</span><b>${fmt(comision)}</b></div>
         </div>
         <ul class="venta-lista">
           ${data.map(v => {
@@ -438,7 +438,7 @@ const Sesion = (() => {
                 <div class="vl-linea"><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt(prod)}</b></div>
                 <div class="vl-linea"><span>Envío · ${esc(v.comuna)}</span><b>${fmt(v.costo_despacho)}</b></div>
                 <div class="vl-linea vl-final"><span>Total</span><b>${fmt(v.total)}</b></div>
-                <div class="vl-linea vl-comision"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
+                <div class="vl-linea vl-pagar"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
               </div>
             </li>`;
           }).join('')}
