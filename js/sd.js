@@ -168,15 +168,15 @@ function cardHTML(p, opts){
   const hayDcto = oferta && p3 > 0 && p3 < p1;
   const precioBase = hayDcto ? p3 : p1;
   const sin = p.inStock === false;
-  const oos = sin ? '<div class="oos-tag">AGOTADO</div>' : '';
+  const oos = sin ? '<p class="oos-tag">Agotado</p>' : '';
   return `<div class="product-card temu-card${sin ? ' out-of-stock' : ''}" data-id="${escAttr(p.slug)}" data-name="${escAttr(p.name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.imgScale ?? 0.75}" data-desc="${escAttr(p.desc)}"${sin ? ' aria-disabled="true"' : ''}>
-      <div class="card-img-wrap"><img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="card-img-placeholder" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>${oos}</div>
+      <div class="card-img-wrap"><img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="card-img-placeholder" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>
       <div class="card-info">
         <p class="card-name">${escTxt(p.name)}</p>
         <div class="card-foot">
           <div class="card-precio-col">
-            <p class="card-price">${fmt(precioBase)}</p>
-            ${hayDcto ? `<span class="dcto"><s class="dcto-antes">${fmt(p1)}</s><span class="dcto-chip">-${Math.round((1 - p3 / p1) * 100)}%</span></span>` : ''}
+            ${sin ? oos : `<p class="card-price">${fmt(precioBase)}</p>
+            ${hayDcto ? `<span class="dcto"><s class="dcto-antes">${fmt(p1)}</s><span class="dcto-chip">-${Math.round((1 - p3 / p1) * 100)}%</span></span>` : ''}`}
           </div>
         </div>
       </div>
