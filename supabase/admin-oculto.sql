@@ -74,6 +74,44 @@ create policy "perfiles admin" on public.profiles
   using ( public.es_admin() and (not oculto or id = auth.uid()) )
   with check ( public.es_admin() and (not oculto or id = auth.uid()) );
 
+-- ── Que no quede su huella en ninguna fila ─────────────────────────────────
+--  `ventas.resuelto_por` y `guias.creada_por` guardan quién hizo la acción.
+--  Hoy la web no los escribe, pero si algún día lo hiciera, el dueño vería un
+--  uuid que no corresponde a nadie de su equipo y sabría que hay alguien más.
+--  Estos disparadores los dejan vacíos cuando el que actúa está oculto.
+create extension if not exists hstore;
+
+create or replace function public.sin_huella_oculta()
+returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  col text := tg_argv[0];
+  val uuid;
+begin
+  execute format('select ($1).%I', col) into val using new;
+  if val is not null and exists (
+    select 1 from public.profiles p where p.id = val and p.oculto
+  ) then
+    new := new #= hstore(col, null);
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists ventas_sin_huella on public.ventas;
+create trigger ventas_sin_huella
+  before insert or update on public.ventas
+  for each row execute function public.sin_huella_oculta('resuelto_por');
+
+drop trigger if exists guias_sin_huella on public.guias;
+create trigger guias_sin_huella
+  before insert or update on public.guias
+  for each row execute function public.sin_huella_oculta('creada_por');
+
+-- Y limpia lo que ya pudiera estar guardado.
+update public.ventas set resuelto_por = null
+ where resuelto_por in (select id from public.profiles where oculto);
+update public.guias set creada_por = null
+ where creada_por in (select id from public.profiles where oculto);
+
 -- ============================================================================
 --  PARA SACARLA de nuevo a la vista:
 --    update public.profiles set oculto = false where email = 'adpp23777@gmail.com';

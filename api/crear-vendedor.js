@@ -103,6 +103,18 @@ module.exports = async (req, res) => {
     const rol = b.rol === 'admin' ? 'admin' : 'vendedor';
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Correo no válido' });
+
+    // Una cuenta oculta no se delata ni acá: si alguien prueba crear un
+    // vendedor con ese correo, la respuesta es la misma que daría un correo
+    // escrito mal, no un "ya existe" que confirmaría que está.
+    const yaEsta = await sbRest('profiles', {
+      method: 'GET',
+      query: `?email=eq.${encodeURIComponent(email)}&oculto=is.true&select=id`,
+    });
+    if (Array.isArray(yaEsta) && yaEsta.length) {
+      return res.status(400).json({ error: 'Correo no válido' });
+    }
+
     if (password.length < 8) return res.status(400).json({ error: 'La contraseña necesita 8 caracteres o más' });
     if (!nombre) return res.status(400).json({ error: 'Falta el nombre del vendedor' });
     if (telefono.replace(/\D/g, '').length < 8) return res.status(400).json({ error: 'Falta el teléfono del vendedor' });
