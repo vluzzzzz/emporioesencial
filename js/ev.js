@@ -138,7 +138,10 @@ const EdVendedores = (() => {
     const pendientes = lista.filter(v => estadoDe(v) === 'pendiente');
     const unidades = pagables.reduce((a, v) => a + (v.cantidad || 1), 0);
     const comision = pagables.reduce((a, v) => a + comisionDe(v), 0);
-    const vendido = pagables.reduce((a, v) => a + (v.total || 0), 0);
+    // La ganancia del negocio es lo que cuesta el producto. El envío no entra:
+    // ese se lo queda el vendedor, igual que su comisión.
+    const productos = pagables.reduce((a, v) => a + (v.precio_unitario || 0) * (v.cantidad || 1), 0);
+    const envios = pagables.reduce((a, v) => a + (v.costo_despacho || 0), 0);
 
     const [anio, mes] = mesVisto.split('-').map(Number);
     const primero = new Date(anio, mes - 1, 1);
@@ -158,13 +161,14 @@ const EdVendedores = (() => {
       const k = mesVisto + '-' + String(d).padStart(2, '0');
       const delDia = porDia[k] || [];
       const pend = delDia.filter(v => estadoDe(v) === 'pendiente').length;
-      const com = delDia.filter(cuentaParaPago).reduce((a, v) => a + comisionDe(v), 0);
+      const gan = delDia.filter(cuentaParaPago)
+        .reduce((a, v) => a + (v.precio_unitario || 0) * (v.cantidad || 1), 0);
       celdas.push(`
         <button type="button" class="ev-dia${delDia.length ? ' con' : ''}${k === hoy ? ' hoy' : ''}${k === diaVisto ? ' elegido' : ''}"
                 data-dia="${k}"${delDia.length ? '' : ' disabled'}>
           <span class="ev-dia-n">${d}</span>
           ${delDia.length ? `<span class="ev-dia-c">${delDia.length}</span>` : ''}
-          ${com ? `<span class="ev-dia-p">${plata(com)}</span>` : ''}
+          ${gan ? `<span class="ev-dia-p">${plata(gan)}</span>` : ''}
           ${pend ? `<span class="ev-dia-pend" title="${pend} por aprobar"></span>` : ''}
         </button>`);
     }
@@ -191,8 +195,9 @@ const EdVendedores = (() => {
       <div class="venta-tarjetas">
         <div class="vt"><span>Pedidos</span><b>${pagables.length}</b></div>
         <div class="vt"><span>Productos vendidos</span><b>${unidades}</b></div>
-        <div class="vt"><span>Vendido</span><b>${plata(vendido)}</b></div>
-        <div class="vt destacada"><span>Comisión del mes</span><b>${plata(comision)}</b></div>
+        <div class="vt destacada"><span>Ganancia en productos</span><b>${plata(productos)}</b></div>
+        <div class="vt vendedor"><span>Para el vendedor</span><b>${plata(envios + comision)}</b>
+          <small>${plata(envios)} de envíos + ${plata(comision)} de comisión</small></div>
       </div>
 
       <div class="ev-cal">
@@ -223,12 +228,14 @@ const EdVendedores = (() => {
       return;
     }
     const [a, m, d] = diaVisto.split('-').map(Number);
-    const com = delDia.filter(cuentaParaPago).reduce((x, v) => x + comisionDe(v), 0);
+    const ok = delDia.filter(cuentaParaPago);
+    const com = ok.reduce((x, v) => x + comisionDe(v), 0);
+    const gan = ok.reduce((x, v) => x + (v.precio_unitario || 0) * (v.cantidad || 1), 0);
 
     caja.innerHTML = `
       <div class="ev-dia-cab">
         <h3>${d} de ${MESES[m - 1]}</h3>
-        <span>${delDia.length} pedido${delDia.length === 1 ? '' : 's'} · ${plata(com)} de comisión</span>
+        <span>${delDia.length} pedido${delDia.length === 1 ? '' : 's'} · ${plata(gan)} de ganancia · ${plata(com)} de comisión</span>
       </div>
       <ul class="venta-lista">${delDia.map(filaVenta).join('')}</ul>`;
 
@@ -237,20 +244,69 @@ const EdVendedores = (() => {
     caja.scrollIntoView({ behavior:'smooth', block:'nearest' });
   }
 
-  async function resolver(box, id, como){
+  // Al resolver se puede dejar una observación: por qué se denegó, o
+  // cualquier nota para el vendedor.
+  function resolver(box, id, como){
     const v = ventas.find(x => String(x.id) === String(id));
     if (!v) return;
     const acepta = como === 'aceptado';
-    if (!acepta && confirmarFn &&
-        !(await confirmarFn('¿Denegar el pedido de ' + v.cliente_nombre + '? No se le paga comisión al vendedor.', 'Denegar'))) return;
-    try {
-      const { error } = await sb.from('ventas')
-        .update({ estado: como, resuelto_en: new Date().toISOString() }).eq('id', v.id);
-      if (error) throw error;
-      v.estado = como;
-      pintarVentas(box);
-      toast(acepta ? 'Pedido aceptado' : 'Pedido denegado');
-    } catch (err) { toast(mensajeError(err), true); }
+
+    const cuerpo = `
+      <form id="evResolver">
+        <div class="ev-resumen-pedido">
+          <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+          <div>
+            <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+            <small>${esc(v.cliente_nombre)} · ${esc(v.comuna)}</small>
+            <small>${esc(v.vendedor_nombre)} · ${cuando(v.created_at)}</small>
+          </div>
+        </div>
+        <div class="vl-cuenta" style="width:100%;border:0;padding:0;margin-top:16px">
+          <div class="vl-linea"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
+          <div class="vl-linea vl-gana"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+          <div class="vl-linea"><span>Envío · vendedor</span><b>${plata(v.costo_despacho)}</b></div>
+          <div class="vl-linea vl-comision"><span>Comisión · vendedor</span><b>${plata(comisionDe(v))}</b></div>
+          <div class="vl-linea vl-final"><span>Se lleva el vendedor</span><b>${plata((v.costo_despacho || 0) + comisionDe(v))}</b></div>
+        </div>
+        <label class="venta-f venta-ancho" style="margin-top:18px"><span>Observación${acepta ? ' (opcional)' : ''}</span>
+          <textarea name="motivo" rows="3" placeholder="${acepta ? 'Alguna nota sobre este pedido' : 'Por qué se deniega: no llegó, el cliente se arrepintió…'}">${esc(v.motivo || '')}</textarea>
+        </label>
+        <p class="venta-msg" id="evResMsg"></p>
+      </form>`;
+
+    const pie = `<button type="submit" form="evResolver" class="venta-btn${acepta ? '' : ' peligro'}">${acepta ? 'Aceptar comisión' : 'Denegar pedido'}</button>`;
+    const { ov, cerrar } = Sesion.panel(
+      acepta ? 'Aceptar comisión' : 'Denegar pedido',
+      'Pedido de ' + (v.vendedor_nombre || 'el vendedor'), cuerpo, pie);
+    const f = ov.querySelector('#evResolver');
+    f.motivo.focus();
+
+    f.addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = ov.querySelector('button[type=submit]');
+      const msg = ov.querySelector('#evResMsg');
+      const motivo = f.motivo.value.trim();
+      if (!acepta && !motivo) {
+        msg.className = 'venta-msg err';
+        msg.textContent = 'Escribí por qué se deniega, para que el vendedor sepa.';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Guardando…';
+      try {
+        const { error } = await sb.from('ventas')
+          .update({ estado: como, motivo, resuelto_en: new Date().toISOString() })
+          .eq('id', v.id);
+        if (error) throw error;
+        v.estado = como; v.motivo = motivo;
+        cerrar();
+        pintarVentas(box);
+        toast(acepta ? 'Comisión aceptada' : 'Pedido denegado');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = acepta ? 'Aceptar comisión' : 'Denegar pedido';
+        msg.className = 'venta-msg err';
+        msg.textContent = mensajeError(err);
+      }
+    });
   }
 
   function filaVenta(v){
@@ -266,15 +322,17 @@ const EdVendedores = (() => {
           <small>${esc(v.metodo_pago)} · ${esc(v.vendedor_nombre)} · ${hora(v.created_at)}</small>
           ${estado === 'pendiente' ? `
             <div class="ev-resolver">
-              <button type="button" class="ev-ok" data-resolver="${esc(v.id)}" data-como="aceptado">Aceptar pedido</button>
-              <button type="button" class="ev-no" data-resolver="${esc(v.id)}" data-como="denegado">Denegar</button>
-            </div>` : `<span class="ev-sello ${estado}">${estado === 'aceptado' ? 'Aceptado' : 'Denegado'}</span>`}
+              <button type="button" class="ev-ok" data-resolver="${esc(v.id)}" data-como="aceptado">Aceptar comisión</button>
+              <button type="button" class="ev-no" data-resolver="${esc(v.id)}" data-como="denegado">Denegar pedido</button>
+            </div>` : `<span class="ev-sello ${estado}">${estado === 'aceptado' ? 'Comisión aceptada' : 'Denegado'}</span>
+            ${v.motivo ? `<small class="ev-motivo">${esc(v.motivo)}</small>` : ''}`}
         </div>
         <div class="vl-cuenta">
-          <div class="vl-linea"><span>Producto</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div class="vl-linea"><span>Envío</span><b>${plata(v.costo_despacho)}</b></div>
-          <div class="vl-linea vl-final"><span>Total</span><b>${plata(v.total)}</b></div>
-          <div class="vl-linea vl-comision"><span>Comisión vendedor</span><b>${plata(com)}</b></div>
+          <div class="vl-linea"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
+          <div class="vl-linea vl-gana"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+          <div class="vl-linea"><span>Envío · vendedor</span><b>${plata(v.costo_despacho)}</b></div>
+          <div class="vl-linea vl-comision"><span>Comisión · vendedor</span><b>${plata(com)}</b></div>
+          <div class="vl-linea vl-final"><span>Se lleva el vendedor</span><b>${plata((v.costo_despacho || 0) + com)}</b></div>
         </div>
       </li>`;
   }
