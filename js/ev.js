@@ -348,7 +348,7 @@ const EdVendedores = (() => {
         ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
       </div>
 
-      <p class="venta-sec">La plata</p>
+      <p class="venta-sec">Total</p>
       <div class="ev-datos">
         ${linea('Cobrado al cliente', plata(v.total))}
         <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
