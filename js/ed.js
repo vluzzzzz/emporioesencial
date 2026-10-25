@@ -14,7 +14,7 @@
  *  consola, Supabase rechaza toda escritura que no venga de un admin (RLS).
  * ========================================================================== */
 const Edicion = (() => {
-  const V = "85";
+  const V = "90";
   const MODULOS = ['js/eu.js', 'js/ep.js', 'js/eb.js'];
   const LLAVE = 'emporio-editando';
 
@@ -38,9 +38,20 @@ const Edicion = (() => {
 
     // El panel de vendedores no depende del interruptor: el admin lo ve
     // siempre, con los lápices apagados.
-    cargarUno('js/ev.js', () => EdVendedores.montarBoton());
+    cargarCss();
+    cargarUno('js/eu.js', () => cargarUno('js/ev.js', () => EdVendedores.montarBoton()));
 
     if (localStorage.getItem(LLAVE) === '1') alternar(true);
+  }
+
+  let cssPuesto = false;
+  function cargarCss(){
+    if (cssPuesto) return;
+    cssPuesto = true;
+    const css = document.createElement('link');
+    css.rel = 'stylesheet';
+    css.href = 'css/edicion.css?v=' + V;
+    document.head.appendChild(css);
   }
 
   function cargarUno(src, alCargar){
@@ -62,18 +73,17 @@ const Edicion = (() => {
 
   function cargarModulos(){
     if (cargando) return cargando;
+    // eu.js ya puede estar cargado desde init(), para el panel de vendedores.
+    const faltan = MODULOS.filter(m => !(m === 'js/eu.js' && typeof EdUtil !== 'undefined'));
+    cargarCss();
     cargando = new Promise(resolve => {
-      const css = document.createElement('link');
-      css.rel = 'stylesheet';
-      css.href = 'css/edicion.css?v=' + V;
-      document.head.appendChild(css);
       // En serie: ep.js usa EdUtil, así que eu.js tiene que estar antes.
       (function siguiente(i){
-        if (i >= MODULOS.length) return resolve();
+        if (i >= faltan.length) return resolve();
         const s = document.createElement('script');
-        s.src = MODULOS[i] + '?v=' + V;
+        s.src = faltan[i] + '?v=' + V;
         s.onload = () => siguiente(i + 1);
-        s.onerror = () => { console.error('No se pudo cargar', MODULOS[i]); siguiente(i + 1); };
+        s.onerror = () => { console.error('No se pudo cargar', faltan[i]); siguiente(i + 1); };
         document.body.appendChild(s);
       })(0);
     });

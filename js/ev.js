@@ -343,38 +343,123 @@ const EdVendedores = (() => {
 
   /* ── Despacho ─────────────────────────────────────────── */
   function pintarDespacho(ov, box){
-    box.innerHTML = `
-      <p class="venta-vacio" style="margin-bottom:16px">Es lo que se suma al precio cuando el vendedor elige la comuna. Si apagás una, deja de aparecer en el formulario.</p>
-      <div class="ev-comunas">
-        ${comunas.map(c => `
-          <div class="ev-comuna" data-c="${esc(c.id)}">
-            <span>${esc(c.nombre)}</span>
-            <input type="number" min="0" step="500" data-cf="costo" value="${c.costo}">
-            <label class="ed-dest"><input type="checkbox" data-cf="activa" ${c.activa ? 'checked' : ''}><span>Activa</span></label>
-          </div>`).join('')}
-      </div>
-      <button type="button" class="venta-btn" id="evGuardarComunas" style="margin-top:18px">Guardar comunas</button>`;
+    const nuevas = [];   // las que todavía no están en la base
+    const borradas = []; // ids a eliminar al guardar
 
-    ov.querySelector('#evGuardarComunas').addEventListener('click', async e => {
-      const btn = e.target;
-      btn.disabled = true; btn.textContent = 'Guardando…';
-      try {
-        const filas = [...box.querySelectorAll('.ev-comuna')].map(el => ({
-          ...comunas.find(x => x.id === el.dataset.c),
-          costo: parseInt(el.querySelector('[data-cf=costo]').value, 10) || 0,
-          activa: el.querySelector('[data-cf=activa]').checked,
-        }));
-        const { error } = await sb.from('comunas').upsert(filas, { onConflict: 'id' });
-        if (error) throw error;
-        comunas = filas;
-        toast('Comunas guardadas');
-      } catch (err) {
-        toast(mensajeError(err), true);
-      } finally {
-        btn.disabled = false; btn.textContent = 'Guardar comunas';
-      }
-    });
+    function filas(){
+      return comunas.concat(nuevas);
+    }
+
+    function pintar(){
+      box.innerHTML = `
+        <p class="ec-intro">Es lo que se suma al precio cuando el vendedor elige la comuna. El ojo la saca del formulario sin perderla; el tacho la elimina para siempre.</p>
+        <div class="ev-comunas">
+          ${filas().map((c, i) => `
+            <div class="ev-comuna${c.activa ? '' : ' apagada'}" data-i="${i}">
+              <input type="text" data-cf="nombre" value="${esc(c.nombre)}" placeholder="Nombre de la comuna">
+              <input type="number" min="0" step="500" data-cf="costo" value="${c.costo}">
+              <label class="ec-ojo" title="${c.activa ? 'Sacar del formulario' : 'Volver a ofrecer'}">
+                <input type="checkbox" data-cf="activa" ${c.activa ? 'checked' : ''}>
+                <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+              </label>
+              <button type="button" class="ec-borrar" data-quitar="${i}" aria-label="Eliminar comuna">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+              </button>
+            </div>`).join('')}
+        </div>
+        <div class="ev-nueva-comuna">
+          <input type="text" id="evComunaNueva" placeholder="Comuna nueva">
+          <input type="number" id="evComunaCosto" min="0" step="500" value="3000" aria-label="Costo de despacho">
+          <button type="button" class="ed-btn" id="evComunaAgregar">Agregar</button>
+        </div>
+        <div class="ev-pie-comunas">
+          <span class="ed-aviso" id="evComunasAviso"></span>
+          <button type="button" class="venta-btn" id="evGuardarComunas">Guardar comunas</button>
+        </div>`;
+
+      box.querySelectorAll('[data-cf=nombre]').forEach(x => x.addEventListener('input', e => {
+        filas()[+e.target.closest('.ev-comuna').dataset.i].nombre = e.target.value;
+      }));
+      box.querySelectorAll('[data-cf=costo]').forEach(x => x.addEventListener('input', e => {
+        filas()[+e.target.closest('.ev-comuna').dataset.i].costo = parseInt(e.target.value, 10) || 0;
+      }));
+      box.querySelectorAll('[data-cf=activa]').forEach(x => x.addEventListener('change', e => {
+        filas()[+e.target.closest('.ev-comuna').dataset.i].activa = e.target.checked;
+        pintar();
+      }));
+
+      box.querySelectorAll('[data-quitar]').forEach(b => b.addEventListener('click', async () => {
+        const i = +b.dataset.quitar;
+        const c = filas()[i];
+        const usada = ventas.some(v => v.comuna === c.nombre);
+        if (usada) {
+          toast('No se puede eliminar: hay ventas despachadas a ' + c.nombre + '. Podés apagarla con el ojo.', true);
+          return;
+        }
+        if (confirmarFn && !(await confirmarFn('¿Eliminar ' + c.nombre + ' de la lista de despacho?', 'Eliminar'))) return;
+        if (i < comunas.length) { borradas.push(c.id); comunas.splice(i, 1); }
+        else nuevas.splice(i - comunas.length, 1);
+        pintar();
+      }));
+
+      const agregar = () => {
+        const inp = box.querySelector('#evComunaNueva');
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        if (filas().some(c => c.nombre.toLowerCase() === nombre.toLowerCase())) {
+          toast('Esa comuna ya está en la lista', true);
+          return;
+        }
+        nuevas.push({
+          nombre,
+          costo: parseInt(box.querySelector('#evComunaCosto').value, 10) || 0,
+          activa: true,
+          position: filas().length + 1,
+        });
+        inp.value = '';
+        pintar();
+        box.querySelector('#evComunaNueva').focus();
+      };
+      box.querySelector('#evComunaAgregar').addEventListener('click', agregar);
+      box.querySelector('#evComunaNueva').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); agregar(); }
+      });
+
+      box.querySelector('#evGuardarComunas').addEventListener('click', e => guardarComunas(ov, box, e.target, nuevas, borradas));
+    }
+
+    pintar();
   }
+
+  async function guardarComunas(ov, box, btn, nuevas, borradas){
+    const aviso = box.querySelector('#evComunasAviso');
+    const todas = comunas.concat(nuevas);
+    if (todas.some(c => !c.nombre.trim())) {
+      aviso.className = 'ed-aviso err';
+      aviso.textContent = 'Hay una comuna sin nombre.';
+      return;
+    }
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      if (borradas.length) {
+        const { error } = await sb.from('comunas').delete().in('id', borradas);
+        if (error) throw error;
+      }
+      const { error } = await sb.from('comunas')
+        .upsert(todas.map((c, i) => ({ ...c, position: i + 1 })), { onConflict: 'id' });
+      if (error) throw error;
+      await cargar();
+      pintar(ov);
+      toast('Comunas guardadas');
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Guardar comunas';
+      aviso.className = 'ed-aviso err';
+      aviso.textContent = mensajeError(err);
+    }
+  }
+
+
 
   return { montarBoton, abrir };
 })();

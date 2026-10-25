@@ -31,7 +31,9 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 .ed-toast.err{background:#c0392b;color:#fff}
 
 /* Confirmación propia, en vez del confirm() del navegador */
-.ed-conf{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:20px;background:rgba(17,17,17,0);transition:background .2s}
+/* El panel usa transform, y eso aísla las capas: sin este z-index tan alto
+   el cuadro de confirmar queda atrapado debajo y no se puede tocar. */
+.ed-conf{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;background:rgba(17,17,17,0);transition:background .2s}
 .ed-conf.abierto{background:rgba(17,17,17,.5)}
 .ed-conf-caja{background:#fff;border-radius:18px;padding:26px;max-width:420px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
 .ed-conf-caja p{margin:0 0 20px;font-size:15.5px;line-height:1.5}

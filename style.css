@@ -2813,9 +2813,20 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-acc{display:flex;align-items:center;gap:10px;margin-top:14px}
 .ev-apagado{font-size:12.5px;color:#c0392b;font-weight:600}
 .ev-comunas{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px}
-.ev-comuna{display:grid;grid-template-columns:1fr 110px auto;align-items:center;gap:10px;background:#fff;padding:11px 14px;border:1px solid var(--gray-light);border-radius:12px}
-.ev-comuna span{font-size:14px}
-.ev-comuna input[type=number]{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:1.5px solid var(--gray-light);border-radius:10px}
+.ev-comuna{display:grid;grid-template-columns:1fr 110px auto auto;align-items:center;gap:8px;background:#fff;padding:10px 12px;border:1px solid var(--gray-light);border-radius:12px}
+.ev-comuna.apagada{opacity:.55}
+.ev-comuna input{width:100%;font:inherit;font-size:14px;padding:9px 11px;border:1.5px solid var(--gray-light);border-radius:10px;min-width:0}
+.ev-comuna input[type=text]{font-weight:600;border-color:transparent;background:var(--off-white)}
+.ev-comuna input[type=text]:focus{outline:none;border-color:#111;background:#fff}
+.ev-comuna .ec-ojo{padding:7px}
+.ev-comuna .ec-borrar{width:30px;height:30px}
+.ev-pie-comunas{display:flex;align-items:center;gap:14px;margin-top:20px;flex-wrap:wrap}
+/* La fila de "comuna nueva" se salia del panel: el campo de texto crecia
+   sin limite y empujaba al boton fuera del borde. */
+.ev-nueva-comuna{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+.ev-nueva-comuna input[type=text]{flex:1 1 220px;min-width:0;font:inherit;font-size:14px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px}
+.ev-nueva-comuna input[type=number]{flex:0 0 120px;font:inherit;font-size:14px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px}
+.ev-nueva-comuna .ed-btn{flex:none}
 .ed-dest{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--gray-mid);white-space:nowrap;cursor:pointer}
 @media(max-width:700px){
   .nav-vendedores-btn span{display:none}
