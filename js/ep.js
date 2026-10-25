@@ -107,7 +107,7 @@ const EdProducto = (() => {
     const pintarAyuda = () => {
       const n = unidades(f);
       if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
-      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel AGOTADO.'; ayuda.className = 'ep-stock-ayuda sin'; }
+      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra con el cartel AGOTADO en lugar del precio.'; ayuda.className = 'ep-stock-ayuda sin'; }
       else if (n <= 5) { ayuda.textContent = 'Quedan pocas: ' + n + (n === 1 ? ' unidad.' : ' unidades.'); ayuda.className = 'ep-stock-ayuda poco'; }
       else             { ayuda.textContent = n + ' unidades a la venta.'; ayuda.className = 'ep-stock-ayuda'; }
     };

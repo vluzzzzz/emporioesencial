@@ -70,10 +70,15 @@ const EdUtil = (() => {
         }, 1000);
       }
 
+      // Mismo resguardo que los paneles: el clic que abrió este aviso no lo
+      // cierra, y arrastrar desde adentro tampoco.
+      const nacio = Date.now();
+      let desdeElVelo = false;
+      ov.addEventListener('pointerdown', e => { desdeElVelo = e.target === ov; });
       ov.addEventListener('click', e => {
         const b = e.target.closest('[data-r]');
         if (b && b.disabled) return;
-        if (!b && e.target !== ov) return;
+        if (!b && (e.target !== ov || !desdeElVelo || Date.now() - nacio < 250)) return;
         if (reloj) clearInterval(reloj);
         ov.remove();
         resolve(b ? b.dataset.r === '1' : false);

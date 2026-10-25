@@ -14,7 +14,9 @@
  *  consola, Supabase rechaza toda escritura que no venga de un admin (RLS).
  * ========================================================================== */
 const Edicion = (() => {
-  const V = "124";
+  // La versión sale de la dirección de este mismo archivo. Escrita a mano se
+  // quedaba atrás y el navegador servía módulos viejos junto a páginas nuevas.
+  const V = (document.currentScript && new URL(document.currentScript.src, location.href).searchParams.get('v')) || '1';
   const MODULOS = ['js/eu.js', 'js/ep.js', 'js/eb.js'];
   const LLAVE = 'emporio-editando';
 
@@ -54,12 +56,24 @@ const Edicion = (() => {
     document.head.appendChild(css);
   }
 
+  // Un archivo se baja una sola vez, aunque lo pidan dos caminos a la vez.
+  // Bajarlo dos veces rompía el módulo: `const EdUtil` ya estaba declarado.
+  const enVuelo = {};
+  function bajar(src){
+    if (!enVuelo[src]) {
+      enVuelo[src] = new Promise(listo => {
+        const s = document.createElement('script');
+        s.src = src + '?v=' + V;
+        s.onload = () => listo();
+        s.onerror = () => { console.error('No se pudo cargar', src); listo(); };
+        document.body.appendChild(s);
+      });
+    }
+    return enVuelo[src];
+  }
+
   function cargarUno(src, alCargar){
-    const s = document.createElement('script');
-    s.src = src + '?v=' + V;
-    s.onload = alCargar;
-    s.onerror = () => console.error('No se pudo cargar', src);
-    document.body.appendChild(s);
+    bajar(src).then(alCargar);
   }
 
   async function alternar(v){
@@ -73,20 +87,9 @@ const Edicion = (() => {
 
   function cargarModulos(){
     if (cargando) return cargando;
-    // eu.js ya puede estar cargado desde init(), para el panel de vendedores.
-    const faltan = MODULOS.filter(m => !(m === 'js/eu.js' && typeof EdUtil !== 'undefined'));
     cargarCss();
-    cargando = new Promise(resolve => {
-      // En serie: ep.js usa EdUtil, así que eu.js tiene que estar antes.
-      (function siguiente(i){
-        if (i >= faltan.length) return resolve();
-        const s = document.createElement('script');
-        s.src = faltan[i] + '?v=' + V;
-        s.onload = () => siguiente(i + 1);
-        s.onerror = () => { console.error('No se pudo cargar', faltan[i]); siguiente(i + 1); };
-        document.body.appendChild(s);
-      })(0);
-    });
+    // En serie: ep.js y eb.js usan EdUtil, así que eu.js tiene que estar antes.
+    cargando = MODULOS.reduce((antes, m) => antes.then(() => bajar(m)), Promise.resolve());
     return cargando;
   }
 
@@ -121,7 +124,10 @@ const Edicion = (() => {
     }
   }, true);
 
-  function despachar(que, el){
+  // Si el clic llega antes de que terminen de bajar los módulos, se espera en
+  // vez de no hacer nada: antes el primer clic después de prender se perdía.
+  async function despachar(que, el){
+    await cargarModulos();
     if (que === 'producto' && typeof EdProducto !== 'undefined') {
       EdProducto.abrir(el.dataset.id || el.dataset.slug || document.getElementById('ppage')?.dataset.slug);
       return;
@@ -134,6 +140,7 @@ const Edicion = (() => {
     if (que === 'banner' && typeof EdSitio !== 'undefined') { EdSitio.abrirBanners(); return; }
     if (que === 'categorias' && typeof EdSitio !== 'undefined') { EdSitio.abrirCategorias(); return; }
     console.warn('Edición sin módulo para:', que);
+    if (typeof EdUtil !== 'undefined') EdUtil.toast('No se pudo abrir el editor. Recarga la página con Ctrl+F5.', true);
   }
 
   return {

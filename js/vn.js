@@ -283,8 +283,18 @@ const Sesion = (() => {
         if (!document.querySelector('.venta-ov')) document.documentElement.style.overflow = '';
       }, 300);
     };
+    // El clic de afuera cierra, pero con dos resguardos: tiene que haber
+    // empezado sobre el velo (si no, arrastrar texto desde adentro cerraba el
+    // panel) y no cuenta el primer cuarto de segundo (el toque que lo abrió
+    // puede repetirse sobre el velo recién creado y lo cerraba al instante).
+    const nacio = Date.now();
+    let desdeElVelo = false;
+    ov.addEventListener('pointerdown', e => { desdeElVelo = e.target === ov; });
     ov.addEventListener('click', e => {
-      if (e.target === ov || e.target.closest('[data-acc=cerrar]')) cerrar();
+      if (e.target.closest('[data-acc=cerrar]')) return cerrar();
+      if (e.target !== ov || !desdeElVelo) return;
+      if (Date.now() - nacio < 250) return;
+      cerrar();
     });
     // Escape cierra solo el panel de más arriba, no toda la pila.
     function salir(e){
