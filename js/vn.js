@@ -161,45 +161,72 @@ const Sesion = (() => {
   /* ── Desplegable propio ───────────────────────────────── */
   // Reemplaza al <select> del navegador, que no se puede diseñar.
   // `elegido` deja una opción ya marcada, para los campos que vienen con valor.
-  function desplegable(nombre, opciones, textoVacio, elegido){
+  // `buscar` suma una casilla para filtrar cuando la lista es larga.
+  function desplegable(nombre, opciones, textoVacio, elegido, buscar){
     const actual = opciones.find(o => o.valor === elegido);
     return `
-      <div class="vsel" data-sel="${esc(nombre)}">
+      <div class="vsel${buscar ? ' con-busca' : ''}" data-sel="${esc(nombre)}">
         <input type="hidden" name="${esc(nombre)}" value="${esc(actual ? actual.valor : '')}">
         <button type="button" class="vsel-btn" aria-haspopup="listbox" aria-expanded="false">
           <span class="vsel-txt${actual ? '' : ' vacio'}">${esc(actual ? actual.texto : textoVacio)}</span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <ul class="vsel-lista" role="listbox" hidden>
+        <div class="vsel-caja" hidden>
+        ${buscar ? `<label class="vsel-busca">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+          <input type="text" placeholder="Buscar…" autocomplete="off">
+        </label>` : ''}
+        <ul class="vsel-lista" role="listbox">
           ${opciones.map(o => `
             <li role="option" class="${o.valor === elegido ? 'elegida' : ''}" data-val="${esc(o.valor)}" data-extra="${esc(o.extra == null ? '' : o.extra)}">
               <span>${esc(o.texto)}</span>
               ${o.nota ? `<small>${esc(o.nota)}</small>` : ''}
             </li>`).join('')}
+          <li class="vsel-nada" hidden>Sin resultados</li>
         </ul>
+        </div>
       </div>`;
   }
 
   function conectarDesplegables(raiz, alElegir){
     raiz.querySelectorAll('.vsel').forEach(sel => {
       const btn = sel.querySelector('.vsel-btn');
+      const caja = sel.querySelector('.vsel-caja');
       const lista = sel.querySelector('.vsel-lista');
+      const busca = sel.querySelector('.vsel-busca input');
       const txt = sel.querySelector('.vsel-txt');
       const campo = sel.querySelector('input');
 
       btn.addEventListener('click', () => {
-        const abierto = !lista.hidden;
-        raiz.querySelectorAll('.vsel-lista').forEach(l => { l.hidden = true; });
+        const abierto = !caja.hidden;
+        raiz.querySelectorAll('.vsel-caja').forEach(c => { c.hidden = true; });
         raiz.querySelectorAll('.vsel').forEach(s => s.classList.remove('abierto'));
-        lista.hidden = abierto;
+        caja.hidden = abierto;
         sel.classList.toggle('abierto', !abierto);
         btn.setAttribute('aria-expanded', String(!abierto));
+        if (abierto) return;
+        if (busca) { busca.value = ''; filtrar(''); busca.focus(); }
         // Con listas largas, la opción elegida tiene que quedar a la vista.
-        if (!abierto) {
-          const elegida = lista.querySelector('li.elegida');
-          if (elegida) lista.scrollTop = Math.max(0, elegida.offsetTop - lista.clientHeight / 2 + elegida.offsetHeight / 2);
-        }
+        const elegida = lista.querySelector('li.elegida');
+        if (elegida) lista.scrollTop = Math.max(0, elegida.offsetTop - lista.clientHeight / 2 + elegida.offsetHeight / 2);
       });
+
+      const limpio = t => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+      function filtrar(q){
+        const t = limpio(q);
+        let vistos = 0;
+        lista.querySelectorAll('li[data-val]').forEach(li => {
+          const ok = !t || limpio(li.textContent).includes(t);
+          li.hidden = !ok;
+          if (ok) vistos++;
+        });
+        const nada = lista.querySelector('.vsel-nada');
+        if (nada) nada.hidden = vistos > 0;
+      }
+      if (busca) {
+        busca.addEventListener('input', e => filtrar(e.target.value));
+        busca.addEventListener('click', e => e.stopPropagation());
+      }
 
       lista.addEventListener('click', e => {
         const li = e.target.closest('li');
@@ -209,7 +236,7 @@ const Sesion = (() => {
         txt.classList.remove('vacio');
         lista.querySelectorAll('li').forEach(x => x.classList.remove('elegida'));
         li.classList.add('elegida');
-        lista.hidden = true;
+        caja.hidden = true;
         sel.classList.remove('abierto');
         btn.setAttribute('aria-expanded','false');
         if (alElegir) alElegir(sel.dataset.sel, li.dataset.val, li.dataset.extra);
@@ -218,7 +245,7 @@ const Sesion = (() => {
 
     raiz.addEventListener('click', e => {
       if (e.target.closest('.vsel')) return;
-      raiz.querySelectorAll('.vsel-lista').forEach(l => { l.hidden = true; });
+      raiz.querySelectorAll('.vsel-caja').forEach(c => { c.hidden = true; });
       raiz.querySelectorAll('.vsel').forEach(s => s.classList.remove('abierto'));
     });
   }

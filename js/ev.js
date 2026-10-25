@@ -217,9 +217,10 @@ const EdVendedores = (() => {
           ${Sesion.desplegable('quien', [{ valor:'', texto:'Todo el equipo' }].concat(
             usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
                     .map(u => ({ valor:u.id, texto:u.nombre || u.email }))),
-            'Todo el equipo', vendedorVisto)}
+            'Todo el equipo', vendedorVisto, true)}
         </div>
         ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
+        ${perfilVendedor()}
       </div>
 
       <div class="ev-resumen">
@@ -241,8 +242,6 @@ const EdVendedores = (() => {
             <small class="vt-nota">en comisiones · ${plata(resumen.envios)} de envíos los cobró él</small></div>
         </div>
       </div>
-
-      <section class="ev-pagos" id="evPagos"></section>
 
       <div class="ev-columnas">
         <section class="ev-cal">
@@ -289,7 +288,6 @@ const EdVendedores = (() => {
     }));
 
     pintarDia(box, porDia);
-    pintarPagos(box);
   }
 
   function pintarDia(box, porDia){
@@ -322,61 +320,32 @@ const EdVendedores = (() => {
       resolver(box, b.dataset.resolver, b.dataset.como)));
   }
 
-  // Lo que hay que pagarle a cada vendedor por el mes que se está viendo.
-  function pintarPagos(box){
-    const caja = box.querySelector('#evPagos');
-    const mes = ventas.filter(v => clave(new Date(v.created_at)) === mesVisto);
+  // La ficha del vendedor elegido, al lado del desplegable. Sin nadie
+  // elegido muestra el total del equipo.
+  function perfilVendedor(){
+    const mes = ventas.filter(v => clave(new Date(v.created_at)) === mesVisto
+      && (!vendedorVisto || v.vendedor_id === vendedorVisto));
+    const ok = mes.filter(cuentaParaPago);
+    const pend = mes.filter(v => estadoDe(v) === 'pendiente').length;
+    const comision = ok.reduce((a, v) => a + comisionDe(v), 0);
+    const unidades = ok.reduce((a, v) => a + (v.cantidad || 1), 0);
 
-    const porQuien = new Map();
-    mes.forEach(v => {
-      if (!porQuien.has(v.vendedor_id)) {
-        const u = usuarios.find(x => x.id === v.vendedor_id);
-        porQuien.set(v.vendedor_id, {
-          id: v.vendedor_id,
-          nombre: (u && (u.nombre || u.email)) || v.vendedor_nombre || 'Sin nombre',
-          pedidos: 0, unidades: 0, comision: 0, envios: 0, pendientes: 0,
-        });
-      }
-      const g = porQuien.get(v.vendedor_id);
-      if (estadoDe(v) === 'pendiente') { g.pendientes++; return; }
-      if (!cuentaParaPago(v)) return;
-      g.pedidos++;
-      g.unidades += v.cantidad || 1;
-      g.comision += comisionDe(v);
-      g.envios += v.costo_despacho || 0;
-    });
+    const u = vendedorVisto && usuarios.find(x => x.id === vendedorVisto);
+    const nombre = u ? (u.nombre || u.email)
+      : (mes[0] && vendedorVisto ? mes[0].vendedor_nombre : 'Todo el equipo');
 
-    const gente = [...porQuien.values()].sort((a, b) => b.comision - a.comision);
-    if (!gente.length) { caja.innerHTML = ''; return; }
-    const total = gente.reduce((a, g) => a + g.comision, 0);
-
-    caja.innerHTML = `
-      <header class="ev-pagos-cab">
-        <p class="ev-otros-tit">Comisiones de ${MESES[Number(mesVisto.slice(5)) - 1]}</p>
-        <span class="ev-pagos-total">Total a pagar <b>${plata(total)}</b></span>
-      </header>
-      <div class="ev-pagos-fila">
-        ${gente.map(g => `
-          <div class="ev-pago${g.id === vendedorVisto ? ' activo' : ''}">
-            <span class="ev-pago-ini">${esc((g.nombre || '?').trim().charAt(0).toUpperCase())}</span>
-            <div class="ev-pago-txt">
-              <b>${esc(g.nombre)}</b>
-              <small>${g.pedidos} pedido${g.pedidos === 1 ? '' : 's'} · ${g.unidades} producto${g.unidades === 1 ? '' : 's'}</small>
-              ${g.pendientes ? `<small class="ev-pago-pend">${g.pendientes} sin aprobar</small>` : ''}
-            </div>
-            <div class="ev-pago-monto">
-              <b>${plata(g.comision)}</b>
-              <small>a pagar</small>
-            </div>
-            <button type="button" class="ev-pago-ver" data-quien="${esc(g.id)}">${g.id === vendedorVisto ? 'Ver todo' : 'Ver solo él'}</button>
-          </div>`).join('')}
+    return `
+      <div class="ev-perfil${vendedorVisto ? '' : ' equipo'}">
+        <span class="ev-perfil-ini">${esc((nombre || '?').trim().charAt(0).toUpperCase())}</span>
+        <div class="ev-perfil-txt">
+          <b>${esc(nombre)}</b>
+          <small>${ok.length} pedido${ok.length === 1 ? '' : 's'} · ${unidades} producto${unidades === 1 ? '' : 's'}${pend ? ' · ' + pend + ' sin aprobar' : ''}</small>
+        </div>
+        <div class="ev-perfil-monto">
+          <b>${plata(comision)}</b>
+          <small>a pagar</small>
+        </div>
       </div>`;
-
-    caja.querySelectorAll('[data-quien]').forEach(b => b.addEventListener('click', () => {
-      vendedorVisto = vendedorVisto === b.dataset.quien ? '' : b.dataset.quien;
-      diaVisto = null;
-      pintarVentas(box);
-    }));
   }
 
   function tarjetaVenta(v){
