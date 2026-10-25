@@ -146,23 +146,8 @@ const EdVendedores = (() => {
     calendario: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>',
     ok: '<circle cx="12" cy="12" r="8.6"/><path d="m8.4 12.2 2.5 2.5 4.7-5"/>',
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
-    sube: '<path d="M6 17 11 11l3 3 5-6"/><path d="M15 8h4v4"/>',
-    baja: '<path d="M6 8 11 14l3-3 5 6"/><path d="M15 17h4v-4"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
-
-  function tendencia(ahora, antes){
-    if (!antes) return '';
-    const p = Math.round(((ahora - antes) / antes) * 100);
-    if (!p) return '';
-    return `<span class="vt-tend ${p > 0 ? 'sube' : 'baja'}">${svg(p > 0 ? ICO.sube : ICO.baja)}${p > 0 ? '+' : ''}${p}%</span>
-            <small class="vt-vs">vs. mes anterior</small>`;
-  }
-
-  const mesAnterior = c => {
-    const [a, m] = c.split('-').map(Number);
-    return clave(new Date(a, m - 2, 1));
-  };
 
   function cuentas(c){
     const ok = delMes(c).filter(cuentaParaPago);
@@ -178,8 +163,7 @@ const EdVendedores = (() => {
   /* ── Ventas: resumen, calendario y detalle del día ────── */
   function pintarVentas(box){
     const lista = delMes(mesVisto);
-    const hoyAhora = cuentas(mesVisto);
-    const antes = cuentas(mesAnterior(mesVisto));
+    const resumen = cuentas(mesVisto);
     const pendientes = lista.filter(v => estadoDe(v) === 'pendiente');
 
     const [anio, mes] = mesVisto.split('-').map(Number);
@@ -223,20 +207,20 @@ const EdVendedores = (() => {
       <div class="ev-resumen">
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.pedidos)}</span>
-          <div><span>Pedidos</span><b>${hoyAhora.pedidos}</b>${tendencia(hoyAhora.pedidos, antes.pedidos)}</div>
+          <div><span>Pedidos</span><b>${resumen.pedidos}</b></div>
         </div>
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.caja)}</span>
-          <div><span>Productos vendidos</span><b>${hoyAhora.unidades}</b>${tendencia(hoyAhora.unidades, antes.unidades)}</div>
+          <div><span>Productos vendidos</span><b>${resumen.unidades}</b></div>
         </div>
         <div class="vt2 destacada">
           <span class="vt2-ico">${svg(ICO.moneda)}</span>
-          <div><span>Ganancia en productos</span><b>${plata(hoyAhora.productos)}</b>${tendencia(hoyAhora.productos, antes.productos)}</div>
+          <div><span>Ganancia en productos</span><b>${plata(resumen.productos)}</b></div>
         </div>
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.persona)}</span>
-          <div><span>Pagar al vendedor</span><b>${plata(hoyAhora.comision)}</b>
-            <small class="vt-nota">en comisiones · ${plata(hoyAhora.envios)} de envíos los cobró él</small></div>
+          <div><span>Pagar al vendedor</span><b>${plata(resumen.comision)}</b>
+            <small class="vt-nota">en comisiones · ${plata(resumen.envios)} de envíos los cobró él</small></div>
         </div>
       </div>
 
@@ -266,6 +250,8 @@ const EdVendedores = (() => {
 
         <section class="ev-detalle" id="evDia"></section>
       </div>
+
+      <section class="ev-pagos" id="evPagos"></section>
 
       <div class="ev-pie-mes">
         <label>Ir a
@@ -303,6 +289,7 @@ const EdVendedores = (() => {
     }));
 
     pintarDia(box, porDia);
+    pintarPagos(box);
   }
 
   function pintarDia(box, porDia){
@@ -315,7 +302,6 @@ const EdVendedores = (() => {
     const [a, m, d] = diaVisto.split('-').map(Number);
     const pend = delDia.filter(v => estadoDe(v) === 'pendiente').length;
 
-    const otros = Object.keys(porDia).filter(k => k !== diaVisto).sort().reverse();
 
     caja.innerHTML = `
       <header class="ev-det-cab">
@@ -330,29 +316,66 @@ const EdVendedores = (() => {
         ${delDia.length ? delDia.map(tarjetaVenta).join('')
           : `<div class="ev-det-vacio">${svg(ICO.calendario)}<p>No se registró ninguna venta este día.</p></div>`}
 
-        ${otros.length ? `
-          <div class="ev-otros">
-            <p class="ev-otros-tit">Otros días con ventas</p>
-            ${otros.map(k => {
-              const l = porDia[k];
-              const gan = l.filter(cuentaParaPago).reduce((x, v) => x + (v.precio_unitario || 0) * (v.cantidad || 1), 0);
-              const hayPend = l.some(v => estadoDe(v) === 'pendiente');
-              return `
-                <button type="button" class="ev-otro" data-dia="${k}">
-                  <span class="ev-otro-ico">${svg(ICO.calendario)}</span>
-                  <b>${Number(k.slice(8))} de ${MESES[Number(k.slice(5, 7)) - 1]}</b>
-                  <small>${l.length} pedido${l.length === 1 ? '' : 's'} · ${plata(gan)}</small>
-                  <span class="ev-sello ${hayPend ? 'pendiente' : 'aceptado'}">${hayPend ? 'Pendiente' : 'Comisión aceptada'}</span>
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
-                </button>`;
-            }).join('')}
-          </div>` : ''}
       </div>`;
 
     caja.querySelectorAll('[data-resolver]').forEach(b => b.addEventListener('click', () =>
       resolver(box, b.dataset.resolver, b.dataset.como)));
-    caja.querySelectorAll('.ev-otro').forEach(b => b.addEventListener('click', () => {
-      diaVisto = b.dataset.dia; pintarVentas(box);
+  }
+
+  // Lo que hay que pagarle a cada vendedor por el mes que se está viendo.
+  function pintarPagos(box){
+    const caja = box.querySelector('#evPagos');
+    const mes = ventas.filter(v => clave(new Date(v.created_at)) === mesVisto);
+
+    const porQuien = new Map();
+    mes.forEach(v => {
+      if (!porQuien.has(v.vendedor_id)) {
+        const u = usuarios.find(x => x.id === v.vendedor_id);
+        porQuien.set(v.vendedor_id, {
+          id: v.vendedor_id,
+          nombre: (u && (u.nombre || u.email)) || v.vendedor_nombre || 'Sin nombre',
+          pedidos: 0, unidades: 0, comision: 0, envios: 0, pendientes: 0,
+        });
+      }
+      const g = porQuien.get(v.vendedor_id);
+      if (estadoDe(v) === 'pendiente') { g.pendientes++; return; }
+      if (!cuentaParaPago(v)) return;
+      g.pedidos++;
+      g.unidades += v.cantidad || 1;
+      g.comision += comisionDe(v);
+      g.envios += v.costo_despacho || 0;
+    });
+
+    const gente = [...porQuien.values()].sort((a, b) => b.comision - a.comision);
+    if (!gente.length) { caja.innerHTML = ''; return; }
+    const total = gente.reduce((a, g) => a + g.comision, 0);
+
+    caja.innerHTML = `
+      <header class="ev-pagos-cab">
+        <p class="ev-otros-tit">Comisiones de ${MESES[Number(mesVisto.slice(5)) - 1]}</p>
+        <span class="ev-pagos-total">Total a pagar <b>${plata(total)}</b></span>
+      </header>
+      <div class="ev-pagos-fila">
+        ${gente.map(g => `
+          <div class="ev-pago${g.id === vendedorVisto ? ' activo' : ''}">
+            <span class="ev-pago-ini">${esc((g.nombre || '?').trim().charAt(0).toUpperCase())}</span>
+            <div class="ev-pago-txt">
+              <b>${esc(g.nombre)}</b>
+              <small>${g.pedidos} pedido${g.pedidos === 1 ? '' : 's'} · ${g.unidades} producto${g.unidades === 1 ? '' : 's'}</small>
+              ${g.pendientes ? `<small class="ev-pago-pend">${g.pendientes} sin aprobar</small>` : ''}
+            </div>
+            <div class="ev-pago-monto">
+              <b>${plata(g.comision)}</b>
+              <small>a pagar</small>
+            </div>
+            <button type="button" class="ev-pago-ver" data-quien="${esc(g.id)}">${g.id === vendedorVisto ? 'Ver todo' : 'Ver solo él'}</button>
+          </div>`).join('')}
+      </div>`;
+
+    caja.querySelectorAll('[data-quien]').forEach(b => b.addEventListener('click', () => {
+      vendedorVisto = vendedorVisto === b.dataset.quien ? '' : b.dataset.quien;
+      diaVisto = null;
+      pintarVentas(box);
     }));
   }
 
