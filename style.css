@@ -3035,3 +3035,60 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 /* Arranca oculto para que no parpadee antes de que el JS sepa si hay banner */
 .bnr-section[hidden]{display:none}
+
+/* ===========================================================================
+   V91 — Ventas como calendario, con comisiones y pedidos por aprobar
+   ======================================================================== */
+.ev-barra{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.ev-sel{display:flex;gap:12px;flex-wrap:wrap}
+.ev-sel label{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:600;color:var(--gray-mid)}
+.ev-sel select{font:inherit;font-size:14px;font-weight:600;color:var(--black);padding:9px 12px;border:1.5px solid var(--gray-light);border-radius:11px;background:#fff}
+.ev-aviso-pend{font-size:13px;font-weight:700;color:#b8860b;background:rgba(184,134,11,.12);padding:8px 14px;border-radius:999px}
+
+.ev-cal{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:14px;margin-bottom:20px}
+.ev-cal-cab{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:6px}
+.ev-cal-cab span{text-align:center;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid);padding:4px 0}
+.ev-cal-grilla{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.ev-dia{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:68px;padding:8px;border:1.5px solid transparent;border-radius:11px;background:var(--off-white);font:inherit;cursor:default;text-align:left}
+.ev-dia.vacia{background:none}
+.ev-dia-n{font-size:13px;font-weight:600;color:var(--gray-mid)}
+.ev-dia.con{background:#fff;border-color:var(--gray-light);cursor:pointer}
+.ev-dia.con:hover{border-color:#111}
+.ev-dia.con .ev-dia-n{color:var(--black)}
+.ev-dia.hoy .ev-dia-n{background:#111;color:#e9d9a8;border-radius:999px;padding:1px 7px}
+.ev-dia.elegido{border-color:#111;background:#111}
+.ev-dia.elegido .ev-dia-n,.ev-dia.elegido .ev-dia-c,.ev-dia.elegido .ev-dia-p{color:#e9d9a8}
+.ev-dia.elegido.hoy .ev-dia-n{background:#e9d9a8;color:#111}
+.ev-dia-c{font-size:11.5px;font-weight:700;color:var(--black)}
+.ev-dia-p{font-size:11px;color:var(--gray-mid);font-weight:600}
+.ev-dia-pend{position:absolute;top:7px;right:7px;width:7px;height:7px;border-radius:50%;background:#b8860b}
+
+.ev-pista{margin:0;padding:22px;text-align:center;font-size:13.5px;color:var(--gray-mid);background:#fff;border:1px dashed var(--gray-light);border-radius:14px}
+.ev-dia-cab{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.ev-dia-cab h3{margin:0;font-family:var(--font-display);font-size:24px;font-weight:400;letter-spacing:.03em;text-transform:capitalize}
+.ev-dia-cab span{font-size:13px;color:var(--gray-mid)}
+
+.ev-venta.pendiente{border-color:rgba(184,134,11,.5);background:rgba(184,134,11,.04)}
+.ev-venta.denegado{opacity:.55}
+.ev-resolver{display:flex;gap:8px;margin-top:9px}
+.ev-ok,.ev-no{font:inherit;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer;border:1.5px solid transparent}
+.ev-ok{background:#111;color:#e9d9a8}
+.ev-ok:hover{background:#000}
+.ev-no{background:transparent;color:#c0392b;border-color:rgba(192,57,43,.4)}
+.ev-no:hover{background:rgba(192,57,43,.08);border-color:#c0392b}
+.ev-sello{display:inline-block;margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:4px 11px;border-radius:999px}
+.ev-sello.aceptado{background:rgba(52,199,89,.14);color:#1e7a3a}
+.ev-sello.denegado{background:rgba(192,57,43,.12);color:#c0392b}
+.vl-linea.vl-comision{margin-top:6px;padding-top:7px;border-top:1px dashed var(--gray-light)}
+.vl-linea.vl-comision b{color:#1e7a3a}
+
+@media(max-width:700px){
+  .ev-cal{padding:9px}
+  .ev-cal-grilla,.ev-cal-cab{gap:4px}
+  .ev-dia{min-height:54px;padding:5px}
+  .ev-dia-p{display:none}
+  .ev-sel{width:100%}
+  .ev-sel label{flex:1 1 140px}
+  .ev-sel select{width:100%}
+}
+.ev-sello.pendiente{background:rgba(184,134,11,.14);color:#8a6508}

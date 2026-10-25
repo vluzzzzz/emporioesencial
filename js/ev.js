@@ -12,6 +12,7 @@ const EdVendedores = (() => {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   const plata = n => '$' + Number(n || 0).toLocaleString('es-CL');
   const cuando = d => new Date(d).toLocaleDateString('es-CL');
+  const hora = d => new Date(d).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
 
   const sb = window.sb;
   let usuarios = [], ventas = [], comunas = [], pestana = 'ventas';
@@ -45,38 +46,7 @@ const EdVendedores = (() => {
     comunas = c.data || [];
   }
 
-  function porVendedor(){
-    const mapa = new Map();
-    ventas.forEach(v => {
-      if (!mapa.has(v.vendedor_id)) mapa.set(v.vendedor_id, { id:v.vendedor_id, nombre:v.vendedor_nombre, lista:[] });
-      mapa.get(v.vendedor_id).lista.push(v);
-    });
-    usuarios.forEach(u => {
-      const g = mapa.get(u.id);
-      if (g) g.nombre = u.nombre || u.email;
-      else if (u.rol === 'vendedor') mapa.set(u.id, { id:u.id, nombre:u.nombre || u.email, lista:[] });
-    });
-    const suma = g => g.lista.reduce((a, v) => a + (v.total || 0), 0);
-    return [...mapa.values()].sort((a, b) => suma(b) - suma(a));
-  }
 
-  function filaVenta(v){
-    return `
-      <li>
-        <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
-        <div class="vl-info">
-          <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-          <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}</small>
-          <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
-          <small>${esc(v.metodo_pago)} · ${cuando(v.created_at)}</small>
-        </div>
-        <div class="vl-cuenta">
-          <div class="vl-linea"><span>Producto</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div class="vl-linea"><span>Envío</span><b>${plata(v.costo_despacho)}</b></div>
-          <div class="vl-linea vl-final"><span>Total</span><b>${plata(v.total)}</b></div>
-        </div>
-      </li>`;
-  }
 
   /* ── Panel ────────────────────────────────────────────── */
   async function abrir(){
@@ -113,59 +83,200 @@ const EdVendedores = (() => {
     if (pestana === 'despacho') return pintarDespacho(ov, box);
   }
 
-  function pintarVentas(box){
-    const grupos = porVendedor();
-    if (!grupos.length) { box.innerHTML = '<p class="venta-vacio">Todavía no hay vendedores.</p>'; return; }
-    const total = ventas.reduce((a, v) => a + (v.total || 0), 0);
-    const envios = ventas.reduce((a, v) => a + (v.costo_despacho || 0), 0);
+  /* ── Comisión del vendedor ────────────────────────────── */
+  // Lo que se le paga por unidad, según cuánto cuesta el producto. La misma
+  // escala está en supabase/pedidos-comisiones.sql, que es la que manda.
+  const TRAMOS = [
+    { hasta: 10500, paga: 1300 },
+    { hasta: 22500, paga: 1800 },
+    { hasta: 32500, paga: 2300 },
+    { hasta: Infinity, paga: 2800 },
+  ];
+  const comisionUnidad = precio => {
+    const p = Number(precio) || 0;
+    if (p <= 0) return 0;
+    return (TRAMOS.find(t => p <= t.hasta) || TRAMOS[TRAMOS.length - 1]).paga;
+  };
+  // La venta puede traerla calculada de la base; si no, se saca acá.
+  const comisionDe = v => v.comision != null && v.comision > 0
+    ? v.comision
+    : (v.cantidad || 1) * comisionUnidad(v.precio_unitario);
 
-    box.innerHTML = `
-      <div class="venta-tarjetas">
-        <div class="vt"><span>Ventas</span><b>${ventas.length}</b></div>
-        <div class="vt"><span>Productos</span><b>${plata(total - envios)}</b></div>
-        <div class="vt"><span>Envíos</span><b>${plata(envios)}</b></div>
-        <div class="vt destacada"><span>Total</span><b>${plata(total)}</b></div>
-      </div>
-      <div class="ev-grid">
-      ${grupos.map(g => {
-        const t = g.lista.reduce((a, v) => a + (v.total || 0), 0);
-        return `
-        <div class="ev-vendedor">
-          <button type="button" class="ev-head" data-abrir="${esc(g.id)}">
-            <span class="ev-ini">${esc((g.nombre || '?').trim().charAt(0).toUpperCase())}</span>
-            <span class="ev-txt">
-              <b>${esc(g.nombre)}</b>
-              <small>${g.lista.length} venta${g.lista.length === 1 ? '' : 's'} · ${plata(t)}</small>
-            </span>
-            <span class="ev-ver">Ver todo</span>
-          </button>
-          ${g.lista.length
-            ? `<ul class="venta-lista">${g.lista.slice(0, 3).map(filaVenta).join('')}</ul>`
-            : '<p class="venta-vacio">Todavía no registró ninguna venta.</p>'}
-        </div>`;
-      }).join('')}
-      </div>`;
+  const estadoDe = v => v.estado || 'aceptado';
+  const cuentaParaPago = v => estadoDe(v) === 'aceptado';
 
-    box.querySelectorAll('[data-abrir]').forEach(b =>
-      b.addEventListener('click', () => historial(b.dataset.abrir)));
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                 'agosto','septiembre','octubre','noviembre','diciembre'];
+  const DIAS = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+  const clave = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  const claveDia = d => clave(d) + '-' + String(d.getDate()).padStart(2, '0');
+
+  /* ── Ventas: calendario del mes ───────────────────────── */
+  let mesVisto = clave(new Date());
+  let diaVisto = null;
+  let vendedorVisto = '';
+
+  function mesesConVentas(){
+    const s = new Set(ventas.map(v => clave(new Date(v.created_at))));
+    s.add(clave(new Date()));
+    return [...s].sort().reverse();
   }
 
-  function historial(id){
-    const g = porVendedor().find(x => x.id === id);
-    if (!g) return;
-    const total = g.lista.reduce((a, v) => a + (v.total || 0), 0);
-    const envios = g.lista.reduce((a, v) => a + (v.costo_despacho || 0), 0);
-    const cuerpo = `
-      <div class="venta-tarjetas">
-        <div class="vt"><span>Ventas</span><b>${g.lista.length}</b></div>
-        <div class="vt"><span>Productos</span><b>${plata(total - envios)}</b></div>
-        <div class="vt"><span>Envíos</span><b>${plata(envios)}</b></div>
-        <div class="vt destacada"><span>Total</span><b>${plata(total)}</b></div>
+  const nombreMes = c => {
+    const [a, m] = c.split('-').map(Number);
+    return MESES[m - 1] + ' de ' + a;
+  };
+
+  function delMes(c){
+    return ventas.filter(v => clave(new Date(v.created_at)) === c
+      && (!vendedorVisto || v.vendedor_id === vendedorVisto));
+  }
+
+  function pintarVentas(box){
+    const lista = delMes(mesVisto);
+    const pagables = lista.filter(cuentaParaPago);
+    const pendientes = lista.filter(v => estadoDe(v) === 'pendiente');
+    const unidades = pagables.reduce((a, v) => a + (v.cantidad || 1), 0);
+    const comision = pagables.reduce((a, v) => a + comisionDe(v), 0);
+    const vendido = pagables.reduce((a, v) => a + (v.total || 0), 0);
+
+    const [anio, mes] = mesVisto.split('-').map(Number);
+    const primero = new Date(anio, mes - 1, 1);
+    const dias = new Date(anio, mes, 0).getDate();
+    const corrimiento = (primero.getDay() + 6) % 7;   // la semana arranca el lunes
+    const hoy = claveDia(new Date());
+
+    const porDia = {};
+    lista.forEach(v => {
+      const k = claveDia(new Date(v.created_at));
+      (porDia[k] = porDia[k] || []).push(v);
+    });
+
+    const celdas = [];
+    for (let i = 0; i < corrimiento; i++) celdas.push('<div class="ev-dia vacia"></div>');
+    for (let d = 1; d <= dias; d++) {
+      const k = mesVisto + '-' + String(d).padStart(2, '0');
+      const delDia = porDia[k] || [];
+      const pend = delDia.filter(v => estadoDe(v) === 'pendiente').length;
+      const com = delDia.filter(cuentaParaPago).reduce((a, v) => a + comisionDe(v), 0);
+      celdas.push(`
+        <button type="button" class="ev-dia${delDia.length ? ' con' : ''}${k === hoy ? ' hoy' : ''}${k === diaVisto ? ' elegido' : ''}"
+                data-dia="${k}"${delDia.length ? '' : ' disabled'}>
+          <span class="ev-dia-n">${d}</span>
+          ${delDia.length ? `<span class="ev-dia-c">${delDia.length}</span>` : ''}
+          ${com ? `<span class="ev-dia-p">${plata(com)}</span>` : ''}
+          ${pend ? `<span class="ev-dia-pend" title="${pend} por aprobar"></span>` : ''}
+        </button>`);
+    }
+
+    box.innerHTML = `
+      <div class="ev-barra">
+        <div class="ev-sel">
+          <label>Mes
+            <select id="evMes">
+              ${mesesConVentas().map(c => `<option value="${c}"${c === mesVisto ? ' selected' : ''}>${nombreMes(c)}</option>`).join('')}
+            </select>
+          </label>
+          <label>Vendedor
+            <select id="evQuien">
+              <option value="">Todo el equipo</option>
+              ${usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
+                        .map(u => `<option value="${esc(u.id)}"${u.id === vendedorVisto ? ' selected' : ''}>${esc(u.nombre || u.email)}</option>`).join('')}
+            </select>
+          </label>
+        </div>
+        ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar</span>` : ''}
       </div>
-      ${g.lista.length
-        ? `<ul class="venta-lista">${g.lista.map(filaVenta).join('')}</ul>`
-        : '<p class="venta-vacio">Sin ventas.</p>'}`;
-    Sesion.panel(g.nombre, 'Vendedor', '<div class="venta-wrap">' + cuerpo + '</div>', '', true);
+
+      <div class="venta-tarjetas">
+        <div class="vt"><span>Pedidos</span><b>${pagables.length}</b></div>
+        <div class="vt"><span>Productos vendidos</span><b>${unidades}</b></div>
+        <div class="vt"><span>Vendido</span><b>${plata(vendido)}</b></div>
+        <div class="vt destacada"><span>Comisión del mes</span><b>${plata(comision)}</b></div>
+      </div>
+
+      <div class="ev-cal">
+        <div class="ev-cal-cab">${DIAS.map(d => '<span>' + d + '</span>').join('')}</div>
+        <div class="ev-cal-grilla">${celdas.join('')}</div>
+      </div>
+
+      <div id="evDia"></div>`;
+
+    box.querySelector('#evMes').addEventListener('change', e => {
+      mesVisto = e.target.value; diaVisto = null; pintarVentas(box);
+    });
+    box.querySelector('#evQuien').addEventListener('change', e => {
+      vendedorVisto = e.target.value; diaVisto = null; pintarVentas(box);
+    });
+    box.querySelectorAll('[data-dia]').forEach(b => b.addEventListener('click', () => {
+      diaVisto = diaVisto === b.dataset.dia ? null : b.dataset.dia;
+      pintarVentas(box);
+    }));
+
+    pintarDia(box, porDia[diaVisto] || (diaVisto ? [] : null));
+  }
+
+  function pintarDia(box, delDia){
+    const caja = box.querySelector('#evDia');
+    if (!delDia) {
+      caja.innerHTML = '<p class="ev-pista">Tocá un día con ventas para ver qué se vendió.</p>';
+      return;
+    }
+    const [a, m, d] = diaVisto.split('-').map(Number);
+    const com = delDia.filter(cuentaParaPago).reduce((x, v) => x + comisionDe(v), 0);
+
+    caja.innerHTML = `
+      <div class="ev-dia-cab">
+        <h3>${d} de ${MESES[m - 1]}</h3>
+        <span>${delDia.length} pedido${delDia.length === 1 ? '' : 's'} · ${plata(com)} de comisión</span>
+      </div>
+      <ul class="venta-lista">${delDia.map(filaVenta).join('')}</ul>`;
+
+    caja.querySelectorAll('[data-resolver]').forEach(b => b.addEventListener('click', () =>
+      resolver(box, b.dataset.resolver, b.dataset.como)));
+    caja.scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }
+
+  async function resolver(box, id, como){
+    const v = ventas.find(x => String(x.id) === String(id));
+    if (!v) return;
+    const acepta = como === 'aceptado';
+    if (!acepta && confirmarFn &&
+        !(await confirmarFn('¿Denegar el pedido de ' + v.cliente_nombre + '? No se le paga comisión al vendedor.', 'Denegar'))) return;
+    try {
+      const { error } = await sb.from('ventas')
+        .update({ estado: como, resuelto_en: new Date().toISOString() }).eq('id', v.id);
+      if (error) throw error;
+      v.estado = como;
+      pintarVentas(box);
+      toast(acepta ? 'Pedido aceptado' : 'Pedido denegado');
+    } catch (err) { toast(mensajeError(err), true); }
+  }
+
+  function filaVenta(v){
+    const estado = estadoDe(v);
+    const com = comisionDe(v);
+    return `
+      <li class="ev-venta ${estado}">
+        <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+        <div class="vl-info">
+          <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+          <small>${esc(v.cliente_nombre)} · ${esc(v.cliente_telefono)}</small>
+          <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
+          <small>${esc(v.metodo_pago)} · ${esc(v.vendedor_nombre)} · ${hora(v.created_at)}</small>
+          ${estado === 'pendiente' ? `
+            <div class="ev-resolver">
+              <button type="button" class="ev-ok" data-resolver="${esc(v.id)}" data-como="aceptado">Aceptar pedido</button>
+              <button type="button" class="ev-no" data-resolver="${esc(v.id)}" data-como="denegado">Denegar</button>
+            </div>` : `<span class="ev-sello ${estado}">${estado === 'aceptado' ? 'Aceptado' : 'Denegado'}</span>`}
+        </div>
+        <div class="vl-cuenta">
+          <div class="vl-linea"><span>Producto</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+          <div class="vl-linea"><span>Envío</span><b>${plata(v.costo_despacho)}</b></div>
+          <div class="vl-linea vl-final"><span>Total</span><b>${plata(v.total)}</b></div>
+          <div class="vl-linea vl-comision"><span>Comisión vendedor</span><b>${plata(com)}</b></div>
+        </div>
+      </li>`;
   }
 
   /* ── Equipo ───────────────────────────────────────────── */

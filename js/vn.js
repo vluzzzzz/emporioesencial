@@ -16,6 +16,19 @@ const Sesion = (() => {
   const productos = () => (typeof CATALOGO !== 'undefined' ? CATALOGO : []);
   const fotoDe = slug => (productos().find(p => p.slug === slug) || {}).image || '';
 
+  // La misma escala que usa el panel y la base: lo que se le paga al
+  // vendedor por unidad, según cuánto cuesta el producto.
+  const comisionUnidad = precio => {
+    const p = Number(precio) || 0;
+    if (p <= 0) return 0;
+    if (p <= 10500) return 1300;
+    if (p <= 22500) return 1800;
+    if (p <= 32500) return 2300;
+    return 2800;
+  };
+  const comisionDe = v => v.comision > 0 ? v.comision : (v.cantidad || 1) * comisionUnidad(v.precio_unitario);
+  const estadoDe = v => v.estado || 'aceptado';
+
   async function init(){
     if (!sb) return;
     const { data:{ session } } = await sb.auth.getSession();
@@ -391,21 +404,27 @@ const Sesion = (() => {
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
     if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Agregar pedido.</p>'; return; }
 
-    const suma = data.reduce((a, v) => a + (v.total || 0), 0);
-    const envios = data.reduce((a, v) => a + (v.costo_despacho || 0), 0);
+    // Solo se cobra por lo que el administrador aceptó.
+    const pagables = data.filter(v => estadoDe(v) === 'aceptado');
+    const pendientes = data.filter(v => estadoDe(v) === 'pendiente').length;
+    const suma = pagables.reduce((a, v) => a + (v.total || 0), 0);
+    const comision = pagables.reduce((a, v) => a + comisionDe(v), 0);
+    const unidades = pagables.reduce((a, v) => a + (v.cantidad || 1), 0);
     box.innerHTML = `
       <div class="venta-wrap">
+        ${pendientes ? `<p class="ev-aviso-pend" style="display:inline-block;margin:0 0 16px">${pendientes} pedido${pendientes === 1 ? '' : 's'} esperando aprobación</p>` : ''}
         <div class="venta-tarjetas">
-          <div class="vt"><span>Ventas</span><b>${data.length}</b></div>
-          <div class="vt"><span>Productos</span><b>${fmt(suma - envios)}</b></div>
-          <div class="vt"><span>Envíos</span><b>${fmt(envios)}</b></div>
-          <div class="vt destacada"><span>Total</span><b>${fmt(suma)}</b></div>
+          <div class="vt"><span>Aceptadas</span><b>${pagables.length}</b></div>
+          <div class="vt"><span>Productos vendidos</span><b>${unidades}</b></div>
+          <div class="vt"><span>Vendido</span><b>${fmt(suma)}</b></div>
+          <div class="vt destacada"><span>Tu comisión</span><b>${fmt(comision)}</b></div>
         </div>
         <ul class="venta-lista">
           ${data.map(v => {
             const prod = (v.precio_unitario || 0) * (v.cantidad || 1);
+            const estado = estadoDe(v);
             return `
-            <li>
+            <li class="ev-venta ${estado}">
               <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
               <div class="vl-info">
                 <b>${esc(v.producto_nombre)}</b>
@@ -413,11 +432,13 @@ const Sesion = (() => {
                 <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
                 <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
                 ${v.notas ? `<small>${esc(v.notas)}</small>` : ''}
+                <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Esperando aprobación' : estado === 'aceptado' ? 'Aceptado' : 'Denegado'}</span>
               </div>
               <div class="vl-cuenta">
                 <div class="vl-linea"><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt(prod)}</b></div>
                 <div class="vl-linea"><span>Envío · ${esc(v.comuna)}</span><b>${fmt(v.costo_despacho)}</b></div>
                 <div class="vl-linea vl-final"><span>Total</span><b>${fmt(v.total)}</b></div>
+                <div class="vl-linea vl-comision"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
               </div>
             </li>`;
           }).join('')}
