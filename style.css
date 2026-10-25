@@ -3136,7 +3136,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-datos{display:grid;gap:1px;background:var(--gray-light);border:1px solid var(--gray-light);border-radius:12px;overflow:hidden}
 .ev-datos-l{display:grid;grid-template-columns:minmax(0,1fr) 46%;background:#fff}
 .ev-datos-l span{align-self:center;padding:10px 14px;font-size:12.5px;color:var(--gray-mid)}
-.ev-datos-l b{align-self:center;padding:10px 14px;border-left:1px solid var(--gray-light);font-size:14px;font-weight:600;text-align:right;word-break:break-word}
+.ev-datos-l b{display:flex;align-items:center;justify-content:flex-end;padding:10px 14px;border-left:1px solid var(--gray-light);font-size:14px;font-weight:600;text-align:right;word-break:break-word}
 .ev-datos-l.verde b{color:#1e7a3a}
 .ev-datos-l.total{background:var(--off-white)}
 .ev-datos-l.total span{padding-top:13px;padding-bottom:13px;font-size:11px;font-weight:700;color:var(--black);text-transform:uppercase;letter-spacing:.1em}
