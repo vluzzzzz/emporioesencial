@@ -204,6 +204,24 @@ const EdVendedores = (() => {
     for (let i = 1; i <= sobran; i++) celdas.push(`<div class="ev-dia fuera"><span class="ev-dia-n">${i}</span></div>`);
 
     box.innerHTML = `
+      <div class="ev-filtros">
+        <div class="ev-filtro">
+          <span>Mes</span>
+          ${Sesion.desplegable('mes', anios().flatMap(a => MESES.map((n, k) => {
+            const c = a + '-' + String(k + 1).padStart(2, '0');
+            return { valor:c, texto:n + ' ' + a, nota: conVentas(c) ? 'con ventas' : '' };
+          })), 'Elegí el mes', mesVisto)}
+        </div>
+        <div class="ev-filtro">
+          <span>Vendedor</span>
+          ${Sesion.desplegable('quien', [{ valor:'', texto:'Todo el equipo' }].concat(
+            usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
+                    .map(u => ({ valor:u.id, texto:u.nombre || u.email }))),
+            'Todo el equipo', vendedorVisto)}
+        </div>
+        ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
+      </div>
+
       <div class="ev-resumen">
         <div class="vt2">
           <span class="vt2-ico">${svg(ICO.pedidos)}</span>
@@ -223,6 +241,8 @@ const EdVendedores = (() => {
             <small class="vt-nota">en comisiones · ${plata(resumen.envios)} de envíos los cobró él</small></div>
         </div>
       </div>
+
+      <section class="ev-pagos" id="evPagos"></section>
 
       <div class="ev-columnas">
         <section class="ev-cal">
@@ -251,33 +271,13 @@ const EdVendedores = (() => {
         <section class="ev-detalle" id="evDia"></section>
       </div>
 
-      <section class="ev-pagos" id="evPagos"></section>
+      `;
 
-      <div class="ev-pie-mes">
-        <label>Ir a
-          <select id="evMes" aria-label="Mes">
-            ${anios().map(a => `<optgroup label="${a}">${
-              MESES.map((n, i) => {
-                const c = a + '-' + String(i + 1).padStart(2, '0');
-                return `<option value="${c}"${c === mesVisto ? ' selected' : ''}>${n}${conVentas(c) ? ' ·' : ''}</option>`;
-              }).join('')}</optgroup>`).join('')}
-          </select>
-        </label>
-        <label>Vendedor
-          <select id="evQuien">
-            <option value="">Todo el equipo</option>
-            ${usuarios.filter(u => u.rol === 'vendedor' || ventas.some(v => v.vendedor_id === u.id))
-                      .map(u => `<option value="${esc(u.id)}"${u.id === vendedorVisto ? ' selected' : ''}>${esc(u.nombre || u.email)}</option>`).join('')}
-          </select>
-        </label>
-        ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
-      </div>`;
-
-    box.querySelector('#evMes').addEventListener('change', e => {
-      mesVisto = e.target.value; diaVisto = null; pintarVentas(box);
-    });
-    box.querySelector('#evQuien').addEventListener('change', e => {
-      vendedorVisto = e.target.value; diaVisto = null; pintarVentas(box);
+    Sesion.conectarDesplegables(box, (campo, valor) => {
+      if (campo === 'mes') mesVisto = valor;
+      if (campo === 'quien') vendedorVisto = valor;
+      diaVisto = null;
+      pintarVentas(box);
     });
     box.querySelector('#evAntes').addEventListener('click', () => { correrMes(-1); pintarVentas(box); });
     box.querySelector('#evDespues').addEventListener('click', () => { correrMes(1); pintarVentas(box); });

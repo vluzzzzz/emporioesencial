@@ -194,6 +194,11 @@ const Sesion = (() => {
         lista.hidden = abierto;
         sel.classList.toggle('abierto', !abierto);
         btn.setAttribute('aria-expanded', String(!abierto));
+        // Con listas largas, la opción elegida tiene que quedar a la vista.
+        if (!abierto) {
+          const elegida = lista.querySelector('li.elegida');
+          if (elegida) lista.scrollTop = Math.max(0, elegida.offsetTop - lista.clientHeight / 2 + elegida.offsetHeight / 2);
+        }
       });
 
       lista.addEventListener('click', e => {
