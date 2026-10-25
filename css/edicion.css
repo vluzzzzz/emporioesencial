@@ -38,6 +38,8 @@ body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;bord
 .ed-conf-caja{background:#fff;border-radius:18px;padding:26px;max-width:420px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
 .ed-conf-caja p{margin:0 0 20px;font-size:15.5px;line-height:1.5}
 .ed-conf-caja .ev-resumen-pedido{margin-bottom:12px}
+/* El recuadro de aviso no puede quedar pegado a los botones */
+.ed-conf-caja .ev-previo{margin:0 0 22px}
 .ev-conf-venta{margin:0 0 20px!important;font-size:13.5px!important;color:var(--gray-mid)}
 .ev-conf-venta b{color:var(--black)}
 .ed-conf-acc{display:flex;gap:10px;justify-content:flex-end}
