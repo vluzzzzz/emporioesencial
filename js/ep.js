@@ -9,6 +9,9 @@ const EdProducto = (() => {
   const { escH, slug: slugify, rid, toast, confirmar, mensajeError, uploadFile } = EdUtil;
   const sb = window.sb;
 
+  // Campo vacío significa que ese producto no lleva inventario.
+  const unidades = f => f.unidades.value.trim() === '' ? null : Math.max(0, parseInt(f.unidades.value, 10) || 0);
+
   const precioDe = s => {
     const t = PRICE_TIERS[s] || [];
     return t.length ? t[0].price : 0;
@@ -80,17 +83,12 @@ const EdProducto = (() => {
           Agregar característica
         </button>
 
-        <p class="venta-sec">Disponibilidad</p>
+        <p class="venta-sec">Stock</p>
         <div class="venta-g2">
-          <label class="venta-f"><span>Unidades (opcional)</span>
-            <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? ''}" placeholder="Avisa cuando quedan 5 o menos">
+          <label class="venta-f venta-ancho"><span>Unidades disponibles</span>
+            <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? (p.inStock === false ? 0 : '')}" placeholder="Dejalo vacío para no llevar la cuenta">
+            <small class="ep-stock-ayuda" id="epStockAyuda"></small>
           </label>
-          <div class="venta-f"><span>¿Hay stock?</span>
-            ${Sesion.desplegable('hay', [
-              { valor:'1', texto:'Sí, a la venta' },
-              { valor:'0', texto:'Sin stock', nota:'Se muestra en gris' },
-            ], 'Elegí', p.inStock === false ? '0' : '1')}
-          </div>
         </div>
         <p class="venta-msg" id="edMsg"></p>
       </form>`;
@@ -104,6 +102,17 @@ const EdProducto = (() => {
 
     const estado = { fotos: fotos.slice(), caracts: caracts.slice(), cat: p.cat };
     Sesion.conectarDesplegables(ov, (campo, valor) => { if (campo === 'cat') estado.cat = valor; });
+
+    const ayuda = ov.querySelector('#epStockAyuda');
+    const pintarAyuda = () => {
+      const n = unidades(f);
+      if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
+      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
+      else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
+      else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
+    };
+    f.unidades.addEventListener('input', pintarAyuda);
+    pintarAyuda();
 
     pintarFotos(ov, estado);
     pintarCaracts(ov, estado);
@@ -123,6 +132,7 @@ const EdProducto = (() => {
       const msg = ov.querySelector('#edMsg');
       btn.disabled = true; btn.textContent = 'Guardando…';
       msg.className = 'venta-msg'; msg.textContent = '';
+      const n = unidades(f);
       try {
         await guardar(s, {
           name: f.nombre.value,
@@ -133,8 +143,8 @@ const EdProducto = (() => {
           features: estado.caracts,
           precio: parseInt(f.precio.value, 10) || 0,
           compare_at_price: f.antes.value === '' ? null : (parseInt(f.antes.value, 10) || null),
-          stock_qty: f.unidades.value === '' ? null : (parseInt(f.unidades.value, 10) || 0),
-          in_stock: f.hay.value === '1',
+          stock_qty: n,
+          in_stock: n === null ? true : n > 0,
         });
         toast('Producto guardado');
         cerrar();
@@ -160,7 +170,18 @@ const EdProducto = (() => {
 
     box.querySelectorAll('button[data-i]').forEach(b => b.addEventListener('click', () => {
       estado.fotos.splice(+b.dataset.i, 1);
-      pintarFotos(ov, estado);
+      const ayuda = ov.querySelector('#epStockAyuda');
+    const pintarAyuda = () => {
+      const n = unidades(f);
+      if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
+      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
+      else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
+      else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
+    };
+    f.unidades.addEventListener('input', pintarAyuda);
+    pintarAyuda();
+
+    pintarFotos(ov, estado);
     }));
     box.querySelector('.ed-subir input').addEventListener('change', async e => {
       const files = [...e.target.files];
@@ -168,7 +189,18 @@ const EdProducto = (() => {
       toast('Subiendo ' + files.length + (files.length === 1 ? ' foto…' : ' fotos…'));
       try {
         for (const file of files) estado.fotos.push(await uploadFile(file, 'catalog/'));
-        pintarFotos(ov, estado);
+        const ayuda = ov.querySelector('#epStockAyuda');
+    const pintarAyuda = () => {
+      const n = unidades(f);
+      if (n === null)  { ayuda.textContent = 'Sin control de stock: el producto siempre se ofrece.'; ayuda.className = 'ep-stock-ayuda'; }
+      else if (n === 0){ ayuda.textContent = 'En cero: el producto se muestra en gris y con el cartel SIN STOCK.'; ayuda.className = 'ep-stock-ayuda sin'; }
+      else if (n <= 5) { ayuda.textContent = 'Con 5 o menos avisa "Quedan ' + n + (n === 1 ? ' unidad".' : ' unidades".'); ayuda.className = 'ep-stock-ayuda poco'; }
+      else             { ayuda.textContent = 'A la venta, sin aviso de últimas unidades.'; ayuda.className = 'ep-stock-ayuda'; }
+    };
+    f.unidades.addEventListener('input', pintarAyuda);
+    pintarAyuda();
+
+    pintarFotos(ov, estado);
         toast('Fotos listas');
       } catch (err) { toast(mensajeError(err), true); }
       e.target.value = '';

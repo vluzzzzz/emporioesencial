@@ -169,3 +169,8 @@ body.editando .bnr-section[hidden] .ed-ancla::before{
   font-size:13.5px;color:var(--gray-mid);margin-bottom:12px;
 }
 body.editando .bnr-section[hidden] .ed-ancla{flex-wrap:wrap;padding-top:26px}
+
+/* Aviso bajo el campo de stock: dice qué va a pasar con ese número */
+.ep-stock-ayuda{display:block;margin-top:7px;font-size:12.5px;color:var(--gray-mid);font-weight:400}
+.ep-stock-ayuda.sin{color:#c0392b}
+.ep-stock-ayuda.poco{color:#b8860b}
