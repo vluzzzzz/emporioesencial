@@ -70,6 +70,20 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true });
     }
 
+    // Borrar a alguien del equipo. Sus ventas quedan: son plata registrada,
+    // no se van con la persona. El nombre con que vendió ya está copiado en
+    // cada venta, así que el historial se sigue leyendo igual.
+    if (b.accion === 'borrar') {
+      if (!b.id) return res.status(400).json({ error: 'Falta el usuario' });
+      if (b.id === quien.id) return res.status(400).json({ error: 'No te podés borrar a vos mismo' });
+      const r = await fetch(`${SB_URL()}/auth/v1/admin/users/${encodeURIComponent(b.id)}`, {
+        method: 'DELETE',
+        headers: { apikey: SB_KEY(), Authorization: `Bearer ${SB_KEY()}` },
+      });
+      if (!r.ok) return res.status(r.status).json({ error: await r.text() });
+      return res.status(200).json({ ok: true });
+    }
+
     const nombre = String(b.nombre || '').trim().slice(0, 120);
     const telefono = String(b.telefono || '').trim().slice(0, 50);
     const observacion = String(b.observacion || '').trim().slice(0, 500);
