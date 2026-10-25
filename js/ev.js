@@ -314,8 +314,76 @@ const EdVendedores = (() => {
 
       </div>`;
 
-    caja.querySelectorAll('[data-resolver]').forEach(b => b.addEventListener('click', () =>
-      resolver(box, b.dataset.resolver, b.dataset.como)));
+    caja.querySelectorAll('[data-resolver]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      resolver(box, b.dataset.resolver, b.dataset.como);
+    }));
+    caja.querySelectorAll('[data-ver]').forEach(t => t.addEventListener('click', () =>
+      verPedido(box, t.dataset.ver)));
+  }
+
+  // La ficha completa del pedido. Desde acá el administrador puede cambiar
+  // de opinión, esté aceptado o denegado.
+  function verPedido(box, id){
+    const v = ventas.find(x => String(x.id) === String(id));
+    if (!v) return;
+    const estado = estadoDe(v);
+    const linea = (t, d) => `<div class="ev-ficha-l"><span>${t}</span><b>${esc(d || '—')}</b></div>`;
+
+    const cuerpo = `
+      <div class="ev-resumen-pedido">
+        <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+        <div>
+          <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+          <small>${plata(v.precio_unitario)} por unidad · ${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</small>
+          <small>${cuando(v.created_at)} · ${hora(v.created_at)}</small>
+        </div>
+        <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Pendiente' : estado === 'aceptado' ? 'Aceptada' : 'Denegado'}</span>
+      </div>
+
+      <p class="venta-sec">A quién se lo enviamos</p>
+      <div class="ev-ficha">
+        ${linea('Cliente', v.cliente_nombre)}
+        ${linea('Teléfono', v.cliente_telefono)}
+        ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
+        ${linea('Dirección', v.cliente_direccion)}
+        ${linea('Comuna', v.comuna)}
+      </div>
+
+      <p class="venta-sec">Quién lo vendió</p>
+      <div class="ev-ficha">
+        ${linea('Vendedor', v.vendedor_nombre)}
+        ${linea('Forma de pago', v.metodo_pago)}
+        ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
+      </div>
+
+      <p class="venta-sec">La plata</p>
+      <div class="vl-cuenta" style="width:100%;border:0;padding:0">
+        <div class="vl-linea"><span>Cobrado al cliente</span><b>${plata(v.total)}</b></div>
+        <div class="vl-linea vl-gana"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+        <div class="vl-linea"><span>Envío · lo cobra el vendedor</span><b>${plata(v.costo_despacho)}</b></div>
+        <div class="vl-linea vl-final vl-pagar"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comisionDe(v))}</b></div>
+      </div>
+
+      ${v.motivo ? `<div class="ev-previo">
+        <span>${estado === 'denegado' ? 'Se denegó por' : 'Nota del administrador'}</span>
+        <p>${esc(v.motivo)}</p>
+      </div>` : ''}`;
+
+    const pie = estado === 'pendiente'
+      ? `<div class="ev-resolver" style="margin:0;width:100%">
+           <button type="button" class="ev-ok" data-ir="aceptado">${svg(ICO.ok)}Aceptar comisión</button>
+           <button type="button" class="ev-no" data-ir="denegado">${svg(ICO.no)}Denegar pedido</button>
+         </div>`
+      : `<div class="ev-resolver" style="margin:0;width:100%">
+           <button type="button" class="ev-rever" data-ir="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar y aceptar' : 'Revisar y denegar'}</button>
+         </div>`;
+
+    const { ov, cerrar } = Sesion.panel('Pedido', cuando(v.created_at), cuerpo, pie);
+    ov.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => {
+      cerrar();
+      resolver(box, v.id, b.dataset.ir);
+    }));
   }
 
 
@@ -323,7 +391,7 @@ const EdVendedores = (() => {
     const estado = estadoDe(v);
     const com = comisionDe(v);
     return `
-      <article class="ev-venta ${estado}">
+      <article class="ev-venta ${estado}" data-ver="${esc(v.id)}" title="Clic para ver el pedido completo">
         <div class="ev-venta-top">
           <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
           <div class="ev-venta-datos">
@@ -346,11 +414,7 @@ const EdVendedores = (() => {
           <div class="ev-resolver">
             <button type="button" class="ev-ok" data-resolver="${esc(v.id)}" data-como="aceptado">${svg(ICO.ok)}Aceptar comisión</button>
             <button type="button" class="ev-no" data-resolver="${esc(v.id)}" data-como="denegado">${svg(ICO.no)}Denegar pedido</button>
-          </div>` : `
-          ${v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : ''}
-          <div class="ev-resolver">
-            <button type="button" class="ev-rever" data-resolver="${esc(v.id)}" data-como="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar de nuevo y aceptar' : 'Revisar de nuevo y denegar'}</button>
-          </div>`}
+          </div>` : (v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : '')}
       </article>`;
   }
 
