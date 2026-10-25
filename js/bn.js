@@ -2,25 +2,25 @@
 'use strict';
 
 /* ════════════════════════════════════════════════════════════════════════════
-   ZONA EDITABLE — acá pegás las rutas de tus imágenes.
+   ZONA EDITABLE — aquí pegas las rutas de tus imágenes.
 
    Mientras 'desktop' esté vacío se ve el rectángulo punteado con la medida.
-   Apenas pegás la ruta, el punteado desaparece solo.
+   Apenas pegas la ruta, el punteado desaparece solo.
 
    Medidas:
      desktop → 1920 × 560 px
-     mobile  → 1080 × 1080 px  · si lo dejás vacío se usa el de desktop
+     mobile  → 1080 × 1080 px  · si lo dejas vacío se usa el de desktop
 
    Los que faltan muestran el hueco punteado con el nombre de archivo que
-   esperan. Guardás la imagen con ese nombre en images/ y la pegás en
+   esperan. Guardas la imagen con ese nombre en images/ y la pegas en
    'desktop'. El orden de esta lista es el orden en que se ven.
 
    'producto' es el slug al que lleva el banner: al hacer clic se abre la
    ficha de ese producto. 'categoria' abre la sección de esa categoría. Si en
-   lugar de los dos ponés 'link', va a esa ancla.
+   lugar de los dos pones 'link', va a esa ancla.
 
    ⚠ Esta lista es solo el punto de partida: si hay
-   algo guardado en el panel, eso gana y lo de acá no se usa. Editá en el
+   algo guardado en el panel, eso gana y lo de aquí no se usa. Edita en el
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 let BANNERS = [
@@ -59,7 +59,7 @@ const CINTA_SEPARADOR = 'images/logo-cinta.webp';
      └─────────┴─────────┴─────────┘
 
    'arriba' es la línea chica y 'titulo' la grande. 'desde' es el precio del
-   recuadro; si lo dejás vacío no se muestra el recuadro.
+   recuadro; si lo dejas vacío no se muestra el recuadro.
    'cat' es la categoría del catálogo (js/sd.js) que se abre al hacer clic.
    'banner' es la imagen ancha que encabeza esa sección cuando se abre:
    va sola arriba de todo, sin nada más. Medida → 1920 × 558 px.
@@ -120,7 +120,7 @@ const Banners = (() => {
       : `<div class="slot cat-slot" data-medida="${escAttr(c.medida || '800 × 1000')}">` +
         (c.archivo ? `<span class="slot-archivo">${escTxt(c.archivo)}</span>` : '') +
         `</div>`;
-    // No lleva a otra página: abre el panel de esa categoría acá mismo.
+    // No lleva a otra página: abre el panel de esa categoría aquí mismo.
     // Solo categoría y nombre: el precio lo decide cada producto, no la tarjeta.
     return `<a href="#panel" class="cat-card" data-cat="${escAttr(c.cat || '')}" data-cat-abrir="${escAttr(c.cat || '')}">
         <div class="cat-media">${img}</div>

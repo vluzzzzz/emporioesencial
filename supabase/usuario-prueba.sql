@@ -7,10 +7,10 @@
 --
 --  Entra con:  prueba@esencialemporio.cl  /  prueba1234
 --
---  Corré primero supabase/pedidos-comisiones.sql.
---  Pegá esto en Supabase → SQL Editor y dale Run.
+--  Corre primero supabase/pedidos-comisiones.sql.
+--  Pega esto en Supabase → SQL Editor y dale Run.
 --
---  PARA BORRARLO después, corré el bloque del final de este archivo.
+--  PARA BORRARLO después, corre el bloque del final de este archivo.
 -- ============================================================================
 
 do $$
@@ -109,7 +109,7 @@ end $$;
 
 
 -- ============================================================================
---  PARA BORRAR LA PRUEBA, descomentá y corré esto:
+--  PARA BORRAR LA PRUEBA, descomenta y corre esto:
 -- ----------------------------------------------------------------------------
 -- delete from public.ventas   where vendedor_id = (select id from auth.users where email = 'prueba@esencialemporio.cl');
 -- delete from public.profiles where id          = (select id from auth.users where email = 'prueba@esencialemporio.cl');

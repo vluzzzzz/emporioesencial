@@ -32,9 +32,9 @@ module.exports = async (req, res) => {
     const imagen = typeof b.image === 'string' ? b.image : '';
 
     if (!product) return res.status(400).json({ error: 'Falta el producto' });
-    if (name.length < 2) return res.status(400).json({ error: 'Poné tu nombre' });
-    if (text.length < 3) return res.status(400).json({ error: 'Escribí un comentario' });
-    if (!b.stars) return res.status(400).json({ error: 'Elegí una calificación' });
+    if (name.length < 2) return res.status(400).json({ error: 'Pon tu nombre' });
+    if (text.length < 3) return res.status(400).json({ error: 'Escribe un comentario' });
+    if (!b.stars) return res.status(400).json({ error: 'Elige una calificación' });
 
     const ipHash = hashIp(ipDe(req));
     const desde = new Date(Date.now() - VENTANA_HORAS * 3600 * 1000).toISOString();
@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
     }
     const distintos = new Set(previas.map(r => r.product_slug));
     if (distintos.size >= MAX_PRODUCTOS) {
-      return res.status(429).json({ error: 'Alcanzaste el límite de reseñas por ahora. Probá más tarde.' });
+      return res.status(429).json({ error: 'Alcanzaste el límite de reseñas por ahora. Prueba más tarde.' });
     }
 
     let images = [];

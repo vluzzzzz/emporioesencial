@@ -9,7 +9,7 @@
 --  toca las rutas de images/emporio-images: las fotos que subiste desde la
 --  web ya son WebP y viven en Supabase Storage, no se tocan.
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 -- ── Imagen principal del producto ───────────────────────────────────────────
@@ -46,5 +46,5 @@ where key in ('banners', 'categorias', 'categorias_arbol')
   and value::text ~ 'emporio-images/[0-9.]+\.(jpeg|jpg|png)';
 
 -- ============================================================================
---  LISTO. Recargá la tienda con Ctrl+F5 y las fotos vuelven a verse.
+--  LISTO. Recarga la tienda con Ctrl+F5 y las fotos vuelven a verse.
 -- ============================================================================

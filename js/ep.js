@@ -86,7 +86,7 @@ const EdProducto = (() => {
         <p class="venta-sec">Stock</p>
         <div class="venta-g2">
           <label class="venta-f venta-ancho"><span>Unidades disponibles</span>
-            <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? (p.inStock === false ? 0 : '')}" placeholder="Dejalo vacío para no llevar la cuenta">
+            <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? (p.inStock === false ? 0 : '')}" placeholder="Déjalo vacío para no llevar la cuenta">
             <small class="ep-stock-ayuda" id="epStockAyuda"></small>
           </label>
         </div>

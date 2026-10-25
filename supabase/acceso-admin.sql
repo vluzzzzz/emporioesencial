@@ -4,12 +4,12 @@
 --  Sin esto, CUALQUIER usuario registrado puede editar el catálogo. Con esto,
 --  solo los correos de la lista.
 --
---  PASO 1 · Poné los correos que tienen permiso, entre comillas y separados
+--  PASO 1 · Pon los correos que tienen permiso, entre comillas y separados
 --           por coma. El tuyo y el del cliente. TODO EN MINÚSCULAS: Supabase
 --           guarda los correos así, y la comparación distingue mayúsculas.
---  PASO 2 · Pegá todo en Supabase → SQL Editor → Run.
+--  PASO 2 · Pega todo en Supabase → SQL Editor → Run.
 --
---  Para sumar o sacar a alguien después, cambiás la lista y volvés a correrlo.
+--  Para sumar o sacar a alguien después, cambias la lista y vuelves a correrlo.
 -- ============================================================================
 
 create or replace function public.es_admin()

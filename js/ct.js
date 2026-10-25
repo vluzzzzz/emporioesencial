@@ -4,7 +4,7 @@
  *  Cats — la única lista de categorías de la web.
  *  Antes vivía repartida en cuatro archivos: el mega menú, los nombres de la
  *  página de categoría, las tarjetas de la portada y el panel. Ahora sale de
- *  acá, y la clave `categorias_arbol` de site_config la pisa.
+ *  aquí, y la clave `categorias_arbol` de site_config la pisa.
  *
  *  El árbol de abajo es la semilla: si Supabase no responde, la web anda igual.
  * ========================================================================== */

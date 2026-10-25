@@ -13,7 +13,7 @@
 --      hasta $32.500 ............ $2.300
 --      de $33.000 en adelante ... $2.800
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 

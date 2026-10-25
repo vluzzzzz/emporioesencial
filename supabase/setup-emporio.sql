@@ -2,15 +2,15 @@
 --  ESENCIAL EMPORIO · Base de datos nueva (catálogo para el hogar)
 --  ----------------------------------------------------------------------------
 --  Un solo archivo. Crea TODO lo que necesita la web, vacío y sin productos
---  de ejemplo. Después cargás tus productos desde /admin.
+--  de ejemplo. Después cargas tus productos desde /admin.
 --
 --  CÓMO USARLO
---   1. Creá un proyecto NUEVO en Supabase (no uses el de la web anterior).
---   2. Abajo, en el PASO 0, poné tu correo (y el del cliente) en MINÚSCULAS.
---   3. Supabase → SQL Editor → New query → pegá todo esto → Run.
---   4. Authentication → Users → Add user: creá el usuario admin con ese correo.
---      (Opcional: Authentication → Providers → Email: desactivá "Confirm email".)
---   5. Settings → API: copiá Project URL y anon public key a
+--   1. Crea un proyecto NUEVO en Supabase (no uses el de la web anterior).
+--   2. Abajo, en el PASO 0, pon tu correo (y el del cliente) en MINÚSCULAS.
+--   3. Supabase → SQL Editor → New query → pega todo esto → Run.
+--   4. Authentication → Users → Add user: crea el usuario admin con ese correo.
+--      (Opcional: Authentication → Providers → Email: desactiva "Confirm email".)
+--   5. Settings → API: copia Project URL y anon public key a
 --      js/supabase-config.js.
 --
 --  Es seguro correrlo varias veces.
@@ -19,7 +19,7 @@
 
 -- ── PASO 0 · Quién es administrador ─────────────────────────────────────────
 --  Solo estos correos pueden editar el catálogo desde /admin. El resto, aunque
---  tenga sesión, no puede escribir. Poné los correos reales, en minúsculas.
+--  tenga sesión, no puede escribir. Pon los correos reales, en minúsculas.
 create or replace function public.es_admin()
 returns boolean language sql stable as $$
   select lower(auth.jwt() ->> 'email') in (
@@ -36,7 +36,7 @@ $$;
 
 
 -- ── 1 · Productos ───────────────────────────────────────────────────────────
---  La categoría es texto libre: la definís vos desde /admin (Cocina, Belleza,
+--  La categoría es texto libre: la defines desde /admin (Cocina, Belleza,
 --  Herramientas, Limpieza, etc.). Sin candado de categorías fijas.
 create table if not exists public.products (
   id            uuid primary key default gen_random_uuid(),
@@ -222,7 +222,7 @@ create policy "site-images admin write" on storage.objects
 
 -- ============================================================================
 --  LISTO. La base queda vacía y lista. Ahora:
---   · Entrá a /admin con el usuario que creaste y cargá tus productos.
+--   · Entra a /admin con el usuario que creaste y carga tus productos.
 --   · Mientras no haya productos cargados, la web muestra los de ejemplo
 --     (las 4 fotos del emporio) definidos en js/sd.js.
 -- ============================================================================

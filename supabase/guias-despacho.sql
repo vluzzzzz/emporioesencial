@@ -12,7 +12,7 @@
 --  El administrador apaga el link cuando quiere: con activa = false deja de
 --  abrirse para todos.
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 create extension if not exists pgcrypto;

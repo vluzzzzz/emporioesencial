@@ -86,9 +86,9 @@ const EdUtil = (() => {
     if (m === 'SIN_PERMISO' || /row-level security/i.test(m))
       return 'Tu cuenta no tiene permiso para guardar esto.';
     if (/JWT|not authenticated|session/i.test(m))
-      return 'Se cerró la sesión. Volvé a entrar y probá de nuevo.';
+      return 'Se cerró la sesión. Vuelve a entrar y prueba de nuevo.';
     if (/Failed to fetch|NetworkError/i.test(m))
-      return 'Sin conexión con el servidor. Revisá internet y probá de nuevo.';
+      return 'Sin conexión con el servidor. Revisa internet y prueba de nuevo.';
     return 'Error al guardar: ' + m;
   }
 

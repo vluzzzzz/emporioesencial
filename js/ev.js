@@ -52,7 +52,7 @@ const EdVendedores = (() => {
     };
   }
 
-  // La base descuenta el stock sola al aceptar un pedido. Acá se vuelve a leer
+  // La base descuenta el stock sola al aceptar un pedido. Aquí se vuelve a leer
   // ese producto para que la tienda abierta muestre el número nuevo.
   async function refrescarStock(slug){
     if (!slug || typeof aplicarProducto !== 'function') return;
@@ -147,7 +147,7 @@ const EdVendedores = (() => {
     if (p <= 0) return 0;
     return (TRAMOS.find(t => p <= t.hasta) || TRAMOS[TRAMOS.length - 1]).paga;
   };
-  // La venta puede traerla calculada de la base; si no, se saca acá.
+  // La venta puede traerla calculada de la base; si no, se saca aquí.
   const comisionDe = v => v.comision != null && v.comision > 0
     ? v.comision
     : (v.cantidad || 1) * comisionUnidad(v.precio_unitario);
@@ -255,7 +255,7 @@ const EdVendedores = (() => {
         <span>Mes</span>
         ${Sesion.desplegable('mes', MESES.map((n, k) => ({
           valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
-        })), 'Elegí el mes', mesVisto, false, ICO.calendario)}
+        })), 'Elige el mes', mesVisto, false, ICO.calendario)}
       </div>
       <div class="ev-filtro">
         <span>Vendedor</span>
@@ -363,7 +363,7 @@ const EdVendedores = (() => {
       verPedido(box, t.dataset.ver)));
   }
 
-  // La ficha completa del pedido. Desde acá el administrador puede cambiar
+  // La ficha completa del pedido. Desde aquí el administrador puede cambiar
   // de opinión, esté aceptado o denegado.
   function verPedido(box, id){
     const v = ventas.find(x => String(x.id) === String(id));
@@ -455,7 +455,7 @@ const EdVendedores = (() => {
       <p class="ev-conf-venta">Venta de: <b>${esc(vendedorDe(v).nombre)}</b></p>`;
 
     const ok = await confirmarFn(
-      '¿Seguro que querés eliminar este pedido? Se borra para siempre y no se puede deshacer.',
+      '¿Seguro que quieres eliminar este pedido? Se borra para siempre y no se puede deshacer.',
       'Eliminar pedido', 5, ficha);
     if (!ok) return;
     try {
@@ -551,7 +551,7 @@ const EdVendedores = (() => {
       const motivo = f.motivo.value.trim();
       if (!acepta && !motivo) {
         msg.className = 'venta-msg err';
-        msg.textContent = 'Escribí por qué se deniega, para que el vendedor sepa.';
+        msg.textContent = 'Escribe por qué se deniega, para que el vendedor sepa.';
         return;
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
@@ -662,13 +662,13 @@ const EdVendedores = (() => {
             ${Sesion.desplegable('rol', [
               { valor:'vendedor', texto:'Vendedor', nota:'Solo ventas' },
               { valor:'admin', texto:'Administrador', nota:'Edita la web' },
-            ], 'Elegí el rol', u.rol)}
+            ], 'Elige el rol', u.rol)}
           </div>
           <label class="venta-f venta-ancho"><span>Observación</span>
             <input type="text" data-uf="observacion" value="${esc(u.observacion)}">
           </label>
           <label class="venta-f venta-ancho"><span>Contraseña nueva (opcional)</span>
-            <input type="text" data-uf="clave" placeholder="Dejalo vacío para no cambiarla">
+            <input type="text" data-uf="clave" placeholder="Déjalo vacío para no cambiarla">
           </label>
         </div>
         <p class="venta-msg" id="evPersonaMsg"></p>
@@ -737,9 +737,9 @@ const EdVendedores = (() => {
     msg.className = 'venta-msg';
     const falla = t => { msg.className = 'venta-msg err'; msg.textContent = t; };
     // El nombre y el teléfono salen en cada pedido, así que son obligatorios.
-    if (!cuerpo.nombre) return falla('Escribí el nombre y el apellido del vendedor.');
+    if (!cuerpo.nombre) return falla('Escribe el nombre y el apellido del vendedor.');
     if (!cuerpo.email) return falla('Falta el correo.');
-    if (!cuerpo.telefono) return falla('Escribí el teléfono: sale en cada pedido que registre.');
+    if (!cuerpo.telefono) return falla('Escribe el teléfono: sale en cada pedido que registre.');
     if (cuerpo.telefono.replace(/\D/g, '').length < 8) return falla('Ese teléfono parece incompleto.');
     if (cuerpo.password.length < 8) return falla('La contraseña necesita 8 caracteres o más.');
 
@@ -810,7 +810,7 @@ const EdVendedores = (() => {
     const ok = await confirmarFn(
       conVentas
         ? 'Todas las ventas y el historial de esta persona van a ser eliminados. ¿Estás seguro? No se puede deshacer.'
-        : '¿Seguro que querés eliminar a esta persona del equipo? Se borra su cuenta y no va a poder entrar nunca más. No se puede deshacer.',
+        : '¿Seguro que quieres eliminar a esta persona del equipo? Se borra su cuenta y no va a poder entrar nunca más. No se puede deshacer.',
       'Eliminar vendedor', 5, ficha);
     if (!ok) return;
 
@@ -898,7 +898,7 @@ const EdVendedores = (() => {
         const c = filas()[i];
         const usada = ventas.some(v => v.comuna === c.nombre);
         if (usada) {
-          toast('No se puede eliminar: hay ventas despachadas a ' + c.nombre + '. Podés apagarla con el ojo.', true);
+          toast('No se puede eliminar: hay ventas despachadas a ' + c.nombre + '. Puedes apagarla con el ojo.', true);
           return;
         }
         if (confirmarFn && !(await confirmarFn('¿Eliminar ' + c.nombre + ' de la lista de despacho?', 'Eliminar'))) return;

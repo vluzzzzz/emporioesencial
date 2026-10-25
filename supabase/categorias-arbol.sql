@@ -4,8 +4,8 @@
 --  Una sola lista para el menú, los nombres de cada sección y las tarjetas de
 --  la portada. Antes estaba repetida en cuatro archivos distintos.
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Después se edita desde la web:
---  entrá como administrador, prendé Editar y tocá Categorías.
+--  Pégalo en Supabase → SQL Editor y dale Run. Después se edita desde la web:
+--  entra como administrador, prende Editar y toca Categorías.
 --
 --  Solo siembra el valor inicial: si ya editaste las categorías, no las pisa.
 -- ============================================================================

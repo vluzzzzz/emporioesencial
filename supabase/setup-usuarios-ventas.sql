@@ -1,14 +1,14 @@
 -- ============================================================================
 --  ESENCIAL EMPORIO · Usuarios, vendedores y ventas
 --  ----------------------------------------------------------------------------
---  Corré PRIMERO supabase/setup-emporio.sql y DESPUÉS este archivo.
+--  Corre PRIMERO supabase/setup-emporio.sql y DESPUÉS este archivo.
 --
 --  CÓMO USARLO
---   1. Abajo, en el PASO 0, poné tu correo de administrador en MINÚSCULAS.
---   2. Supabase → SQL Editor → New query → pegá todo esto → Run.
---   3. Authentication → Users → Add user: creá tu usuario con ese correo.
---      (Authentication → Providers → Email: desactivá "Confirm email".)
---   4. Volvé a correr el bloque del PASO 4 si creaste el usuario después.
+--   1. Abajo, en el PASO 0, pon tu correo de administrador en MINÚSCULAS.
+--   2. Supabase → SQL Editor → New query → pega todo esto → Run.
+--   3. Authentication → Users → Add user: crea tu usuario con ese correo.
+--      (Authentication → Providers → Email: desactiva "Confirm email".)
+--   4. Vuelve a correr el bloque del PASO 4 si creaste el usuario después.
 --
 --  Es seguro correrlo varias veces.
 -- ============================================================================

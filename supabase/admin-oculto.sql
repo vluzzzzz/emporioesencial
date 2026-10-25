@@ -11,8 +11,8 @@
 --  sea invisible para todos menos para ella misma. Un admin que mire con las
 --  herramientas del navegador tampoco la va a ver.
 --
---  Correlo de nuevo cuando quieras devolver la contraseña a emporioADMIN.
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Córrelo de nuevo cuando quieras devolver la contraseña a emporioADMIN.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 alter table public.profiles add column if not exists oculto boolean not null default false;
@@ -100,7 +100,7 @@ create policy "perfiles admin" on public.profiles
 -- ── Que no quede su huella en ninguna fila ─────────────────────────────────
 --  `ventas.resuelto_por` y `guias.creada_por` guardan quién hizo la acción.
 --  Hoy la web no los escribe, pero si algún día lo hiciera, el dueño vería un
---  uuid que no corresponde a nadie de su equipo y sabría que hay alguien más.
+--  uuid que no corresponde a nadie de su equipo y sabrea que hay alguien más.
 --  Estos disparadores los dejan vacíos cuando el que actúa está oculto.
 create extension if not exists hstore;
 

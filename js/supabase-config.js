@@ -4,7 +4,7 @@
  *  Estas dos claves son PÚBLICAS y seguras de exponer en el front: la seguridad
  *  real la da Row Level Security (lectura pública, escritura solo logueado).
  *
- *  Pegá acá los valores de tu proyecto:
+ *  Pega aquí los valores de tu proyecto:
  *    Supabase Dashboard → Settings → API
  *      - Project URL      →  SUPABASE_URL
  *      - anon public key   →  SUPABASE_ANON_KEY
@@ -12,7 +12,7 @@
  *  Si quedan vacíos o con los placeholders, la web sigue funcionando con su
  *  contenido hardcodeado (fallback) y no se puede entrar a editar.
  * ========================================================================== */
-// BASE NUEVA — pegá acá los datos del proyecto Supabase NUEVO de Esencial
+// BASE NUEVA — pega aquí los datos del proyecto Supabase NUEVO de Esencial
 // Emporio (Settings → API). Mientras queden con 'TU-PROYECTO', la web funciona
 // con los productos de ejemplo de hogar (las 4 fotos) y no se puede editar.
 // NO uses el proyecto de la web anterior.

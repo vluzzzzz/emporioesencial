@@ -87,7 +87,7 @@
 
   /* ── Guardar como imagen ──────────────────────────────────
    * Se dibuja a mano en un canvas. Una librería para esto pesa más que
-   * toda la página, y acá el diseño lo conozco entero.                  */
+   * toda la página, y aquí el diseño lo conozco entero.                  */
   function comoImagen(d){
     const E = 2, A = 760;
     const c = document.createElement('canvas');
@@ -181,7 +181,7 @@
       await navigator.clipboard.writeText(url);
       aviso('Link copiado');
     } catch {
-      prompt('Copiá el link:', url);
+      prompt('Copia el link:', url);
     }
   }
 
@@ -189,7 +189,7 @@
   (async function init(){
     const id = new URLSearchParams(location.search).get('g');
     if (!id) return falla('Este link no tiene guía.');
-    if (!window.sb) return falla('No se pudo conectar. Probá de nuevo en un rato.');
+    if (!window.sb) return falla('No se pudo conectar. Prueba de nuevo en un rato.');
 
     let fila, error;
     try {
@@ -197,7 +197,7 @@
         .from('guias').select('datos').eq('id', id).maybeSingle());
     } catch (e) { error = e; }
 
-    if (error) return falla('No se pudo abrir la guía. Probá de nuevo en un rato.');
+    if (error) return falla('No se pudo abrir la guía. Prueba de nuevo en un rato.');
     if (!fila) return falla('Esta guía ya no está disponible. Pedile un link nuevo al administrador.');
 
     const d = fila.datos || {};

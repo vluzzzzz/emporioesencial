@@ -2,8 +2,8 @@
 --  Endurecer seguridad: que SOLO tu usuario admin pueda escribir
 --  (aunque alguien logre registrarse/loguearse, no podrá editar nada).
 --
---  1) Reemplazá  TU-EMAIL-ADMIN@ejemplo.com  por el email de tu usuario admin.
---  2) Ejecutá todo en Supabase → SQL Editor.
+--  1) Reemplaza  TU-EMAIL-ADMIN@ejemplo.com  por el email de tu usuario admin.
+--  2) Ejecuta todo en Supabase → SQL Editor.
 -- ============================================================================
 
 -- ── products ──

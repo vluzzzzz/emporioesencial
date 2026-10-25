@@ -5,10 +5,10 @@
 --  de la lista de administradores pueden eliminar un pedido desde la pestaña
 --  Pedidos.
 --
---  Pegá todo en Supabase → SQL Editor → Run.
+--  Pega todo en Supabase → SQL Editor → Run.
 --
 --  OJO: un pedido borrado NO se recupera. Se van los datos del cliente, la
---  dirección y qué compró. El pago sigue registrado en Mercado Pago, pero acá
+--  dirección y qué compró. El pago sigue registrado en Mercado Pago, pero aquí
 --  no queda nada.
 -- ============================================================================
 

@@ -74,7 +74,7 @@ const EdSitio = (() => {
     function pintar(){
       const box = ov.querySelector('#edBanners');
       box.innerHTML = `
-        <p class="ec-intro">Cada banner lleva <b>dos imágenes</b>: la ancha para computadora y la cuadrada para teléfono. El ojo decide si se muestra; lo que apagás se guarda igual. Sin ningún banner visible, la página arranca directo por el catálogo.</p>
+        <p class="ec-intro">Cada banner lleva <b>dos imágenes</b>: la ancha para computadora y la cuadrada para teléfono. El ojo decide si se muestra; lo que apagas se guarda igual. Sin ningún banner visible, la página arranca directo por el catálogo.</p>
         ${estado.lista.map((b, i) => `
           <div class="eb-card${b.oculto ? ' oculta' : ''}" data-i="${i}">
             <div class="eb-cab">
@@ -234,7 +234,7 @@ const EdSitio = (() => {
       box.innerHTML = `
         <p class="ec-intro">${dentro
           ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. La foto se ve en círculo dentro del menú, así que conviene <b>cuadrada, de 400 × 400</b>, con el producto al centro.'
-          : 'Cambiá la foto y el nombre de cada una. La foto se ve en círculo dentro del menú: conviene <b>cuadrada, de 400 × 400</b>. El ojo decide si aparece en la tienda: lo que apagás se guarda igual, solo deja de verse.'}</p>
+          : 'Cambia la foto y el nombre de cada una. La foto se ve en círculo dentro del menú: conviene <b>cuadrada, de 400 × 400</b>. El ojo decide si aparece en la tienda: lo que apagas se guarda igual, solo deja de verse.'}</p>
         <div class="ec-grid">
           ${items.map((it, i) => tarjeta(it, i, esSub)).join('')}
           <button type="button" class="ec-nueva" id="ecNueva">
@@ -286,7 +286,7 @@ const EdSitio = (() => {
         const it = lista()[i];
         const n = esSub ? usanCat(it.slug) : usanTodo(it);
         if (n) {
-          toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Podés ocultarla.', true);
+          toast('No se puede eliminar: tiene ' + cuantos(n).toLowerCase() + ' adentro. Puedes ocultarla.', true);
           return;
         }
         if (await confirmar('¿Eliminar "' + it.nombre + '"?' + (esSub ? '' : ' Se van también sus subcategorías.'), 'Eliminar')) {
@@ -316,7 +316,7 @@ const EdSitio = (() => {
           <label class="venta-f venta-ancho"><span>Nombre</span>
             <input type="text" name="nombre" required placeholder="${esSub ? 'Ej: Ollas y sartenes' : 'Ej: Cocina'}">
           </label>
-          <p class="venta-vacio" style="margin-top:12px">Se crea vacía y después le ponés la foto.</p>
+          <p class="venta-vacio" style="margin-top:12px">Se crea vacía y después le pones la foto.</p>
         </form>`;
       const { ov: ov2, cerrar: cerrar2 } = Sesion.panel(
         esSub ? 'Subcategoría nueva' : 'Categoría nueva', 'Categorías', cuerpo,

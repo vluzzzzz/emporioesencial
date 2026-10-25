@@ -4,11 +4,11 @@ const NavScroll=(()=>{function init(){const nav=document.querySelector('.nav');w
 
 /* ════════════════════════════════════════════════════════════════════════════
    ZONA EDITABLE — qué productos salen en cada fila de la portada, y en qué
-   orden. Son los slugs del catálogo (js/sd.js); si ponés uno que no existe,
+   orden. Son los slugs del catálogo (js/sd.js); si pones uno que no existe,
    se saltea sin romper nada.
 
    ⚠ Esta lista es solo el punto de partida: si hay
-   algo guardado en el panel, eso gana y lo de acá no se usa. Editá en el
+   algo guardado en el panel, eso gana y lo de aquí no se usa. Edita en el
    panel salvo que quieras cambiar el valor de arranque.
    ════════════════════════════════════════════════════════════════════════════ */
 
@@ -21,7 +21,7 @@ let OFERTAS = [
   'espejo-led',
 ];
 
-// Fila de abajo, a lo ancho. Va después de las categorías. Acá están los que
+// Fila de abajo, a lo ancho. Va después de las categorías. Aquí están los que
 // no salen arriba, así que entre las dos filas se ve todo el catálogo.
 let MAS_PRODUCTOS = [
   'utensilios-bambu',
@@ -299,7 +299,7 @@ const CatPage=(()=>{
     overlay?.addEventListener('click',cerrar);
 
     // Los enlaces del pie apuntan a la home, que está detrás. Sin cerrar
-    // primero, el visitante se quedaría acá mientras la página de abajo salta
+    // primero, el visitante se quedaría aquí mientras la página de abajo salta
     // a otra parte. "Productos" es la excepción: sirve para abrir esto mismo.
     document.getElementById('cpageFooter')?.addEventListener('click',e=>{
       const a=e.target.closest('a');

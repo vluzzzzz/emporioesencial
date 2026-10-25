@@ -9,8 +9,8 @@
 --  cualquier administrador: solo el correo dueño, el de es_owner(). Un
 --  administrador común la ve, pero no la puede apagar.
 --
---  PASO 1 · Poné tu correo en es_owner(), en minúsculas.
---  PASO 2 · Pegá todo en Supabase → SQL Editor → Run.
+--  PASO 1 · Pon tu correo en es_owner(), en minúsculas.
+--  PASO 2 · Pega todo en Supabase → SQL Editor → Run.
 -- ============================================================================
 
 create or replace function public.es_owner()

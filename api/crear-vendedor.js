@@ -75,7 +75,7 @@ module.exports = async (req, res) => {
     // (ventas.vendedor_id es on delete restrict).
     if (b.accion === 'borrar') {
       if (!b.id) return res.status(400).json({ error: 'Falta el usuario' });
-      if (b.id === quien.id) return res.status(400).json({ error: 'No te podés borrar a vos mismo' });
+      if (b.id === quien.id) return res.status(400).json({ error: 'No te puedes borrar a ti mismo' });
       const suyo = `?vendedor_id=eq.${encodeURIComponent(b.id)}`;
 
       // Las guías de despacho apuntan a las ventas: se van con ellas.
@@ -104,7 +104,7 @@ module.exports = async (req, res) => {
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Correo no válido' });
 
-    // Una cuenta oculta no se delata ni acá: si alguien prueba crear un
+    // Una cuenta oculta no se delata ni aquí: si alguien prueba crear un
     // vendedor con ese correo, la respuesta es la misma que daría un correo
     // escrito mal, no un "ya existe" que confirmaría que está.
     const yaEsta = await sbRest('profiles', {

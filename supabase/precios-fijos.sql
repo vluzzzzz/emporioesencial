@@ -8,7 +8,7 @@
 --  Al registrar una venta, el precio se toma del producto y el despacho de la
 --  comuna, se venga lo que se venga desde la web. El total se recalcula.
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 create or replace function public.venta_precios_del_catalogo()
@@ -46,6 +46,6 @@ create trigger venta_precios
   for each row execute function public.venta_precios_del_catalogo();
 
 -- ============================================================================
---  LISTO. De acá en adelante, el precio de una venta sale siempre del
+--  LISTO. De aquí en adelante, el precio de una venta sale siempre del
 --  catálogo y el despacho de la tabla de comunas.
 -- ============================================================================

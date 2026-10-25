@@ -90,7 +90,7 @@ const Edicion = (() => {
     return cargando;
   }
 
-  // Los módulos registran acá lo que tienen que volver a montar cuando una
+  // Los módulos registran aquí lo que tienen que volver a montar cuando una
   // grilla se repinta y se lleva por delante un botón anclado.
   function registrar(fn){
     montadores.push(fn);

@@ -4,7 +4,7 @@
 --  Pegar en Supabase → SQL Editor → Run. Es seguro correrlo varias veces.
 --
 --  Todas las imágenes del sitio se convirtieron a webp y los .png se borraron.
---  La base seguía guardando las rutas viejas, así que esos productos salían
+--  La base siguea guardando las rutas viejas, así que esos productos salían
 --  sin foto: Supabase pisa al catálogo del código, y mandaba una ruta muerta.
 --
 --  Esto cambia la terminación en los tres lugares donde hay rutas: la imagen

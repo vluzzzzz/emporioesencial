@@ -1,7 +1,7 @@
 -- ============================================================================
 --  ESENCIAL EMPORIO · Carga del catálogo (23 productos)
 --  ----------------------------------------------------------------------------
---  Corré primero supabase/setup-emporio.sql. Después pegá esto en
+--  Corre primero supabase/setup-emporio.sql. Después pega esto en
 --  Supabase → SQL Editor y dale Run.
 --
 --  Sube los 23 productos que hoy están escritos en js/sd.js a la base, para
@@ -80,5 +80,5 @@ on conflict (product_id, qty) do update set
   active = true;
 
 -- ============================================================================
---  LISTO. Entrá a /admin → Catálogo y vas a ver los 23 productos para editar.
+--  LISTO. Entra a /admin → Catálogo y vas a ver los 23 productos para editar.
 -- ============================================================================

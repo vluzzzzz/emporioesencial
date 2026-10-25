@@ -9,7 +9,7 @@
 // Variables en Vercel:
 //   RESEND_API_KEY     la llave de Resend
 //   AVISO_EMAIL_TO     a quién le llega (varios separados por coma)
-//   AVISO_EMAIL_FROM   de quién sale; sin dominio propio dejá el de prueba
+//   AVISO_EMAIL_FROM   de quién sale; sin dominio propio deja el de prueba
 const { sbRest, sbConfigurado, UUID_RE, SB_URL } = require('./_supabase');
 
 const ANON_KEY = () => process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';

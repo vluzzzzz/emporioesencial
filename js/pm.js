@@ -47,7 +47,7 @@ const ProductModal=(()=>{
   }
   function resetCarousel(src,name,key){imgIndex=0;const cv=colorVars(key);if(cv){imgList=cv.map(v=>v.img);}else{const g=(typeof GALLERY!=='undefined')?GALLERY[key]:null;imgList=(g&&g.length>1)?g.slice():[src];}const w=document.getElementById('ppageThumbs');if(w)w.innerHTML='';document.getElementById('ppageImgWrap')?.style.setProperty('--ppage-img-scale','1');renderDots();updateArrow();}
   // ── Variantes de color ─────────────────────────────────────
-  function _clearColorWarn(){const h=document.getElementById('ppageColorHint');if(h){h.classList.remove('show');h.textContent='Seleccioná tu color';}document.getElementById('ppageColorsRow')?.classList.remove('shake');}
+  function _clearColorWarn(){const h=document.getElementById('ppageColorHint');if(h){h.classList.remove('show');h.textContent='Selecciona tu color';}document.getElementById('ppageColorsRow')?.classList.remove('shake');}
   // El color elegido esta sin stock: se puede ver, pero no comprar.
   function _colorSinStock(){
     const cv=colorVars(currentProduct&&currentProduct.key);
@@ -92,7 +92,7 @@ const ProductModal=(()=>{
     box.classList.toggle('show-cap', !!ag);
   }
   function _updateColorActive(){const row=document.getElementById('ppageColorsRow');if(!row)return;row.querySelectorAll('.ppage-color-swatch').forEach((s,i)=>s.classList.toggle('active',i===imgIndex));const label=document.getElementById('ppageColorName'),cv=colorVars(currentProduct&&currentProduct.key)||[];if(label&&cv[imgIndex])label.innerHTML=escTxt(cv[imgIndex].name);_pintarSinStock();}
-  // El error de color SIEMPRE sale la 1ª vez que tocás un botón (aunque ya hayas mirado/cambiado colores).
+  // El error de color SIEMPRE sale la 1ª vez que tocas un botón (aunque ya hayas mirado/cambiado colores).
   // Después de tocar un botón una vez (_buyTried) ya no bloquea.
   function _blockColor(){if(currentProduct&&colorVars(currentProduct.key)&&!_buyTried){_buyTried=true;_shakeColor();return true;}_clearColorWarn();return false;}
   function _shakeColor(){const row=document.getElementById('ppageColorsRow'),hint=document.getElementById('ppageColorHint');if(row){row.classList.remove('shake');void row.offsetWidth;row.classList.add('shake');}if(hint)hint.classList.add('show');document.getElementById('ppageColors')?.scrollIntoView({behavior:'smooth',block:'center'});}
@@ -545,7 +545,7 @@ const ProductModal=(()=>{
     document.getElementById('ppageWaBtn')?.addEventListener('click',()=>{if(!currentProduct)return;if(_blockColor())return;if(_colorSinStock())return;const u=priceForQty(qty),t=u*qty;const cv=colorVars(currentProduct.key),cn=(cv&&imgIndex>=0&&cv[imgIndex])?cv[imgIndex].name:'';const msg=[`*\u00a1Hola!* Me interesa este producto:`,'',`\u25b8 ${qty}x ${currentProduct.name}${cn?` (${cn})`:''}`,`  Precio: ${fmt(u)} c/u`,`  Total: *${fmt(t)}*`,'','\u00bfTienen stock disponible?'].join('\n');window.open(`https://wa.me/56930521645?text=${encodeURIComponent(msg)}`,'_blank');});
     ['ppage-features'].forEach(id=>document.getElementById(id+'-header')?.addEventListener('click',()=>openAccordion(id)));
     // Las tarjetas se pintan y se repintan todo el tiempo (ofertas, panel de
-    // categoría, buscador), así que el clic se escucha una sola vez acá arriba
+    // categoría, buscador), así que el clic se escucha una sola vez aquí arriba
     // en vez de atarlo a cada botón.
     document.addEventListener('click',e=>{
       const carro=e.target.closest('.card-cart');

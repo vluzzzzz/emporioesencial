@@ -45,7 +45,7 @@ const PRICE_TIERS={
 const getUnitPrice=(key,qty)=>{const t=PRICE_TIERS[key];if(!t||!t.length)return 0;let p=t[0].price;for(const r of t)if(qty>=r.qty)p=r.price;return p;};
 
 /* ── CATÁLOGO ───────────────────────────────────────────────────────────────
-   Única fuente de productos de toda la web. De acá salen la fila de ofertas,
+   Única fuente de productos de toda la web. De aquí salen la fila de ofertas,
    el panel de categorías, el buscador y los productos similares de la ficha.
    Antes las tarjetas estaban escritas a mano en index.html y cada sección
    leía del HTML de la otra; por eso al abrir un similar se armaba una tarjeta
@@ -220,7 +220,7 @@ function aplicarProducto(p){
   FEATURES[p.slug] = p.features || [];
   // imágenes del detalle = principal + secundarias (galería)
   GALLERY[p.slug] = [p.image, ...(p.gallery || [])].filter(Boolean).map(aWebp);
-  // Colores desde el panel. Sin ellos se respeta lo que esté escrito acá
+  // Colores desde el panel. Sin ellos se respeta lo que esté escrito aquí
   // abajo en COLOR_VARIANTS, si no los colores aparecían un instante y se
   // borraban al llegar la respuesta de la base.
   const cols = Array.isArray(p.colors) ? p.colors.filter(c => c && c.img) : [];
@@ -322,7 +322,7 @@ const GALLERY={
   'adorno-escudo-colocolo':['images/emporio-images/23.webp','images/emporio-images/23.1.webp'],
   'tabla-picar-colocolo':['images/emporio-images/10.webp','images/emporio-images/10.2.webp','images/emporio-images/10.3.webp','images/emporio-images/10.4.webp'],
 };
-// Variantes de color — SOLO los slugs listados acá muestran colores (dots + selector + validación).
+// Variantes de color — SOLO los slugs listados aquí muestran colores (dots + selector + validación).
 /* Cada color lleva 'agotado'. En true sigue a la vista pero en gris y no se
    puede elegir, y se vuelve a encender sin perder las fotos. */
 const COLOR_VARIANTS={};

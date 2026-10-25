@@ -51,13 +51,13 @@ create policy "site_config public read" on public.site_config
   for select to anon, authenticated using ( true );
 
 -- Escribir, solo con sesión iniciada. Si ya corriste lock-writes-to-admin.sql
--- y querés el mismo candado acá, cambiá esta política por la de abajo.
+-- y quieres el mismo candado aquí, cambia esta política por la de abajo.
 drop policy if exists "site_config auth write" on public.site_config;
 create policy "site_config auth write" on public.site_config
   for all to authenticated using ( true ) with check ( true );
 
 -- ── Candado por email (opcional) ────────────────────────────────────────────
--- Descomentá las cinco líneas y poné tu email para que ni siquiera otro
+-- Descomenta las cinco líneas y pon tu email para que ni siquiera otro
 -- usuario registrado pueda escribir. Es el mismo criterio del archivo
 -- lock-writes-to-admin.sql.
 --

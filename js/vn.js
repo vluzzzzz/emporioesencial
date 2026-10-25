@@ -328,11 +328,11 @@ const Sesion = (() => {
         <p class="venta-sec">Despacho</p>
         <div class="venta-g2">
           <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
-            ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elegí la comuna')}
+            ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
           </div>
           <div class="venta-f"><span>Costo de despacho</span>
             <p class="venta-fijo" id="ventaDespacho">
-              Elegí la comuna
+              Elige la comuna
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
             </p>
             <input type="hidden" name="despacho" value="0">
@@ -351,7 +351,7 @@ const Sesion = (() => {
             <input type="email" name="email" placeholder="cliente@correo.cl">
           </label>
           <div class="venta-f venta-ancho"><span>Método de pago</span>
-            ${desplegable('pago', ['Transferencia','Efectivo','Débito o crédito','Otro'].map(v => ({ valor:v, texto:v })), 'Elegí el método')}
+            ${desplegable('pago', ['Transferencia','Efectivo','Débito o crédito','Otro'].map(v => ({ valor:v, texto:v })), 'Elige el método')}
           </div>
           <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
             <input type="text" name="direccion" required placeholder="Calle, número, depto">
@@ -397,7 +397,7 @@ const Sesion = (() => {
     const despacho = +f.despacho.value || 0;
 
     msg.textContent = ''; msg.className = 'venta-msg';
-    if (!f.comuna.value) { msg.className = 'venta-msg err'; msg.textContent = 'Elegí la comuna de despacho.'; return; }
+    if (!f.comuna.value) { msg.className = 'venta-msg err'; msg.textContent = 'Elige la comuna de despacho.'; return; }
     btn.disabled = true; btn.textContent = 'Guardando…';
 
     const { data: creada, error } = await sb.from('ventas').insert({
@@ -452,7 +452,7 @@ const Sesion = (() => {
     const { data, error } = await sb.from('ventas')
       .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(100);
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
-    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Agregar pedido.</p>'; return; }
+    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abre un producto y toca Agregar pedido.</p>'; return; }
 
     // Solo se cobra por lo que el administrador aceptó.
     const pagables = data.filter(v => estadoDe(v) === 'aceptado');
@@ -497,7 +497,7 @@ const Sesion = (() => {
   }
 
   /* ── WhatsApp ─────────────────────────────────────────── */
-  // Un teléfono suelto no sirve de nada: acá siempre se puede tocar para
+  // Un teléfono suelto no sirve de nada: aquí siempre se puede tocar para
   // escribir. Vive en Sesion porque lo usan la tienda y los módulos de
   // edición, y una sola versión evita que los números se armen distinto.
   const WA_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/></svg>';

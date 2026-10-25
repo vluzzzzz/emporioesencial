@@ -6,12 +6,12 @@
 --      vendidas al producto. Si después lo deniega o lo elimina, se las
 --      devuelve.
 --   2. Cuando el stock llega a 0, el producto queda AGOTADO solo. Si le
---      cargás unidades de nuevo, vuelve a la venta solo.
+--      cargas unidades de nuevo, vuelve a la venta solo.
 --
 --  Los productos sin stock cargado (en blanco) no llevan inventario: nunca
 --  se tocan ni se agotan.
 --
---  Pegalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
+--  Pégalo en Supabase → SQL Editor y dale Run. Es seguro correrlo dos veces.
 -- ============================================================================
 
 
@@ -86,6 +86,6 @@ create trigger venta_stock
   for each row execute function public.venta_ajusta_stock();
 
 -- ============================================================================
---  LISTO. Cargá las unidades de cada producto desde Editar → el producto, y
+--  LISTO. Carga las unidades de cada producto desde Editar → el producto, y
 --  de ahí en más la cuenta se mantiene sola.
 -- ============================================================================
