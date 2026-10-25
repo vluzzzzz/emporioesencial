@@ -52,6 +52,22 @@ const EdVendedores = (() => {
     };
   }
 
+  // La base descuenta el stock sola al aceptar un pedido. Acá se vuelve a leer
+  // ese producto para que la tienda abierta muestre el número nuevo.
+  async function refrescarStock(slug){
+    if (!slug || typeof aplicarProducto !== 'function') return;
+    try {
+      const { data } = await sb.from('products')
+        .select('*, price_tiers(qty,price,active)').eq('slug', slug).maybeSingle();
+      if (!data) return;
+      aplicarProducto(data);
+      if (typeof Filas !== 'undefined') Filas.init();
+      if (typeof CatPage !== 'undefined' && CatPage.estaAbierta()) CatPage.abrir(CatPage.catActual());
+      if (typeof Trust !== 'undefined') Trust.decorarTarjetas();
+      if (typeof Edicion !== 'undefined') Edicion.remontar();
+    } catch (_) {}
+  }
+
   async function cargar(){
     const [u, v, c] = await Promise.all([
       sb.from('profiles').select('*').order('created_at', { ascending:false }),
@@ -446,6 +462,7 @@ const EdVendedores = (() => {
       const { error } = await sb.from('ventas').delete().eq('id', v.id);
       if (error) throw error;
       ventas = ventas.filter(x => String(x.id) !== String(v.id));
+      await refrescarStock(v.producto_slug);
       cerrar();
       pintarVentas(box);
       toast('Pedido eliminado');
@@ -544,6 +561,7 @@ const EdVendedores = (() => {
           .eq('id', v.id);
         if (error) throw error;
         v.estado = como; v.motivo = motivo;
+        await refrescarStock(v.producto_slug);
         cerrar();
         pintarVentas(box);
         toast(acepta ? 'Comisión aceptada' : 'Pedido denegado');
