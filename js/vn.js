@@ -316,7 +316,7 @@ const Sesion = (() => {
       <button type="submit" form="ventaForm" class="venta-btn">Registrar venta</button>
       <p class="venta-msg" id="ventaMsg"></p>`;
 
-    const { ov, cerrar } = panel('Producto vendido', 'Registro de venta', cuerpo, pie);
+    const { ov, cerrar } = panel('Agregar pedido', 'Registro de venta', cuerpo, pie);
     const f = ov.querySelector('#ventaForm');
 
     const total = () => {
@@ -378,7 +378,7 @@ const Sesion = (() => {
     const { data, error } = await sb.from('ventas')
       .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(100);
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
-    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Producto vendido.</p>'; return; }
+    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abrí un producto y tocá Agregar pedido.</p>'; return; }
 
     const suma = data.reduce((a, v) => a + (v.total || 0), 0);
     const envios = data.reduce((a, v) => a + (v.costo_despacho || 0), 0);
