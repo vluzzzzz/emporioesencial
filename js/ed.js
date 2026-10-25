@@ -14,7 +14,7 @@
  *  consola, Supabase rechaza toda escritura que no venga de un admin (RLS).
  * ========================================================================== */
 const Edicion = (() => {
-  const V = "77";
+  const V = "79";
   const MODULOS = ['js/eu.js', 'js/ep.js', 'js/eb.js'];
   const LLAVE = 'emporio-editando';
 

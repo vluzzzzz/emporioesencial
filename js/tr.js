@@ -1,11 +1,10 @@
-// tr — confianza: descuento, stock, entrega y medios de pago
+// tr — confianza: descuento, entrega y medios de pago
 'use strict';
 
 const Trust = (() => {
   const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 
   // Avisar "quedan N" solo cuando de verdad queda poco.
-  const UMBRAL_STOCK = 5;
 
   /* ── Descuento ─────────────────────────────────────────────────────────── */
   // Sin precio anterior, o si no es mayor al actual, no hay chip. Nunca se
@@ -23,11 +22,7 @@ const Trust = (() => {
   }
 
   /* ── Stock ─────────────────────────────────────────────────────────────── */
-  function stockHTML(qty) {
-    const n = Number(qty);
-    if (!Number.isFinite(n) || n <= 0 || n > UMBRAL_STOCK) return '';
-    return `<p class="stock-aviso">Quedan <strong>${n}</strong> ${n === 1 ? 'unidad' : 'unidades'}</p>`;
-  }
+  function stockHTML() { return ''; }
 
   /* ── Entrega ───────────────────────────────────────────────────────────── */
   // Suma días hábiles saltando sábado y domingo.
@@ -114,7 +109,6 @@ const Trust = (() => {
       const slug   = card.dataset.id;
       const precio = Number(card.dataset.price);
       const antes  = card.dataset.compare;
-      const stock  = card.dataset.stock;
 
       const precioEl = card.querySelector('.card-price, .csl-price');
       if (precioEl && !card.querySelector('.dcto')) {
@@ -122,12 +116,6 @@ const Trust = (() => {
         if (html) precioEl.insertAdjacentHTML('afterend', html);
       }
 
-      const info = card.querySelector('.card-info');
-
-      if (info && !card.querySelector('.stock-aviso')) {
-        const html = stockHTML(stock);
-        if (html) info.querySelector('.card-foot')?.insertAdjacentHTML('beforebegin', html);
-      }
     });
   }
 
