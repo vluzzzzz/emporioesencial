@@ -29,48 +29,55 @@ async function usuarioDelToken(token) {
   return r.json();
 }
 
-// El correo es la etiqueta que se imprime y se pega en el paquete: solo lo
-// que el repartidor necesita leer: a dónde va y cuánto cobra. Nada de la
-// comisión del vendedor ni de la ganancia del negocio.
-function cuerpoHtml(v) {
+// El correo es la guía de despacho que se imprime y se pega en el paquete:
+// la misma que ve el repartidor en guia.html. A dónde va, a quién le
+// entrega, a quién le pregunta y cuánto cobra. Nada de la comisión del
+// vendedor ni de la ganancia del negocio.
+function cuerpoHtml(v, vendedor) {
+  const BORDE = '1px solid #d2d2d7';
   const fila = (rot, dato) => dato
     ? `<tr>
-         <td style="width:34%;padding:10px 14px;border-bottom:1px solid #d2d2d7;color:#6b6b72;font-size:12.5px;vertical-align:middle">${esc(rot)}</td>
-         <td style="padding:10px 14px;border-bottom:1px solid #d2d2d7;border-left:1px solid #d2d2d7;text-align:right;font-size:15px;font-weight:700;vertical-align:middle">${esc(dato)}</td>
+         <td style="width:34%;padding:11px 14px;border-bottom:${BORDE};color:#6b6b72;font-size:12.5px;vertical-align:middle">${esc(rot)}</td>
+         <td style="padding:11px 14px;border-bottom:${BORDE};border-left:${BORDE};text-align:right;font-size:15px;font-weight:700;vertical-align:middle">${esc(dato)}</td>
        </tr>` : '';
 
-  const filas = [
-    ['Cliente', v.cliente_nombre],
-    ['Teléfono', v.cliente_telefono],
-    ['Dirección', v.cliente_direccion],
-    ['Comuna', v.comuna],
-    ['Forma de pago', v.metodo_pago],
-    ['Observación', v.notas],
-  ].filter(f => f[1]);
+  const titulo = t => `<tr><td colspan="2" style="padding:14px 14px 7px;border-bottom:${BORDE};font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6b6b72">${esc(t)}</td></tr>`;
 
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"></head><body style="margin:0;padding:20px 12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border:1px solid #111;border-collapse:separate">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border:1px solid #111;border-collapse:collapse">
 
-      <tr><td style="padding:14px 18px;background:#111">
-        <div style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b98f2e">Etiqueta de despacho</div>
+      <tr><td colspan="2" style="padding:14px 18px;background:#111">
+        <div style="font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#b98f2e">Guía de despacho</div>
         <div style="margin-top:2px;font-size:17px;font-weight:700;color:#fff">Esencial Emporio</div>
       </td></tr>
 
-      <tr><td style="padding:16px 18px 10px;border-bottom:1px solid #d2d2d7">
+      <tr><td colspan="2" style="padding:16px 18px 13px;border-bottom:${BORDE}">
         <div style="font-size:17px;font-weight:700;line-height:1.3">${esc(v.producto_nombre)}${v.cantidad > 1 ? ' &times; ' + v.cantidad : ''}</div>
         <div style="margin-top:3px;font-size:12.5px;color:#6b6b72">${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</div>
       </td></tr>
 
-      <tr><td style="padding:0">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse">
-          ${filas.map(([r, d]) => fila(r, d)).join('')}
-          <tr>
-            <td style="width:34%;padding:14px;background:#f5f5f7;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle">Total</td>
-            <td style="padding:14px;background:#f5f5f7;border-left:1px solid #d2d2d7;text-align:right;font-size:22px;font-weight:700;vertical-align:middle">${plata(v.total)}</td>
-          </tr>
-        </table>
+      ${titulo('Entregar a')}
+      ${fila('Nombre', v.cliente_nombre)}
+      ${fila('Teléfono', v.cliente_telefono)}
+      ${fila('Dirección', v.cliente_direccion)}
+      ${fila('Comuna', v.comuna)}
+      ${fila('Observación', v.notas)}
+
+      ${titulo('Consultas')}
+      ${fila('Vendedor', vendedor.nombre)}
+      ${fila('Teléfono', vendedor.telefono)}
+
+      ${titulo('Pago')}
+      ${fila('Forma de pago', v.metodo_pago)}
+      <tr>
+        <td style="width:34%;padding:14px;background:#f5f5f7;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;vertical-align:middle">Total</td>
+        <td style="padding:14px;background:#f5f5f7;border-left:${BORDE};text-align:right;font-size:22px;font-weight:700;vertical-align:middle">${plata(v.total)}</td>
+      </tr>
+
+      <tr><td colspan="2" style="padding:11px 14px;border-top:${BORDE};font-size:11px;color:#6b6b72">
+        ${esc(new Date(v.created_at).toLocaleDateString('es-CL'))} &nbsp;&middot;&nbsp; Pedido ${esc(String(v.id).slice(0, 8))}
       </td></tr>
 
     </table>
@@ -107,14 +114,25 @@ module.exports = async (req, res) => {
       if (!(p && p.activo && p.rol === 'admin')) return res.status(403).json({ error: 'Sin permiso' });
     }
 
+    // El teléfono del vendedor vive en su perfil: la venta solo guarda el
+    // nombre con que se registró.
+    const quienVende = await sbRest('profiles', {
+      method: 'GET', query: `?id=eq.${encodeURIComponent(v.vendedor_id)}&select=nombre,telefono,email`,
+    });
+    const u = (Array.isArray(quienVende) && quienVende[0]) || {};
+    const vendedor = {
+      nombre: u.nombre || v.vendedor_nombre || u.email || 'Sin nombre',
+      telefono: u.telefono || '',
+    };
+
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${RESEND()}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: DESDE(),
         to: PARA(),
-        subject: `Etiqueta · ${v.producto_nombre} · ${v.cliente_nombre || 'cliente'}, ${v.comuna || ''}`.trim(),
-        html: cuerpoHtml(v),
+        subject: `Guía · ${v.producto_nombre} · ${v.cliente_nombre || 'cliente'}, ${v.comuna || ''}`.trim(),
+        html: cuerpoHtml(v, vendedor),
       }),
     });
     const out = await r.json().catch(() => ({}));

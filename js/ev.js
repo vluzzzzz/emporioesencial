@@ -174,9 +174,6 @@ const EdVendedores = (() => {
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
-    guia: '<path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14 3.5V8h5"/><path d="M9 12.5h7M9 16h5"/>',
-    copiar: '<rect x="8.5" y="8.5" width="12" height="12" rx="2.2"/><path d="M15.5 5.5h-9a2 2 0 0 0-2 2v9"/>',
-    ojo: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     wasap: '<path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/>',
   };
@@ -414,7 +411,6 @@ const EdVendedores = (() => {
             <button type="button" class="ev-no" data-ir="denegado">${svg(ICO.no)}Denegar pedido</button>`
           : `<button type="button" class="ev-rever" data-ir="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar y aceptar' : 'Revisar y denegar'}</button>`}
         </div>
-        <button type="button" class="ev-guia" id="evGuia">${svg(ICO.guia)}Guía para el repartidor</button>
         <button type="button" class="ev-borrar" id="evBorrar">${svg(ICO.tacho)}Eliminar pedido</button>
       </div>`;
 
@@ -423,103 +419,9 @@ const EdVendedores = (() => {
       cerrar();
       resolver(box, v.id, b.dataset.ir);
     }));
-    ov.querySelector('#evGuia').addEventListener('click', e => guiaDespacho(v, e.currentTarget));
     ov.querySelector('#evBorrar').addEventListener('click', () => borrarPedido(box, v, cerrar));
   }
 
-  /* ── Guía para el repartidor ──────────────────────────── */
-  // Un link de solo lectura con lo que el repartidor necesita: a dónde va,
-  // a quién le entrega y a quién le pregunta. Nunca la comisión. Los datos
-  // van copiados dentro de la guía, así el link no depende del pedido y el
-  // que lo abre no llega a la tabla de ventas.
-  function datosGuia(v){
-    const u = vendedorDe(v);
-    return {
-      codigo: String(v.id).slice(0, 8),
-      producto: v.producto_nombre,
-      cantidad: v.cantidad || 1,
-      precio: (v.precio_unitario || 0) * (v.cantidad || 1),
-      foto: new URL(fotoDe(v.producto_slug) || '', location.href).href,
-      cliente: v.cliente_nombre,
-      cliente_tel: v.cliente_telefono,
-      direccion: v.cliente_direccion,
-      comuna: v.comuna,
-      observacion: v.notas || '',
-      vendedor: u.nombre,
-      vendedor_tel: u.telefono === 'Sin teléfono' ? '' : u.telefono,
-      fecha: v.created_at,
-    };
-  }
-
-  async function guiaDespacho(v, btn){
-    btn.disabled = true;
-    const original = btn.innerHTML;
-    btn.innerHTML = 'Buscando la guía…';
-    try {
-      const { data: hay, error: e1 } = await sb.from('guias')
-        .select('id,activa').eq('venta_id', v.id).order('created_at', { ascending:false }).limit(1);
-      if (e1) throw e1;
-
-      let guia = hay && hay[0];
-      if (!guia) {
-        const { data, error } = await sb.from('guias')
-          .insert({ venta_id: v.id, datos: datosGuia(v) }).select('id,activa').single();
-        if (error) throw error;
-        guia = data;
-      }
-      btn.disabled = false; btn.innerHTML = original;
-      panelGuia(v, guia);
-    } catch (err) {
-      btn.disabled = false; btn.innerHTML = original;
-      toast(mensajeError(err));
-    }
-  }
-
-  function panelGuia(v, guia){
-    const url = new URL('guia.html', location.href);
-    url.searchParams.set('g', guia.id);
-    const link = url.href;
-    const u = vendedorDe(v);
-
-    const cuerpo = `
-      <p class="ev-guia-ayuda">Pasale este link al repartidor. Adentro va la dirección,
-        el teléfono del cliente y a quién consultarle. No muestra la comisión ni la
-        ganancia, y no se puede editar desde ahí.</p>
-
-      <div class="ev-link">
-        <input type="text" id="evLink" value="${esc(link)}" readonly>
-        <button type="button" id="evCopiar">${svg(ICO.copiar)}Copiar</button>
-      </div>
-
-      <div class="ev-guia-acc">
-        <a class="ev-guia-btn" href="${esc(link)}" target="_blank" rel="noopener">${svg(ICO.ojo)}Ver la guía</a>
-        ${u.telefono !== 'Sin teléfono' ? `<a class="ev-guia-btn wa" href="${esc(Sesion.wasap(u.telefono, 'Hola ' + u.nombre + ', te escribo por el pedido de ' + v.producto_nombre + ' para ' + (v.cliente_nombre || 'el cliente') + '.'))}" target="_blank" rel="noopener">${svg(ICO.wasap)}WhatsApp al vendedor</a>` : ''}
-      </div>
-
-      <label class="ev-interruptor">
-        <input type="checkbox" id="evActiva"${guia.activa ? ' checked' : ''}>
-        <span class="ev-sw"></span>
-        <span class="ev-interruptor-txt">
-          <b>Link encendido</b>
-          <small>Apagalo y el link deja de abrirse para todos.</small>
-        </span>
-      </label>`;
-
-    const { ov } = Sesion.panel('Guía de despacho', 'Pedido ' + String(v.id).slice(0, 8), cuerpo, '');
-
-    ov.querySelector('#evCopiar').addEventListener('click', async () => {
-      try { await navigator.clipboard.writeText(link); toast('Link copiado'); }
-      catch { ov.querySelector('#evLink').select(); }
-    });
-
-    ov.querySelector('#evActiva').addEventListener('change', async e => {
-      const on = e.target.checked;
-      const { error } = await sb.from('guias').update({ activa: on }).eq('id', guia.id);
-      if (error) { e.target.checked = !on; toast(mensajeError(error)); return; }
-      guia.activa = on;
-      toast(on ? 'Link encendido' : 'Link apagado');
-    });
-  }
 
 
   // Borrar es definitivo: avisa, y el botón recién se habilita a los 5
