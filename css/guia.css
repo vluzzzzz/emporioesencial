@@ -1,0 +1,79 @@
+/* ============================================================================
+ *  Guía de despacho — la hoja que ve el repartidor.
+ *  Vive sola: no carga style.css para que entre rápido en un celular con
+ *  mala señal y para que imprimir no arrastre nada de la tienda.
+ * ========================================================================== */
+:root{
+  --negro:#111;
+  --gris:#6b6b72;
+  --linea:#d2d2d7;
+  --suave:#f5f5f7;
+  --dorado:#b98f2e;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;padding:24px 16px 48px;
+  font-family:'DM Sans',system-ui,sans-serif;
+  color:var(--negro);background:var(--suave);
+  -webkit-text-size-adjust:100%;
+}
+.gw{max-width:560px;margin:0 auto}
+
+.g-estado{padding:40px 20px;text-align:center;color:var(--gris);font-size:15px}
+.g-estado.err{color:#c0392b;font-weight:600}
+
+.guia{background:#fff;border:1px solid var(--linea);border-radius:18px;overflow:hidden}
+
+.g-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;background:var(--negro)}
+.g-logo{height:34px;width:auto}
+.g-kicker{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--dorado)}
+
+.g-prod{display:flex;align-items:center;gap:14px;padding:18px 20px;border-bottom:1px solid var(--linea)}
+.g-prod img{width:74px;height:74px;flex:none;object-fit:contain;border-radius:12px;background:var(--suave)}
+.g-prod>div{min-width:0}
+.g-prod b{display:block;font-size:17px;font-weight:700;line-height:1.3}
+.g-prod small{display:block;margin-top:3px;font-size:13px;color:var(--gris)}
+.g-prod strong{display:block;margin-top:6px;font-size:20px;font-weight:700}
+
+.g-sec{margin:0;padding:14px 20px 8px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gris)}
+
+.g-datos{display:grid;gap:1px;margin:0 20px 6px;background:var(--linea);border:1px solid var(--linea);border-radius:12px;overflow:hidden}
+.g-l{display:grid;grid-template-columns:minmax(0,1fr) 54%;background:#fff}
+.g-l>span{align-self:center;padding:11px 14px;font-size:12.5px;color:var(--gris)}
+.g-l>b{display:flex;align-items:center;justify-content:flex-end;padding:11px 14px;border-left:1px solid var(--linea);font-size:15px;font-weight:600;text-align:right;word-break:break-word}
+/* La dirección y la observación son lo que más mira el repartidor */
+.g-l.grande>b{font-size:17px;font-weight:700}
+.g-l a{color:inherit;text-decoration:none}
+.g-wa{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;margin-right:9px;flex:none;border-radius:50%;background:#25d366;color:#fff}
+.g-wa svg{width:17px;height:17px}
+
+.g-pie{display:flex;justify-content:space-between;gap:12px;padding:14px 20px;margin-top:8px;border-top:1px solid var(--linea);font-size:11.5px;color:var(--gris)}
+
+.g-acc{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.g-acc button{
+  flex:1 1 150px;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font:inherit;font-size:14px;font-weight:600;padding:13px 16px;border-radius:12px;
+  border:1.5px solid var(--linea);background:#fff;color:var(--negro);cursor:pointer;
+  transition:border-color .16s,background .16s;
+}
+.g-acc button:hover{border-color:var(--gris);background:var(--suave)}
+.g-acc button svg{width:17px;height:17px}
+.g-acc button:first-child{background:var(--negro);border-color:var(--negro);color:#e9d9a8}
+.g-acc button:first-child:hover{background:#000}
+
+.g-aviso{
+  position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);
+  padding:12px 20px;border-radius:999px;background:var(--negro);color:#fff;
+  font-size:14px;font-weight:600;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;
+}
+.g-aviso.ver{opacity:1;transform:translate(-50%,0)}
+
+@media print{
+  body{background:#fff;padding:0}
+  .g-acc,.g-aviso{display:none!important}
+  .guia{border:0;border-radius:0}
+  .g-top{background:#fff;border-bottom:2px solid var(--negro)}
+  .g-logo{filter:invert(1)}
+  .g-kicker{color:var(--negro)}
+  .g-wa{display:none}
+}

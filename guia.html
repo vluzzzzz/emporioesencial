@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Guía de despacho · Esencial Emporio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/guia.css?v=112">
+</head>
+<body>
+
+<main class="gw">
+  <div class="g-estado" id="gEstado">Abriendo la guía…</div>
+
+  <article class="guia" id="gGuia" hidden>
+    <header class="g-top">
+      <img class="g-logo" src="images/emporio-images/logo.webp" alt="Esencial Emporio">
+      <span class="g-kicker">Guía de despacho</span>
+    </header>
+
+    <section class="g-prod">
+      <img id="gFoto" alt="" onerror="this.style.visibility='hidden'">
+      <div>
+        <b id="gNombre"></b>
+        <small id="gCant"></small>
+        <strong id="gPrecio"></strong>
+      </div>
+    </section>
+
+    <h2 class="g-sec">Entregar a</h2>
+    <div class="g-datos" id="gCliente"></div>
+
+    <h2 class="g-sec">Consultas</h2>
+    <div class="g-datos" id="gVendedor"></div>
+
+    <footer class="g-pie">
+      <span id="gFecha"></span>
+      <span id="gCodigo"></span>
+    </footer>
+  </article>
+
+  <div class="g-acc" id="gAcc" hidden>
+    <button type="button" id="gImprimir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 9V3.5h11V9"/><rect x="3.5" y="9" width="17" height="7.5" rx="2"/><path d="M6.5 14h11v6.5h-11z"/></svg>
+      Imprimir
+    </button>
+    <button type="button" id="gCompartir">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5.5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="18.5" r="2.6"/><path d="m8.3 10.8 7.4-4M8.3 13.2l7.4 4"/></svg>
+      Compartir
+    </button>
+    <button type="button" id="gImagen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5v11M8 11l4 3.5 4-3.5"/><path d="M4.5 17v2.5a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V17"/></svg>
+      Guardar imagen
+    </button>
+  </div>
+</main>
+
+<div class="g-aviso" id="gAviso" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/supabase-config.js?v=112"></script>
+<script src="js/gu.js?v=112"></script>
+</body>
+</html>
