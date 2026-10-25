@@ -3134,6 +3134,14 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-pie{display:flex;flex-direction:column;gap:10px;width:100%}
 .ev-borrar{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-size:13px;font-weight:600;padding:11px 16px;border-radius:12px;border:1.5px solid transparent;background:none;color:var(--gray-mid);cursor:pointer;transition:color .16s,background .16s}
 .ev-borrar svg{width:16px;height:16px}
+.ev-equipo-cab{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin:26px 0 14px}
+.ev-buscador{display:flex;align-items:center;gap:9px;min-width:340px;padding:10px 14px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;transition:border-color .16s}
+.ev-buscador:focus-within{border-color:#111}
+.ev-buscador svg{width:17px;height:17px;flex:none;color:var(--gray-mid)}
+.ev-buscador input{flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:14px;color:var(--black);background:none}
+.ev-buscador input::-webkit-search-cancel-button{cursor:pointer}
+@media(max-width:620px){.ev-buscador{min-width:0;flex:1 1 100%}}
+
 .ev-zona-roja{margin-top:24px;padding:16px;border:1px solid rgba(192,57,43,.25);border-radius:14px;background:rgba(192,57,43,.04)}
 .ev-zona-roja>b{display:block;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#c0392b}
 .ev-zona-roja p{margin:7px 0 0;font-size:13px;line-height:1.55;color:var(--gray-mid)}

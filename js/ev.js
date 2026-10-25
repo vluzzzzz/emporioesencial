@@ -156,6 +156,7 @@ const EdVendedores = (() => {
     guia: '<path d="M6 3.5h8.5L19 8v12.5H6z"/><path d="M14 3.5V8h5"/><path d="M9 12.5h7M9 16h5"/>',
     copiar: '<rect x="8.5" y="8.5" width="12" height="12" rx="2.2"/><path d="M15.5 5.5h-9a2 2 0 0 0-2 2v9"/>',
     ojo: '<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z"/><circle cx="12" cy="12" r="3"/>',
+    lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     wasap: '<path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -647,25 +648,52 @@ const EdVendedores = (() => {
         <p class="venta-msg" id="nvMsg"></p>
       </div>
 
-      <p class="venta-sec">Equipo</p>
-      <div class="ev-grid">
-        ${usuarios.map(u => `
-          <div class="ev-ficha${u.activo ? '' : ' apagada'}">
-            <span class="ev-ini">${esc((u.nombre || u.email).trim().charAt(0).toUpperCase())}</span>
-            <span class="ev-txt">
-              <b>${esc(u.nombre || u.email)}</b>
-              <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.activo ? '' : ' · desactivado'}</small>
-              ${u.telefono ? `<small>${Sesion.waChip(u.telefono, 'Hola ' + (u.nombre || '') + ', te escribo de Esencial Emporio.', u.nombre)}</small>` : ''}
-            </span>
-            <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-            </button>
-          </div>`).join('')}
-      </div>`;
+      <div class="ev-equipo-cab">
+        <p class="venta-sec" style="margin:0">Equipo</p>
+        <label class="ev-buscador">
+          ${svg(ICO.lupa)}
+          <input type="search" id="evBuscar" placeholder="Buscar por nombre, correo o teléfono" autocomplete="off">
+        </label>
+      </div>
+      <div class="ev-grid" id="evEquipo"></div>
+      <p class="venta-vacio" id="evNadie" hidden>Nadie del equipo coincide con esa búsqueda.</p>`;
 
     ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, e.target));
-    box.querySelectorAll('[data-editar-u]').forEach(b =>
-      b.addEventListener('click', () => editarPersona(ov, b.dataset.editarU)));
+
+    const grilla = box.querySelector('#evEquipo');
+    const nadie = box.querySelector('#evNadie');
+    const buscador = box.querySelector('#evBuscar');
+
+    // Sin tildes ni mayúsculas: "jose" encuentra a "José".
+    const limpio = t => String(t || '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+    function pintarGrilla(){
+      const q = limpio(buscador.value.trim());
+      const vistos = usuarios.filter(u => !q ||
+        [u.nombre, u.email, u.telefono, u.observacion,
+         u.rol === 'admin' ? 'administrador' : 'vendedor'].some(c => limpio(c).includes(q)));
+
+      grilla.innerHTML = vistos.map(u => `
+        <div class="ev-ficha${u.activo ? '' : ' apagada'}">
+          <span class="ev-ini">${esc((u.nombre || u.email).trim().charAt(0).toUpperCase())}</span>
+          <span class="ev-txt">
+            <b>${esc(u.nombre || u.email)}</b>
+            <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.activo ? '' : ' · desactivado'}</small>
+            ${u.telefono ? `<small>${Sesion.waChip(u.telefono, 'Hola ' + (u.nombre || '') + ', te escribo de Esencial Emporio.', u.nombre)}</small>` : ''}
+          </span>
+          <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+          </button>
+        </div>`).join('');
+
+      nadie.hidden = vistos.length > 0;
+      grilla.querySelectorAll('[data-editar-u]').forEach(b =>
+        b.addEventListener('click', () => editarPersona(ov, b.dataset.editarU)));
+    }
+
+    buscador.addEventListener('input', pintarGrilla);
+    pintarGrilla();
   }
 
   // Los datos de una persona se editan en su propio panel: en la grilla solo
