@@ -36,8 +36,12 @@ const EdUtil = (() => {
   }
 
   // confirm() del navegador desentona en la tienda; este usa el mismo panel.
-  function confirmar(texto, textoBoton){
+  // `espera` son los segundos que el botón queda bloqueado, para que nadie
+  // borre algo importante de un clic apurado.
+  function confirmar(texto, textoBoton, espera){
     return new Promise(resolve => {
+      const seg = Number(espera) || 0;
+      const nombre = escH(textoBoton || 'Eliminar');
       const ov = document.createElement('div');
       ov.className = 'ed-conf';
       ov.innerHTML = `
@@ -45,14 +49,30 @@ const EdUtil = (() => {
           <p>${escH(texto)}</p>
           <div class="ed-conf-acc">
             <button type="button" class="venta-btn ghost" data-r="0">Cancelar</button>
-            <button type="button" class="venta-btn peligro" data-r="1">${escH(textoBoton || 'Eliminar')}</button>
+            <button type="button" class="venta-btn peligro" data-r="1"${seg ? ' disabled' : ''}>${seg ? nombre + ' (' + seg + ')' : nombre}</button>
           </div>
         </div>`;
       document.body.appendChild(ov);
       requestAnimationFrame(() => ov.classList.add('abierto'));
+
+      let reloj = null;
+      if (seg) {
+        const btn = ov.querySelector('[data-r="1"]');
+        let quedan = seg;
+        reloj = setInterval(() => {
+          quedan--;
+          if (quedan > 0) { btn.textContent = nombre + ' (' + quedan + ')'; return; }
+          clearInterval(reloj); reloj = null;
+          btn.disabled = false;
+          btn.textContent = nombre;
+        }, 1000);
+      }
+
       ov.addEventListener('click', e => {
         const b = e.target.closest('[data-r]');
+        if (b && b.disabled) return;
         if (!b && e.target !== ov) return;
+        if (reloj) clearInterval(reloj);
         ov.remove();
         resolve(b ? b.dataset.r === '1' : false);
       });

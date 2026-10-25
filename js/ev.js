@@ -142,6 +142,7 @@ const EdVendedores = (() => {
     ok: '<circle cx="12" cy="12" r="8.6"/><path d="m8.4 12.2 2.5 2.5 4.7-5"/>',
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
+    tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
@@ -361,20 +362,44 @@ const EdVendedores = (() => {
         <p>${esc(v.motivo)}</p>
       </div>` : ''}`;
 
-    const pie = estado === 'pendiente'
-      ? `<div class="ev-resolver" style="margin:0;width:100%">
-           <button type="button" class="ev-ok" data-ir="aceptado">${svg(ICO.ok)}Aceptar comisión</button>
-           <button type="button" class="ev-no" data-ir="denegado">${svg(ICO.no)}Denegar pedido</button>
-         </div>`
-      : `<div class="ev-resolver" style="margin:0;width:100%">
-           <button type="button" class="ev-rever" data-ir="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar y aceptar' : 'Revisar y denegar'}</button>
-         </div>`;
+    const pie = `
+      <div class="ev-pie">
+        <div class="ev-resolver" style="margin:0;width:100%">
+          ${estado === 'pendiente' ? `
+            <button type="button" class="ev-ok" data-ir="aceptado">${svg(ICO.ok)}Aceptar comisión</button>
+            <button type="button" class="ev-no" data-ir="denegado">${svg(ICO.no)}Denegar pedido</button>`
+          : `<button type="button" class="ev-rever" data-ir="${estado === 'denegado' ? 'aceptado' : 'denegado'}">${svg(ICO.rever)}${estado === 'denegado' ? 'Revisar y aceptar' : 'Revisar y denegar'}</button>`}
+        </div>
+        <button type="button" class="ev-borrar" id="evBorrar">${svg(ICO.tacho)}Eliminar pedido</button>
+      </div>`;
 
     const { ov, cerrar } = Sesion.panel('Pedido', cuando(v.created_at), cuerpo, pie);
     ov.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => {
       cerrar();
       resolver(box, v.id, b.dataset.ir);
     }));
+    ov.querySelector('#evBorrar').addEventListener('click', () => borrarPedido(box, v, cerrar));
+  }
+
+  // Borrar es definitivo: avisa, y el botón recién se habilita a los 5
+  // segundos para que nadie se lleve un pedido por delante de un clic.
+  async function borrarPedido(box, v, cerrar){
+    const ok = await confirmarFn(
+      '¿Seguro que querés eliminar este pedido? Se borra para siempre: ' +
+      v.producto_nombre + ' de ' + (v.cliente_nombre || 'el cliente') +
+      ', por ' + plata(v.total) + '. No se puede deshacer.',
+      'Eliminar pedido', 5);
+    if (!ok) return;
+    try {
+      const { error } = await sb.from('ventas').delete().eq('id', v.id);
+      if (error) throw error;
+      ventas = ventas.filter(x => String(x.id) !== String(v.id));
+      cerrar();
+      pintarVentas(box);
+      toast('Pedido eliminado');
+    } catch (err) {
+      toast(mensajeError(err));
+    }
   }
 
 
