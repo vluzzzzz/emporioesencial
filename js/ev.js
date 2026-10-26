@@ -837,7 +837,10 @@ const EdVendedores = (() => {
       box.querySelector('#nvSucBox').hidden = valor !== 'moderador';
       box.querySelector('#nvCuenta').hidden = valor !== 'vendedor';
     });
+    // El formulario abre en Vendedor, así que la cuenta arranca a la vista y
+    // la sucursal escondida.
     box.querySelector('#nvCuenta').hidden = false;
+    box.querySelector('#nvSucBox').hidden = true;
     ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, box, e.target));
 
     const grilla = box.querySelector('#evEquipo');

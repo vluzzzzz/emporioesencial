@@ -2702,6 +2702,10 @@ svg{ -webkit-user-select:none; user-select:none; }
 .venta-sec{margin:24px 0 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--gray-mid);font-weight:700}
 .venta-g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .venta-f{display:flex;flex-direction:column;gap:6px}
+/* `hidden` solo trae `display:none` de fábrica, y cualquier `display`
+   declarado le gana. Sin esto, un campo escondido desde el código seguía
+   a la vista: así quedaba la sucursal pidiéndose a un vendedor. */
+.venta-f[hidden],.venta-g2[hidden],.venta-prod[hidden]{display:none}
 .venta-f.venta-ancho{grid-column:1/-1}
 .venta-f>span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
 .venta-f>span .req{margin-left:6px;font-size:10px;font-style:normal;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c0392b}
