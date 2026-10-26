@@ -108,6 +108,10 @@ const EdVendedores = (() => {
   const pagoDe = (id, periodo) => pagos.find(p => p.vendedor_id === id && p.periodo === periodo) || null;
   const CUENTAS = ['Cuenta corriente','Cuenta vista','Cuenta RUT','Cuenta de ahorro'];
 
+  // Sin tildes ni mayúsculas: "jose" encuentra a "José".
+  const limpio = t => String(t || '').toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '');
+
   // El número entero no hace falta para confirmar que quedó guardado, y en
   // una grilla a la vista de cualquiera que pase conviene que no esté.
   function resumenCuenta(id){
@@ -260,7 +264,7 @@ const EdVendedores = (() => {
   // Lo que hay que transferirle a cada uno a fin de mes, con las dos
   // comisiones por separado: se ganan distinto, pero se pagan juntas.
   function paraPagar(c){
-    const ok = delMes(c).filter(cuentaParaPago);
+    const ok = ventas.filter(v => clave(new Date(v.created_at)) === c && cuentaParaPago(v));
     const mapa = new Map();
     ok.forEach(v => {
       const fila = mapa.get(v.vendedor_id) || {
@@ -840,10 +844,6 @@ const EdVendedores = (() => {
     const nadie = box.querySelector('#evNadie');
     const buscador = box.querySelector('#evBuscar');
 
-    // Sin tildes ni mayúsculas: "jose" encuentra a "José".
-    const limpio = t => String(t || '').toLowerCase()
-      .normalize('NFD').replace(/[̀-ͯ]/g, '');
-
     function pintarGrilla(){
       const q = limpio(buscador.value.trim());
       const vistos = usuarios.filter(u => !q ||
@@ -1309,6 +1309,7 @@ const EdVendedores = (() => {
   // se transfirió. Un pago es una foto del momento: no se recalcula nunca.
   // Si después entra otra venta de ese mes, la diferencia sale como saldo.
   let mesPagos = clave(new Date());
+  let buscaPagos = '';
 
   function estadoPago(fila){
     const p = pagoDe(fila.id, mesPagos);
@@ -1324,10 +1325,12 @@ const EdVendedores = (() => {
   const quienMarco = id => (usuarios.find(u => u.id === id) || {}).nombre || 'el administrador';
 
   function pintarPagos(ov, box){
-    const filas = paraPagar(mesPagos).map(f => ({ ...f, estado: estadoPago(f) }));
+    const todas = paraPagar(mesPagos).map(f => ({ ...f, estado: estadoPago(f) }));
+    const q = limpio(buscaPagos.trim());
+    const filas = q ? todas.filter(f => limpio(f.nombre).includes(q)) : todas;
     const [anio, mes] = mesPagos.split('-').map(Number);
-    const total = filas.reduce((a, f) => a + f.total, 0);
-    const pagado = filas.reduce((a, f) => a + f.estado.pagado, 0);
+    const total = todas.reduce((a, f) => a + f.total, 0);
+    const pagado = todas.reduce((a, f) => a + f.estado.pagado, 0);
 
     const filtros = box.parentNode && box.parentNode.querySelector('#evFiltros');
     if (filtros) filtros.innerHTML = `
@@ -1336,7 +1339,11 @@ const EdVendedores = (() => {
         ${Sesion.desplegable('mesPagos', MESES.map((n, k) => ({
           valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
         })), 'Elige el mes', mesPagos, false, ICO.calendario)}
-      </div>`;
+      </div>
+      <label class="ev-buscador ev-busca-pagos">
+        ${svg(ICO.lupa)}
+        <input type="search" id="evBuscaPagos" placeholder="Buscar vendedor" autocomplete="off" value="${esc(buscaPagos)}">
+      </label>`;
 
     box.innerHTML = `
       <div class="ev-resumen">
@@ -1375,21 +1382,31 @@ const EdVendedores = (() => {
               </button>`).join('')}
             ${filas.length > 1 ? `
               <div class="ev-pagos-f suma">
-                <span>Todo el equipo</span>
+                <span>${q ? 'Los que coinciden' : 'Todo el equipo'}</span>
                 <span>${plata(filas.reduce((a, f) => a + f.local, 0))}</span>
                 <span>${plata(filas.reduce((a, f) => a + f.delivery, 0))}</span>
-                <span class="ev-pagos-t">${plata(total)}</span>
+                <span class="ev-pagos-t">${plata(filas.reduce((a, f) => a + f.total, 0))}</span>
                 <span></span>
               </div>` : ''}
           </div>`
-        : `<div class="ev-det-vacio">${svg(ICO.calendario)}<p>Nadie tiene comisiones aceptadas este mes.</p></div>`}
+        : `<div class="ev-det-vacio">${svg(ICO.calendario)}<p>${
+            q ? 'Nadie del equipo coincide con esa búsqueda.'
+              : 'Nadie tiene comisiones aceptadas este mes.'}</p></div>`}
       </section>`;
 
-    if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
-      if (campo !== 'mesPagos') return;
-      mesPagos = valor;
-      pintarPagos(ov, box);
-    });
+    if (filtros) {
+      Sesion.conectarDesplegables(filtros, (campo, valor) => {
+        if (campo !== 'mesPagos') return;
+        mesPagos = valor;
+        pintarPagos(ov, box);
+      });
+      const casilla = filtros.querySelector('#evBuscaPagos');
+      casilla.addEventListener('input', e => {
+        buscaPagos = e.target.value;
+        pintarPagos(ov, box);
+      });
+      if (buscaPagos) { casilla.focus(); casilla.setSelectionRange(buscaPagos.length, buscaPagos.length); }
+    }
     box.querySelectorAll('[data-pagar]').forEach(b => b.addEventListener('click', () => {
       const f = filas.find(x => x.id === b.dataset.pagar);
       if (f) fichaPago(ov, box, f);

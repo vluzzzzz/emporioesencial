@@ -3489,3 +3489,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 .venta-ov.venta-centro .venta-pie .ed-btn{flex:none;display:inline-flex;align-items:center;gap:7px}
 .venta-ov.venta-centro .venta-pie .ed-btn svg{width:16px;height:16px}
 .venta-ov.venta-centro .venta-pie .venta-btn{width:auto;flex:1}
+
+/* El buscador de Pagos: la lista queda completa y se filtra aquí, sin que
+   el filtro de Ventas tenga nada que ver */
+.ev-busca-pagos{min-width:240px}
+@media(max-width:620px){.ev-busca-pagos{min-width:0;width:100%}}
