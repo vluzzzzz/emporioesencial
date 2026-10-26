@@ -3133,6 +3133,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ev-cifras{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:14px}
 /* El vendedor ve tres cifras: la ganancia del negocio no es asunto suyo. */
 .ev-cifras.tres{grid-template-columns:repeat(3,1fr)}
+.ev-cifras.dos{grid-template-columns:repeat(2,1fr)}
 .ev-cifras>div{border:1px solid var(--gray-light);border-radius:11px;padding:10px 12px;min-width:0}
 .ev-cifras span{display:block;font-size:10.5px;color:var(--gray-mid);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
 .ev-cifras b{display:block;margin-top:4px;font-size:15.5px;font-weight:700;white-space:nowrap}
@@ -3279,6 +3280,10 @@ svg{ -webkit-user-select:none; user-select:none; }
 .venta-codigo>b{display:block;margin:12px 0 18px;font-size:64px;line-height:1;font-weight:700;letter-spacing:.16em;color:var(--black)}
 .venta-codigo>p{margin:0 auto;max-width:420px;font-size:14px;line-height:1.6;color:var(--gray-mid)}
 
+/* Un <b> dentro de un <small> es un dato resaltado, no un título: sin esto
+   hereda el tamaño grande de .ev-venta-datos b y se come la línea entera */
+.ev-venta-datos small b{display:inline;font-size:inherit;line-height:inherit;font-weight:700;color:var(--black)}
+
 /* La línea que reemplaza a la dirección cuando el cliente pasa a buscarlo */
 .ev-retiro{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ev-retiro svg{width:15px;height:15px;flex:none}
@@ -3306,7 +3311,14 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ec-codigo>b{font-size:28px;line-height:1;font-weight:700;letter-spacing:.14em;color:var(--black)}
 .ec-codigo.chico{margin:0;padding:8px 12px;flex:none}
 .ec-codigo.chico>b{font-size:20px}
-.ec-cliente b{font-weight:700;color:var(--black)}
+.ec-codigo.grande{flex-direction:column;align-items:center;gap:6px;padding:20px;margin-bottom:18px}
+.ec-codigo.grande>b{font-size:44px;letter-spacing:.18em}
+
+/* Quién viene a buscarlo y quién se lo vendió: la etiqueta chica arriba y el
+   nombre completo abajo, que puede ocupar dos líneas sin cortarse */
+.ec-quien{display:block;margin-top:7px;white-space:normal;overflow:visible;font-size:14px;font-weight:700;color:var(--black)}
+.ec-quien i{display:block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-mid);margin-bottom:1px}
+.ec-cuando{white-space:normal;overflow:visible;line-height:1.45}
 .ec-notas{font-style:italic;color:var(--gray-mid)}
 .ec-sello-hora{flex:1;font-size:13px;color:var(--gray-mid);align-self:center}
 .ec-aviso{margin:16px 0 0;padding:13px 15px;border-radius:12px;background:#fdf0d2;color:#6b4e06;font-size:13.5px;line-height:1.55}

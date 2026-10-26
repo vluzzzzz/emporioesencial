@@ -158,33 +158,42 @@ const EdCaja = (() => {
     }
 
     box.innerHTML = `<div class="ec-lista">${vistos.map(tarjeta).join('')}</div>`;
-    box.querySelectorAll('[data-marcar]').forEach(b => b.addEventListener('click', () =>
-      marcar(ov, b.dataset.marcar, b.dataset.como)));
+    box.querySelectorAll('[data-marcar]').forEach(b => b.addEventListener('click', e => {
+      e.stopPropagation();
+      marcar(ov, b.dataset.marcar, b.dataset.como);
+    }));
+    box.querySelectorAll('[data-ver]').forEach(t => t.addEventListener('click', () =>
+      verPedido(ov, t.dataset.ver)));
   }
 
+  const selloDe = v => v.entrega === 'por_retirar' ? 'Por retirar'
+                     : v.entrega === 'entregado' ? 'Entregado' : 'No retirado';
+  const claseDe = v => v.entrega === 'por_retirar' ? 'pendiente'
+                     : v.entrega === 'entregado' ? 'aceptado' : 'denegado';
+
+  // En el mostrador solo importan tres cosas: quién viene a buscarlo, quién se
+  // lo vendió y cuánto hay que cobrar. El precio por unidad y la comisión no
+  // son asunto de la caja.
   function tarjeta(v){
     const espera = v.entrega === 'por_retirar';
-    const sello = espera ? 'Por retirar' : v.entrega === 'entregado' ? 'Entregado' : 'No retirado';
-    const clase = espera ? 'pendiente' : v.entrega === 'entregado' ? 'aceptado' : 'denegado';
+    const clase = claseDe(v);
     return `
-      <article class="ev-venta ec-pedido ${clase}">
+      <article class="ev-venta ec-pedido ${clase}" data-ver="${esc(v.id)}" title="Clic para ver el pedido completo">
         <div class="ec-codigo"><span>Código</span><b>${esc(v.codigo_retiro || '—')}</b></div>
 
         <div class="ev-venta-top">
           <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
           <div class="ev-venta-datos">
             <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-            <small class="ec-cliente">Cliente: <b>${esc(v.cliente_nombre || 'Sin nombre')}</b> · ${Sesion.waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
-            <small>Vendedor: <b>${esc(v.vendedor_nombre || 'Sin nombre')}</b></small>
-            <small>${esc(Sesion.nombreSucursal(v.sucursal_id))} · ${esc(v.metodo_pago)} · ${cuando(v.created_at)} ${hora(v.created_at)}</small>
-            ${v.notas ? `<small class="ec-notas">${esc(v.notas)}</small>` : ''}
+            <small class="ec-quien"><i>Cliente</i>${esc(v.cliente_nombre || 'Sin nombre')}</small>
+            <small class="ec-quien"><i>Vendedor</i>${esc(v.vendedor_nombre || 'Sin nombre')}</small>
+            <small class="ec-cuando">${esc(Sesion.nombreSucursal(v.sucursal_id))} · ${esc(v.metodo_pago)} · ${cuando(v.created_at)} ${hora(v.created_at)}</small>
           </div>
-          <span class="ev-sello ${clase}">${sello}</span>
+          <span class="ev-sello ${clase}">${selloDe(v)}</span>
         </div>
 
-        <div class="ev-cifras tres">
-          <div><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div><span>Retiro</span><b>Sin costo</b></div>
+        <div class="ev-cifras dos">
+          <div><span>Unidades</span><b>${v.cantidad || 1}</b></div>
           <div class="pagar"><span>Cobrar al cliente</span><b>${plata(v.total)}</b></div>
         </div>
 
@@ -199,6 +208,72 @@ const EdCaja = (() => {
           </div>
           ${v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : ''}`}
       </article>`;
+  }
+
+  // La ficha completa, para cuando la tarjeta no alcanza: el teléfono para
+  // llamar al cliente que no llega, el correo, las notas que dejó el vendedor.
+  // Sin precio por unidad ni comisión: eso es del panel del administrador.
+  function verPedido(padre, id){
+    const v = pedidos.find(x => String(x.id) === String(id));
+    if (!v) return;
+    const espera = v.entrega === 'por_retirar';
+    const linea = (t, d) => `<div class="ev-datos-l"><span>${t}</span><b>${esc(d || '—')}</b></div>`;
+    const telLinea = (t, tel, msg, quien) =>
+      `<div class="ev-datos-l"><span>${t}</span><b>${Sesion.waChip(tel, msg, quien)}</b></div>`;
+
+    const cuerpo = `
+      <div class="ec-codigo grande"><span>Código de retiro</span><b>${esc(v.codigo_retiro || '—')}</b></div>
+
+      <div class="ev-resumen-pedido">
+        <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+        <div>
+          <b>${esc(v.producto_nombre)}</b>
+          <small>${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</small>
+          <small>Registrado el ${cuando(v.created_at)} · ${hora(v.created_at)}</small>
+        </div>
+        <span class="ev-sello ${claseDe(v)}">${selloDe(v)}</span>
+      </div>
+
+      <p class="venta-sec">Quién lo retira</p>
+      <div class="ev-datos">
+        ${linea('Cliente', v.cliente_nombre)}
+        ${telLinea('Teléfono', v.cliente_telefono,
+          'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.',
+          v.cliente_nombre)}
+        ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
+      </div>
+
+      <p class="venta-sec">Quién lo vendió</p>
+      <div class="ev-datos">
+        ${linea('Vendedor', v.vendedor_nombre)}
+        ${linea('Sucursal', Sesion.nombreSucursal(v.sucursal_id))}
+        ${v.notas ? linea('Notas del vendedor', v.notas) : ''}
+      </div>
+
+      <p class="venta-sec">Cobro</p>
+      <div class="ev-datos">
+        ${linea('Forma de pago', v.metodo_pago)}
+        ${linea('Retiro en sucursal', 'Sin costo')}
+        <div class="ev-datos-l total"><span>Cobrar al cliente</span><b>${plata(v.total)}</b></div>
+      </div>
+
+      ${!espera && v.entregado_en ? `<div class="ev-previo">
+        <span>${v.entrega === 'entregado' ? 'Se entregó' : 'Se cerró'}</span>
+        <p>${cuando(v.entregado_en)} a las ${hora(v.entregado_en)}${v.motivo ? '. ' + esc(v.motivo) : ''}</p>
+      </div>` : ''}`;
+
+    const pie = espera
+      ? `<div class="ev-resolver" style="margin:0;width:100%">
+           <button type="button" class="ev-ok" data-ir="entregado">${svg(ICO.ok)}Entregar al cliente</button>
+           <button type="button" class="ev-no" data-ir="no_retirado">${svg(ICO.no)}No lo retiró</button>
+         </div>`
+      : `<button type="button" class="ev-rever" data-ir="por_retirar">Volver a dejarlo en espera</button>`;
+
+    const { ov, cerrar } = Sesion.panel('Pedido', 'Retiro en ' + Sesion.nombreSucursal(v.sucursal_id), cuerpo, pie);
+    ov.querySelectorAll('[data-ir]').forEach(b => b.addEventListener('click', () => {
+      cerrar();
+      marcar(padre, v.id, b.dataset.ir);
+    }));
   }
 
   // Entregar mueve los dos ejes a la vez: el del mostrador y el del dinero.
