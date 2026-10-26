@@ -3302,10 +3302,14 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ec-buscador{min-width:380px}
 @media(max-width:620px){.ec-buscador{min-width:0;width:100%}}
 
-.ec-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;max-width:1460px;margin:0 auto}
+.ec-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;max-width:1460px;margin:0 auto;align-items:stretch}
+.ec-lista .ev-venta{margin-bottom:0}
 @media(max-width:860px){.ec-lista{grid-template-columns:1fr}}
 
-.ec-pedido{position:relative;padding-top:0}
+/* La tarjeta conserva su respiro de arriba: sin eso la caja del código
+   llegaba al borde y se montaba sobre las esquinas redondeadas */
+.ec-pedido{position:relative;display:flex;flex-direction:column}
+.ec-pedido .ev-resolver{margin-top:auto}
 
 /* El código es lo primero que dice el cliente, así que va centrado y solo,
    con su etiqueta debajo. El número puede crecer sin salirse de la caja. */
