@@ -455,55 +455,203 @@ const Sesion = (() => {
   }
 
   /* ── Mis ventas ───────────────────────────────────────── */
+  // Mismo calendario que ve el administrador, pero solo con lo suyo y sin la
+  // ganancia del negocio: el vendedor ve lo que vendió y lo que le toca.
+  const MESES = ['enero','febrero','marzo','abril','mayo','junio','julio',
+                 'agosto','septiembre','octubre','noviembre','diciembre'];
+  const DIAS = ['Lu','Ma','Mi','Ju','Vi','Sá','Do'];
+  const claveMes = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  const claveDia = d => claveMes(d) + '-' + String(d.getDate()).padStart(2, '0');
+  const ICO_CAJA = '<path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5z"/><path d="M3.5 7.5 12 12l8.5-4.5M12 12v9"/>';
+  const ICO_MONEDA = '<ellipse cx="12" cy="7" rx="7.5" ry="3"/><path d="M4.5 7v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V7"/><path d="M4.5 12v5c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3v-5"/>';
+  const ICO_PERSONA = '<circle cx="12" cy="8" r="3.4"/><path d="M5 20c0-3.6 3.1-6 7-6s7 2.4 7 6"/>';
+  const ICO_CAL = '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3.5v3M16 3.5v3"/>';
+  const svgIco = d => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + d + '</svg>';
+
   async function abrirMisVentas(){
     const { ov } = panel('Mis ventas', 'Historial', '<p class="venta-vacio">Cargando…</p>', '', true);
     const box = ov.querySelector('.venta-body');
 
     const { data, error } = await sb.from('ventas')
-      .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(100);
+      .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(500);
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
     if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abre un producto y toca Agregar pedido.</p>'; return; }
 
-    // Solo se cobra por lo que el administrador aceptó.
-    const pagables = data.filter(v => estadoDe(v) === 'aceptado');
-    const pendientes = data.filter(v => estadoDe(v) === 'pendiente').length;
-    const suma = pagables.reduce((a, v) => a + (v.total || 0), 0);
-    const comision = pagables.reduce((a, v) => a + comisionDe(v), 0);
-    const unidades = pagables.reduce((a, v) => a + (v.cantidad || 1), 0);
-    box.innerHTML = `
-      <div class="venta-wrap">
-        ${pendientes ? `<p class="ev-aviso-pend" style="display:inline-block;margin:0 0 16px">${pendientes} pedido${pendientes === 1 ? '' : 's'} esperando aprobación</p>` : ''}
-        <div class="venta-tarjetas">
-          <div class="vt"><span>Aceptadas</span><b>${pagables.length}</b></div>
-          <div class="vt"><span>Productos vendidos</span><b>${unidades}</b></div>
-          <div class="vt"><span>Vendido</span><b>${fmt(suma)}</b></div>
-          <div class="vt destacada"><span>Te deben pagar</span><b>${fmt(comision)}</b></div>
+    let mesVisto = claveMes(new Date(data[0].created_at));
+    let diaVisto = null;
+    pintarMes();
+
+    function correrMes(pasos){
+      const [a, m] = mesVisto.split('-').map(Number);
+      mesVisto = claveMes(new Date(a, m - 1 + pasos, 1));
+      diaVisto = null;
+    }
+
+    function pintarMes(){
+      const lista = data.filter(v => claveMes(new Date(v.created_at)) === mesVisto);
+      const ok = lista.filter(v => estadoDe(v) === 'aceptado');
+      const pendientes = lista.filter(v => estadoDe(v) === 'pendiente').length;
+      const unidades = ok.reduce((a, v) => a + (v.cantidad || 1), 0);
+      const vendido = ok.reduce((a, v) => a + (v.total || 0), 0);
+      const comision = ok.reduce((a, v) => a + comisionDe(v), 0);
+
+      const [anio, mes] = mesVisto.split('-').map(Number);
+      const dias = new Date(anio, mes, 0).getDate();
+      const corrimiento = (new Date(anio, mes - 1, 1).getDay() + 6) % 7;
+      const hoy = claveDia(new Date());
+
+      const porDia = {};
+      lista.forEach(v => {
+        const k = claveDia(new Date(v.created_at));
+        (porDia[k] = porDia[k] || []).push(v);
+      });
+      if (!diaVisto || !diaVisto.startsWith(mesVisto)) {
+        const con = Object.keys(porDia).sort();
+        diaVisto = con.length ? con[con.length - 1] : null;
+      }
+
+      const previo = new Date(anio, mes - 1, 0).getDate();
+      const celdas = [];
+      for (let i = corrimiento; i > 0; i--) celdas.push('<div class="ev-dia fuera"><span class="ev-dia-n">' + (previo - i + 1) + '</span></div>');
+      for (let d = 1; d <= dias; d++) {
+        const k = mesVisto + '-' + String(d).padStart(2, '0');
+        const delDia = porDia[k] || [];
+        const pend = delDia.some(v => estadoDe(v) === 'pendiente');
+        const paga = delDia.filter(v => estadoDe(v) === 'aceptado').reduce((a, v) => a + comisionDe(v), 0);
+        celdas.push(
+          '<button type="button" class="ev-dia' + (delDia.length ? ' con' : '') + (k === hoy ? ' hoy' : '') + (k === diaVisto ? ' elegido' : '') + '" data-dia="' + k + '">' +
+            '<span class="ev-dia-n">' + d + '</span>' +
+            (pend ? '<span class="ev-dia-pend"></span>' : '') +
+            (delDia.length ? '<span class="ev-dia-c">' + delDia.length + ' venta' + (delDia.length === 1 ? '' : 's') + '</span>' : '') +
+            (paga ? '<span class="ev-dia-p">' + fmt(paga) + '</span>' : '') +
+          '</button>');
+      }
+      const sobran = (7 - (celdas.length % 7)) % 7;
+      for (let i = 1; i <= sobran; i++) celdas.push('<div class="ev-dia fuera"><span class="ev-dia-n">' + i + '</span></div>');
+
+      box.innerHTML = `
+        <div class="ev-tabs">
+          <div class="ev-filtros">
+            <div class="ev-filtro">
+              <span>Mes</span>
+              ${desplegable('mes', MESES.map((n, k) => ({
+                valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
+              })), 'Elige el mes', mesVisto, false, ICO_CAL)}
+            </div>
+            ${pendientes ? `<span class="ev-aviso-pend">${pendientes} esperando aprobación</span>` : ''}
+          </div>
         </div>
-        <ul class="venta-lista">
-          ${data.map(v => {
-            const prod = (v.precio_unitario || 0) * (v.cantidad || 1);
-            const estado = estadoDe(v);
-            return `
-            <li class="ev-venta ${estado}">
-              <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
-              <div class="vl-info">
-                <b>${esc(v.producto_nombre)}</b>
-                <small>${esc(v.cliente_nombre)} · ${waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}${v.cliente_email ? ' · ' + esc(v.cliente_email) : ''}</small>
-                <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
-                <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleDateString('es-CL')}</small>
-                ${v.notas ? `<small>${esc(v.notas)}</small>` : ''}
-                <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Esperando aprobación' : estado === 'aceptado' ? 'Aceptado' : 'Denegado'}</span>
-              </div>
-              <div class="vl-cuenta">
-                <div class="vl-linea"><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt(prod)}</b></div>
-                <div class="vl-linea"><span>Envío · ${esc(v.comuna)}</span><b>${fmt(v.costo_despacho)}</b></div>
-                <div class="vl-linea vl-final"><span>Total</span><b>${fmt(v.total)}</b></div>
-                <div class="vl-linea vl-pagar"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
-              </div>
-            </li>`;
-          }).join('')}
-        </ul>
-      </div>`;
+
+        <div class="venta-wrap">
+          <div class="ev-resumen">
+            <div class="vt2">
+              <span class="vt2-ico">${svgIco(ICO_CAJA)}</span>
+              <div><span>Productos vendidos</span><b>${unidades}</b></div>
+            </div>
+            <div class="vt2">
+              <span class="vt2-ico">${svgIco(ICO_MONEDA)}</span>
+              <div><span>Vendido</span><b>${fmt(vendido)}</b></div>
+            </div>
+            <div class="vt2 destacada">
+              <span class="vt2-ico">${svgIco(ICO_PERSONA)}</span>
+              <div><span>Te deben pagar</span><b>${fmt(comision)}</b></div>
+            </div>
+          </div>
+
+          <div class="ev-columnas">
+            <section class="ev-cal">
+              <header class="ev-cal-top">
+                <h3>${MESES[mes - 1]} ${anio}</h3>
+                <div class="ev-cal-nav">
+                  <button type="button" class="ev-flecha" id="mvAntes" aria-label="Mes anterior">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+                  </button>
+                  <button type="button" class="ev-hoy" id="mvHoy">Hoy</button>
+                  <button type="button" class="ev-flecha" id="mvDespues" aria-label="Mes siguiente">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                </div>
+              </header>
+              <div class="ev-cal-cab">${DIAS.map(d => '<span>' + d + '</span>').join('')}</div>
+              <div class="ev-cal-grilla">${celdas.join('')}</div>
+              <footer class="ev-leyenda">
+                <span><i class="lg-pend"></i>Esperando aprobación</span>
+                <span><i class="lg-con"></i>Con ventas</span>
+                <span><i class="lg-sel"></i>Día seleccionado</span>
+                <span><i class="lg-sin"></i>Sin ventas</span>
+              </footer>
+            </section>
+
+            <section class="ev-detalle" id="mvDia"></section>
+          </div>
+        </div>`;
+
+      conectarDesplegables(box, (campo, valor) => {
+        if (campo !== 'mes') return;
+        mesVisto = valor; diaVisto = null; pintarMes();
+      });
+      box.querySelector('#mvAntes').addEventListener('click', () => { correrMes(-1); pintarMes(); });
+      box.querySelector('#mvDespues').addEventListener('click', () => { correrMes(1); pintarMes(); });
+      box.querySelector('#mvHoy').addEventListener('click', () => {
+        mesVisto = claveMes(new Date()); diaVisto = claveDia(new Date()); pintarMes();
+      });
+      box.querySelectorAll('[data-dia]').forEach(b => b.addEventListener('click', () => {
+        diaVisto = b.dataset.dia; pintarMes();
+      }));
+
+      pintarDia(porDia);
+    }
+
+    function pintarDia(porDia){
+      const caja = box.querySelector('#mvDia');
+      if (!diaVisto) {
+        caja.innerHTML = '<div class="ev-det-vacio">' + svgIco(ICO_CAL) + '<p>Este mes todavía no tiene ventas tuyas.</p></div>';
+        return;
+      }
+      const delDia = porDia[diaVisto] || [];
+      const [, m, d] = diaVisto.split('-').map(Number);
+      const pend = delDia.filter(v => estadoDe(v) === 'pendiente').length;
+
+      caja.innerHTML = `
+        <header class="ev-det-cab">
+          <div>
+            <h3>${d} de ${MESES[m - 1]}</h3>
+            <small>${delDia.length ? delDia.length + ' pedido' + (delDia.length === 1 ? '' : 's') + ' registrado' + (delDia.length === 1 ? '' : 's') : 'Sin ventas este día'}</small>
+          </div>
+          ${pend ? `<span class="ev-chip-pend"><i></i>${pend} esperando aprobación</span>` : ''}
+        </header>
+        <div class="ev-det-cuerpo">
+          ${delDia.length ? delDia.map(tarjetaMia).join('')
+            : '<div class="ev-det-vacio">' + svgIco(ICO_CAL) + '<p>No registraste ninguna venta este día.</p></div>'}
+        </div>`;
+    }
+
+    function tarjetaMia(v){
+      const estado = estadoDe(v);
+      const sello = estado === 'pendiente' ? 'Esperando aprobación'
+                  : estado === 'aceptado'  ? 'Aceptada' : 'Denegada';
+      return `
+        <article class="ev-venta ${estado}">
+          <div class="ev-venta-top">
+            <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
+            <div class="ev-venta-datos">
+              <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+              <small>${esc(v.cliente_nombre)} · ${waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
+              <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
+              <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' })}</small>
+            </div>
+            <span class="ev-sello ${estado}">${sello}</span>
+          </div>
+
+          <div class="ev-cifras tres">
+            <div><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
+            <div><span>Despacho</span><b>${fmt(v.costo_despacho)}</b></div>
+            <div class="pagar"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
+          </div>
+
+          ${estado === 'denegado' && v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : ''}
+        </article>`;
+    }
   }
 
   /* ── WhatsApp ─────────────────────────────────────────── */
