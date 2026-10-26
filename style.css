@@ -3482,3 +3482,10 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* La cuenta, resumida en la ficha del equipo: confirma de una mirada que
    quedó guardada, sin mostrar el número entero */
 .ev-cuenta-chip{color:var(--gray-mid)}
+
+/* El pie de la ventana centrada lleva dos botones: el informe a un costado
+   y el de pagar ocupando lo que queda */
+.venta-ov.venta-centro .venta-pie{gap:10px}
+.venta-ov.venta-centro .venta-pie .ed-btn{flex:none;display:inline-flex;align-items:center;gap:7px}
+.venta-ov.venta-centro .venta-pie .ed-btn svg{width:16px;height:16px}
+.venta-ov.venta-centro .venta-pie .venta-btn{width:auto;flex:1}

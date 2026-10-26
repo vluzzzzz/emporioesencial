@@ -238,6 +238,7 @@ const EdVendedores = (() => {
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
+    hoja: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/><path d="M9 13h6M9 16.5h4"/>',
     bajar: '<path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16.5v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     tienda: '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>',
@@ -346,8 +347,9 @@ const EdVendedores = (() => {
       ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
       <div class="ev-acciones">
         <button type="button" class="ed-btn" id="evNuevaLocal">${svg(ICO.tienda)}Nueva venta local</button>
-        <button type="button" class="ed-btn" id="evBajarMes">${svg(ICO.bajar)}Bajar este mes</button>
-        <button type="button" class="ed-btn ghost" id="evBajarTodo">${svg(ICO.bajar)}Bajar todo</button>
+        <button type="button" class="ed-btn" id="evInforme">${svg(ICO.hoja)}Informe PDF</button>
+        <button type="button" class="ed-btn ghost" id="evBajarMes">${svg(ICO.bajar)}Planilla del mes</button>
+        <button type="button" class="ed-btn ghost" id="evBajarTodo">${svg(ICO.bajar)}Planilla completa</button>
       </div>`;
 
     box.innerHTML = `
@@ -406,6 +408,8 @@ const EdVendedores = (() => {
       if (typeof EdLocal === 'undefined') return;
       EdLocal.abrir(async () => { await cargar(); pintarVentas(box); });
     });
+    const pdf = filtros && filtros.querySelector('#evInforme');
+    if (pdf) pdf.addEventListener('click', informeMes);
     const bm = filtros && filtros.querySelector('#evBajarMes');
     if (bm) bm.addEventListener('click', bajarMes);
     const bt = filtros && filtros.querySelector('#evBajarTodo');
@@ -1214,6 +1218,196 @@ const EdVendedores = (() => {
     toast(ventas.length + ' ventas en la planilla');
   }
 
+  /* ── Informe para imprimir o guardar en PDF ───────────── */
+  // El CSV es texto plano: no lleva líneas, ni anchos de columna, ni
+  // negritas. Para un informe que se mira o se manda, lo que corresponde es
+  // una hoja armada. Esto la arma en HTML y la manda a imprimir; el
+  // navegador la guarda como PDF desde el mismo cuadro de impresión.
+  //
+  // Va en un marco oculto, no en una ventana nueva: los bloqueadores de
+  // ventanas emergentes no lo frenan.
+  function imprimir(html){
+    const viejo = document.getElementById('evImprimir');
+    if (viejo) viejo.remove();
+    const marco = document.createElement('iframe');
+    marco.id = 'evImprimir';
+    marco.setAttribute('aria-hidden', 'true');
+    marco.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0';
+    document.body.appendChild(marco);
+    const doc = marco.contentDocument;
+    doc.open();
+    doc.write(html);
+    doc.close();
+    // Esperar a que el navegador termine de maquetar: si se imprime antes,
+    // sale una hoja en blanco.
+    const lanzar = () => {
+      marco.contentWindow.focus();
+      marco.contentWindow.print();
+    };
+    if (doc.readyState === 'complete') setTimeout(lanzar, 120);
+    else marco.onload = () => setTimeout(lanzar, 120);
+  }
+
+  const HOJA = `
+    @page { size: A4 landscape; margin: 12mm 10mm; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'DM Sans',-apple-system,'Segoe UI',sans-serif;color:#1d1d1f;font-size:10px}
+    h1{margin:0;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+    .cab{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+         padding-bottom:10px;margin-bottom:16px;border-bottom:2px solid #1d1d1f}
+    .cab small{display:block;color:#6e6e73;font-size:10px;margin-top:3px}
+    .cab .der{text-align:right;color:#6e6e73;font-size:9.5px;line-height:1.5}
+    h2{margin:18px 0 7px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#6e6e73}
+    table{width:100%;border-collapse:collapse;margin-bottom:6px}
+    thead{display:table-header-group}
+    tr{break-inside:avoid;page-break-inside:avoid}
+    th{background:#1d1d1f;color:#fff;font-size:8.5px;letter-spacing:.07em;text-transform:uppercase;
+       text-align:left;padding:6px 7px;font-weight:700}
+    td{padding:5px 7px;border-bottom:1px solid #e2e2e6;vertical-align:top}
+    tbody tr:nth-child(even) td{background:#f7f7f9}
+    .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .total td{background:#1d1d1f!important;color:#fff;font-weight:700;border:0}
+    .chip{display:inline-block;padding:2px 7px;border-radius:99px;font-size:8px;font-weight:700;
+          letter-spacing:.04em;text-transform:uppercase}
+    .chip.local{background:#e8f6ec;color:#1e7a3a}
+    .chip.deli{background:#eef1f7;color:#3a4a6b}
+    .chip.pagado{background:#e8f6ec;color:#1e7a3a}
+    .chip.saldo{background:#fdf0d2;color:#8a6508}
+    .chip.porpagar{background:#eeeef1;color:#6e6e73}
+    .chip.denegada{background:#fae8e6;color:#c0392b}
+    .pie{margin-top:18px;padding-top:9px;border-top:1px solid #d2d2d7;
+         color:#6e6e73;font-size:8.5px;line-height:1.6}
+    .vacio{padding:26px;text-align:center;color:#6e6e73}`;
+
+  // Una fila por producto vendido, de la más vieja a la más nueva: una hoja
+  // se lee del 1 al 30, al revés que el panel.
+  function informe(lista, periodo, titulo, subtitulo, conResumen){
+    const ordenadas = [...lista].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const ok = ordenadas.filter(cuentaParaPago);
+    const num = n => '<td class="num">' + plata(n) + '</td>';
+
+    const porVendedor = new Map();
+    ok.forEach(v => {
+      const f = porVendedor.get(v.vendedor_id) || { id:v.vendedor_id, nombre: v.vendedor_nombre || 'Sin nombre', local:0, delivery:0, ventas:0 };
+      f[esLocal(v) ? 'local' : 'delivery'] += comisionDe(v);
+      f.ventas++;
+      porVendedor.set(v.vendedor_id, f);
+    });
+    const resumen = [...porVendedor.values()]
+      .map(f => ({ ...f, total: f.local + f.delivery }))
+      .sort((a, b) => b.total - a.total);
+
+    const cuerpoResumen = resumen.map(f => {
+      const p = pagoDe(f.id, periodo);
+      const saldo = p ? Math.max(0, f.total - p.monto) : f.total;
+      const cl = !p ? 'porpagar' : saldo ? 'saldo' : 'pagado';
+      const txt = !p ? 'Por pagar' : saldo ? 'Saldo ' + plata(saldo) : 'Pagado';
+      return `<tr>
+        <td><b>${esc(f.nombre)}</b></td>
+        <td class="num">${f.ventas}</td>
+        ${num(f.local)}${num(f.delivery)}${num(f.total)}
+        <td><span class="chip ${cl}">${txt}</span></td>
+      </tr>`;
+    }).join('');
+
+    const cuerpoDetalle = ordenadas.map(v => {
+      const est = estadoDe(v);
+      return `<tr>
+        <td class="num">${cuando(v.created_at)}</td>
+        <td class="num">${hora(v.created_at)}</td>
+        <td><span class="chip ${esLocal(v) ? 'local' : 'deli'}">${esLocal(v) ? 'Local' : 'Delivery'}</span></td>
+        <td>${esc(v.vendedor_nombre || '')}</td>
+        <td>${esc(v.producto_nombre || '')}</td>
+        <td class="num">${v.cantidad || 1}</td>
+        ${num(v.precio_unitario)}
+        <td class="num">${esLocal(v) ? '—' : plata(v.costo_despacho)}</td>
+        ${num(v.total)}
+        <td class="num">${est === 'denegado' ? '—' : plata(comisionDe(v))}</td>
+        <td>${esc(v.cliente_nombre || (esLocal(v) ? 'Mostrador' : ''))}</td>
+        <td>${esLocal(v) ? esc(sucursalDe(v.sucursal_id)) : esc(v.comuna || '')}</td>
+        <td>${esc(v.metodo_pago || '')}</td>
+        ${est === 'aceptado' ? '<td></td>' : `<td><span class="chip ${est === 'denegado' ? 'denegada' : 'saldo'}">${est === 'pendiente' ? 'Pendiente' : 'Denegada'}</span></td>`}
+      </tr>`;
+    }).join('');
+
+    const sumaCom = ok.reduce((a, v) => a + comisionDe(v), 0);
+
+    return `<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<title>${esc(titulo)}</title>
+<style>${HOJA}</style></head>
+<body>
+  <header class="cab">
+    <div>
+      <h1>Esencial Emporio</h1>
+      <small>${esc(titulo)}${subtitulo ? ' · ' + esc(subtitulo) : ''}</small>
+    </div>
+    <div class="der">
+      Generado el ${new Date().toLocaleString('es-CL')}<br>
+      ${ok.length} venta${ok.length === 1 ? '' : 's'} aceptada${ok.length === 1 ? '' : 's'} · ${plata(sumaCom)} en comisiones
+    </div>
+  </header>
+
+  ${conResumen && resumen.length ? `
+    <h2>Comisiones por vendedor</h2>
+    <table>
+      <thead><tr>
+        <th>Vendedor</th><th class="num">Ventas</th><th class="num">Local</th>
+        <th class="num">Delivery</th><th class="num">Total a pagar</th><th>Estado</th>
+      </tr></thead>
+      <tbody>
+        ${cuerpoResumen}
+        <tr class="total">
+          <td>Todo el equipo</td>
+          <td class="num">${ok.length}</td>
+          ${num(resumen.reduce((a, f) => a + f.local, 0))}
+          ${num(resumen.reduce((a, f) => a + f.delivery, 0))}
+          ${num(sumaCom)}
+          <td></td>
+        </tr>
+      </tbody>
+    </table>` : ''}
+
+  <h2>Detalle de ventas</h2>
+  ${ordenadas.length ? `
+    <table>
+      <thead><tr>
+        <th class="num">Fecha</th><th class="num">Hora</th><th>Tipo</th><th>Vendedor</th>
+        <th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th>
+        <th class="num">Despacho</th><th class="num">Total</th><th class="num">Comisión</th>
+        <th>Cliente</th><th>Dónde</th><th>Pago</th><th>Estado</th>
+      </tr></thead>
+      <tbody>${cuerpoDetalle}</tbody>
+    </table>`
+  : '<p class="vacio">No hay ventas en este período.</p>'}
+
+  <footer class="pie">
+    Las comisiones solo cuentan las ventas aceptadas. Las ventas locales las carga el moderador en el mostrador y ya vienen aprobadas; las de delivery las registra el vendedor y las aprueba el administrador.
+  </footer>
+</body></html>`;
+  }
+
+  function informeMes(){
+    const lista = delMes(mesVisto);
+    if (!lista.length) { toast('Ese mes no tiene ventas para informar', true); return; }
+    const [anio, mes] = mesVisto.split('-').map(Number);
+    const quien = vendedorVisto ? (usuarios.find(u => u.id === vendedorVisto) || {}).nombre || '' : '';
+    const tipo = tipoVisto === 'local' ? 'Solo ventas locales'
+               : tipoVisto === 'delivery' ? 'Solo delivery' : '';
+    imprimir(informe(lista, mesVisto, MESES[mes - 1] + ' ' + anio,
+      [quien, tipo].filter(Boolean).join(' · '), true));
+  }
+
+  // El estado de cuenta de una persona, para mandárselo cuando se le paga.
+  function informeVendedor(f){
+    const [anio, mes] = mesPagos.split('-').map(Number);
+    const suyas = delMesDe(mesPagos, f.id);
+    imprimir(informe(suyas, mesPagos, MESES[mes - 1] + ' ' + anio, f.nombre, true));
+  }
+
+  const delMesDe = (c, vendedor) => ventas.filter(v =>
+    clave(new Date(v.created_at)) === c && v.vendedor_id === vendedor);
+
   /* ── Pagos ────────────────────────────────────────────── */
   // Lo que hay que transferirle a cada vendedor, y el registro de lo que ya
   // se transfirió. Un pago es una foto del momento: no se recalcula nunca.
@@ -1367,12 +1561,16 @@ const EdVendedores = (() => {
         <button type="button" class="ev-borrar" id="evDesPago">${svg(ICO.tacho)}Deshacer</button>
       </div>` : ''}`;
 
-    const pie = `<button type="submit" form="evPago" class="venta-btn">${
-      est.pago ? (est.saldo ? 'Pagar el saldo de ' + plata(est.saldo) : 'Actualizar el pago')
-               : 'Marcar como pagado · ' + plata(aCobrar)}</button>`;
+    const pie = `
+      <button type="button" class="ed-btn ghost" id="evInfVend">${svg(ICO.hoja)}Su detalle</button>
+      <button type="submit" form="evPago" class="venta-btn">${
+        est.pago ? (est.saldo ? 'Pagar el saldo de ' + plata(est.saldo) : 'Actualizar el pago')
+                 : 'Marcar como pagado · ' + plata(aCobrar)}</button>`;
 
     const { ov, cerrar } = Sesion.panel(f.nombre, MESES[mes - 1] + ' ' + anio, cuerpo, pie);
     ov.classList.add('venta-centro');
+
+    ov.querySelector('#evInfVend').addEventListener('click', () => informeVendedor(f));
 
     ov.querySelectorAll('[data-copiar]').forEach(btn => btn.addEventListener('click', async () => {
       try {
