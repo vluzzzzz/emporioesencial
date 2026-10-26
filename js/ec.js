@@ -179,7 +179,7 @@ const EdCaja = (() => {
     const clase = claseDe(v);
     return `
       <article class="ev-venta ec-pedido ${clase}" data-ver="${esc(v.id)}" title="Clic para ver el pedido completo">
-        <div class="ec-codigo"><span>Código</span><b>${esc(v.codigo_retiro || '—')}</b></div>
+        <div class="ec-codigo"><b>${esc(v.codigo_retiro || '—')}</b><span>Código de retiro</span></div>
 
         <div class="ev-venta-top">
           <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
@@ -222,7 +222,7 @@ const EdCaja = (() => {
       `<div class="ev-datos-l"><span>${t}</span><b>${Sesion.waChip(tel, msg, quien)}</b></div>`;
 
     const cuerpo = `
-      <div class="ec-codigo grande"><span>Código de retiro</span><b>${esc(v.codigo_retiro || '—')}</b></div>
+      <div class="ec-codigo grande"><b>${esc(v.codigo_retiro || '—')}</b><span>Código de retiro</span></div>
 
       <div class="ev-resumen-pedido">
         <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
@@ -299,7 +299,7 @@ const EdCaja = (() => {
             <small>Cliente: ${esc(v.cliente_nombre || 'Sin nombre')}</small>
             <small>Vendedor: ${esc(v.vendedor_nombre || 'Sin nombre')}</small>
           </div>
-          <span class="ec-codigo chico"><span>Código</span><b>${esc(v.codigo_retiro || '—')}</b></span>
+          <span class="ec-codigo chico"><b>${esc(v.codigo_retiro || '—')}</b><span>Código</span></span>
         </div>
 
         <div class="ev-datos" style="margin-top:16px">

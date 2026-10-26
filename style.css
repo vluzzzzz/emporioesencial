@@ -3306,19 +3306,24 @@ svg{ -webkit-user-select:none; user-select:none; }
 @media(max-width:860px){.ec-lista{grid-template-columns:1fr}}
 
 .ec-pedido{position:relative;padding-top:0}
-.ec-codigo{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;padding:10px 14px;border-radius:12px;background:var(--off-white)}
-.ec-codigo>span{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-mid)}
-.ec-codigo>b{font-size:28px;line-height:1;font-weight:700;letter-spacing:.14em;color:var(--black)}
-.ec-codigo.chico{margin:0;padding:8px 12px;flex:none}
-.ec-codigo.chico>b{font-size:20px}
-.ec-codigo.grande{flex-direction:column;align-items:center;gap:6px;padding:20px;margin-bottom:18px}
-.ec-codigo.grande>b{font-size:44px;letter-spacing:.18em}
+
+/* El código es lo primero que dice el cliente, así que va centrado y solo,
+   con su etiqueta debajo. El número puede crecer sin salirse de la caja. */
+.ec-codigo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--off-white);text-align:center;min-width:0}
+.ec-codigo>b{display:block;max-width:100%;font-size:30px;line-height:1.1;font-weight:700;letter-spacing:.14em;color:var(--black);word-break:break-all}
+.ec-codigo>span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid)}
+.ec-codigo.chico{margin:0;padding:9px 13px;flex:none}
+.ec-codigo.chico>b{font-size:21px}
+.ec-codigo.grande{padding:22px;margin-bottom:18px}
+.ec-codigo.grande>b{font-size:46px;letter-spacing:.18em}
 
 /* Quién viene a buscarlo y quién se lo vendió: la etiqueta chica arriba y el
-   nombre completo abajo, que puede ocupar dos líneas sin cortarse */
-.ec-quien{display:block;margin-top:7px;white-space:normal;overflow:visible;font-size:14px;font-weight:700;color:var(--black)}
-.ec-quien i{display:block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-mid);margin-bottom:1px}
-.ec-cuando{white-space:normal;overflow:visible;line-height:1.45}
+   nombre completo abajo, que puede ocupar dos líneas sin cortarse.
+   Van calificadas por el padre para pesar más que `.ev-venta-datos small`,
+   que recorta cada línea con puntos suspensivos. */
+.ev-venta-datos .ec-quien{margin-top:7px;white-space:normal;overflow:visible;font-size:14px;font-weight:700;color:var(--black)}
+.ev-venta-datos .ec-quien i{display:block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-mid);margin-bottom:1px}
+.ev-venta-datos .ec-cuando{white-space:normal;overflow:visible;line-height:1.45}
 .ec-notas{font-style:italic;color:var(--gray-mid)}
 .ec-sello-hora{flex:1;font-size:13px;color:var(--gray-mid);align-self:center}
 .ec-aviso{margin:16px 0 0;padding:13px 15px;border-radius:12px;background:#fdf0d2;color:#6b4e06;font-size:13.5px;line-height:1.55}
