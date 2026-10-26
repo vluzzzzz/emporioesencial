@@ -239,7 +239,6 @@ const EdVendedores = (() => {
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
     hoja: '<path d="M13.5 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V9z"/><path d="M13.5 3.5V9H19"/><path d="M9 13h6M9 16.5h4"/>',
-    bajar: '<path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16.5v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     tienda: '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>',
     camion: '<path d="M3 7.5h10.5v8H3z"/><path d="M13.5 10.5H18l3 3v2h-7.5z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
@@ -347,9 +346,8 @@ const EdVendedores = (() => {
       ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
       <div class="ev-acciones">
         <button type="button" class="ed-btn" id="evNuevaLocal">${svg(ICO.tienda)}Nueva venta local</button>
-        <button type="button" class="ed-btn" id="evInforme">${svg(ICO.hoja)}Informe PDF</button>
-        <button type="button" class="ed-btn ghost" id="evBajarMes">${svg(ICO.bajar)}Planilla del mes</button>
-        <button type="button" class="ed-btn ghost" id="evBajarTodo">${svg(ICO.bajar)}Planilla completa</button>
+        <button type="button" class="ed-btn" id="evInforme">${svg(ICO.hoja)}${
+          vendedorVisto ? 'Informe de ' + esc(((usuarios.find(u => u.id === vendedorVisto) || {}).nombre || '').split(' ')[0]) : 'Informe del equipo'}</button>
       </div>`;
 
     box.innerHTML = `
@@ -410,10 +408,7 @@ const EdVendedores = (() => {
     });
     const pdf = filtros && filtros.querySelector('#evInforme');
     if (pdf) pdf.addEventListener('click', informeMes);
-    const bm = filtros && filtros.querySelector('#evBajarMes');
-    if (bm) bm.addEventListener('click', bajarMes);
-    const bt = filtros && filtros.querySelector('#evBajarTodo');
-    if (bt) bt.addEventListener('click', bajarTodo);
+
     box.querySelector('#evAntes').addEventListener('click', () => { correrMes(-1); pintarVentas(box); });
     box.querySelector('#evDespues').addEventListener('click', () => { correrMes(1); pintarVentas(box); });
     box.querySelector('#evHoy').addEventListener('click', () => {
@@ -1118,111 +1113,12 @@ const EdVendedores = (() => {
     toast(u.activo ? 'Cuenta desactivada' : 'Cuenta activada');
   }
 
-  /* ── Descarga a planilla ──────────────────────────────── */
-  // Un CSV que Excel abre con doble clic. Sin librerías: el proyecto no tiene
-  // ninguna dependencia propia y no vale la pena sumar media aplicación para
-  // armar una tabla de texto.
-  //
-  // Tres detalles que hacen que abra bien en un Excel en español:
-  //  · La marca de orden de bytes al principio, si no las tildes salen rotas.
-  //  · Punto y coma de separador, no coma: es lo que espera Excel en español.
-  //  · Cada campo entre comillas, con las comillas de adentro duplicadas.
-  const celda = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-  const fila = cs => cs.map(celda).join(';');
-
-  function bajarCsv(nombre, lineas){
-    const blob = new Blob(['﻿' + lineas.join('\r\n')], { type:'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = nombre;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 4000);
-  }
-
-  // En el panel las ventas van de la más nueva a la más vieja, que es como se
-  // trabaja día a día. Una planilla se lee al revés: del 1 al 30.
-  function planilla(lista, titulo){
-    const ordenadas = [...lista].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    const ok = ordenadas.filter(cuentaParaPago);
-
-    const porVendedor = new Map();
-    ok.forEach(v => {
-      const f = porVendedor.get(v.vendedor_id) || { nombre: v.vendedor_nombre || 'Sin nombre', local:0, delivery:0, ventas:0 };
-      f[esLocal(v) ? 'local' : 'delivery'] += comisionDe(v);
-      f.ventas++;
-      porVendedor.set(v.vendedor_id, f);
-    });
-
-    const lineas = [];
-    lineas.push(fila(['ESENCIAL EMPORIO · ' + titulo]));
-    lineas.push(fila(['Generado el', new Date().toLocaleString('es-CL')]));
-    lineas.push('');
-
-    lineas.push(fila(['COMISIONES POR VENDEDOR']));
-    lineas.push(fila(['Vendedor','Ventas','Comision local','Comision delivery','Total a pagar']));
-    [...porVendedor.values()]
-      .sort((a, b) => (b.local + b.delivery) - (a.local + a.delivery))
-      .forEach(f => lineas.push(fila([f.nombre, f.ventas, f.local, f.delivery, f.local + f.delivery])));
-    lineas.push(fila([
-      'TOTAL', ok.length,
-      ok.filter(esLocal).reduce((a, v) => a + comisionDe(v), 0),
-      ok.filter(v => !esLocal(v)).reduce((a, v) => a + comisionDe(v), 0),
-      ok.reduce((a, v) => a + comisionDe(v), 0),
-    ]));
-    lineas.push('');
-
-    lineas.push(fila(['DETALLE DE VENTAS']));
-    lineas.push(fila(['Fecha','Hora','Tipo','Vendedor','Producto','Cantidad',
-      'Precio unitario','Despacho','Total','Comision','Estado','Cliente',
-      'Telefono','Comuna','Sucursal','Forma de pago','Ticket']));
-    ordenadas.forEach(v => lineas.push(fila([
-      cuando(v.created_at),
-      hora(v.created_at),
-      esLocal(v) ? 'Local' : 'Delivery',
-      v.vendedor_nombre || '',
-      v.producto_nombre || '',
-      v.cantidad || 1,
-      v.precio_unitario || 0,
-      v.costo_despacho || 0,
-      v.total || 0,
-      estadoDe(v) === 'denegado' ? 0 : comisionDe(v),
-      estadoDe(v) === 'pendiente' ? 'Pendiente' : estadoDe(v) === 'aceptado' ? 'Aceptada' : 'Denegada',
-      v.cliente_nombre || '',
-      v.cliente_telefono || '',
-      esLocal(v) ? '' : (v.comuna || ''),
-      esLocal(v) ? sucursalDe(v.sucursal_id) : '',
-      v.metodo_pago || '',
-      v.ticket_id || '',
-    ])));
-
-    return lineas;
-  }
-
-  function bajarMes(){
-    const lista = delMes(mesVisto);
-    if (!lista.length) { toast('Ese mes no tiene ventas para bajar', true); return; }
-    const [anio, mes] = mesVisto.split('-').map(Number);
-    const quien = vendedorVisto ? ' · ' + ((usuarios.find(u => u.id === vendedorVisto) || {}).nombre || '') : '';
-    const tipo = tipoVisto ? ' · solo ' + tipoVisto : '';
-    bajarCsv('ventas-' + mesVisto + '.csv',
-      planilla(lista, MESES[mes - 1] + ' ' + anio + quien + tipo));
-    toast(lista.length + ' venta' + (lista.length === 1 ? '' : 's') + ' en la planilla');
-  }
-
-  function bajarTodo(){
-    if (!ventas.length) { toast('Todavía no hay ventas para bajar', true); return; }
-    bajarCsv('ventas-historial.csv', planilla(ventas, 'Historial completo'));
-    toast(ventas.length + ' ventas en la planilla');
-  }
-
   /* ── Informe para imprimir o guardar en PDF ───────────── */
-  // El CSV es texto plano: no lleva líneas, ni anchos de columna, ni
-  // negritas. Para un informe que se mira o se manda, lo que corresponde es
-  // una hoja armada. Esto la arma en HTML y la manda a imprimir; el
-  // navegador la guarda como PDF desde el mismo cuadro de impresión.
+  // Sale de los mismos filtros de arriba: sin vendedor elegido trae a todo
+  // el equipo, y con uno elegido trae solo lo suyo.
+  //
+  // Se arma en HTML y se manda a imprimir; el navegador la guarda como PDF
+  // desde el mismo cuadro de impresión.
   //
   // Va en un marco oculto, no en una ventana nueva: los bloqueadores de
   // ventanas emergentes no lo frenan.
