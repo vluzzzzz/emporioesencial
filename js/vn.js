@@ -531,8 +531,12 @@ const Sesion = (() => {
       const vendido = ok.reduce((a, v) => a + (v.total || 0), 0);
       const comision = ok.reduce((a, v) => a + comisionDe(v), 0);
       // De dónde viene cada peso: lo que trajo al mostrador y lo que despachó.
-      const comLocal = ok.filter(esLocal).reduce((a, v) => a + comisionDe(v), 0);
+      // Van separadas porque se ganan de maneras distintas, pero lo que se
+      // transfiere a fin de mes es la suma de las dos.
+      const locales = ok.filter(esLocal);
+      const comLocal = locales.reduce((a, v) => a + comisionDe(v), 0);
       const comDelivery = comision - comLocal;
+      const nLocal = locales.length, nDelivery = ok.length - nLocal;
 
       const [anio, mes] = mesVisto.split('-').map(Number);
       const dias = new Date(anio, mes, 0).getDate();
@@ -590,20 +594,33 @@ const Sesion = (() => {
         </div>
 
         <div class="venta-wrap">
-          <div class="ev-resumen">
+          <div class="ev-resumen cuatro">
             <div class="vt2">
               <span class="vt2-ico">${svgIco(ICO_CAJA)}</span>
-              <div><span>Productos vendidos</span><b>${unidades}</b></div>
+              <div>
+                <span>Productos vendidos</span><b>${unidades}</b>
+                <small class="vt2-parte">${fmt(vendido)} vendidos</small>
+              </div>
             </div>
             <div class="vt2">
-              <span class="vt2-ico">${svgIco(ICO_MONEDA)}</span>
-              <div><span>Vendido</span><b>${fmt(vendido)}</b></div>
+              <span class="vt2-ico">${svgIco(ICO_TIENDA)}</span>
+              <div>
+                <span>Comisión local</span><b>${fmt(comLocal)}</b>
+                <small class="vt2-parte">${nLocal} venta${nLocal === 1 ? '' : 's'} en sucursal</small>
+              </div>
+            </div>
+            <div class="vt2">
+              <span class="vt2-ico">${svgIco(ICO_CAMION)}</span>
+              <div>
+                <span>Comisión delivery</span><b>${fmt(comDelivery)}</b>
+                <small class="vt2-parte">${nDelivery} pedido${nDelivery === 1 ? '' : 's'} a domicilio</small>
+              </div>
             </div>
             <div class="vt2 destacada">
-              <span class="vt2-ico">${svgIco(ICO_PERSONA)}</span>
+              <span class="vt2-ico">${svgIco(ICO_MONEDA)}</span>
               <div>
-                <span>Te deben pagar</span><b>${fmt(comision)}</b>
-                ${comision ? `<small class="vt2-parte">${fmt(comLocal)} local · ${fmt(comDelivery)} delivery</small>` : ''}
+                <span>Total a pagarte</span><b>${fmt(comision)}</b>
+                <small class="vt2-parte">Local más delivery</small>
               </div>
             </div>
           </div>

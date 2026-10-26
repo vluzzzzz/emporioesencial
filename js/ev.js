@@ -220,6 +220,26 @@ const EdVendedores = (() => {
     };
   }
 
+  // Lo que hay que transferirle a cada uno a fin de mes, con las dos
+  // comisiones por separado: se ganan distinto, pero se pagan juntas.
+  function paraPagar(c){
+    const ok = delMes(c).filter(cuentaParaPago);
+    const mapa = new Map();
+    ok.forEach(v => {
+      const fila = mapa.get(v.vendedor_id) || {
+        id: v.vendedor_id,
+        nombre: (usuarios.find(u => u.id === v.vendedor_id) || {}).nombre || v.vendedor_nombre || 'Sin nombre',
+        local: 0, delivery: 0, ventas: 0,
+      };
+      fila[esLocal(v) ? 'local' : 'delivery'] += comisionDe(v);
+      fila.ventas++;
+      mapa.set(v.vendedor_id, fila);
+    });
+    return [...mapa.values()]
+      .map(f => ({ ...f, total: f.local + f.delivery }))
+      .sort((a, b) => b.total - a.total);
+  }
+
   /* ── Ventas: resumen, calendario y detalle del día ────── */
   function pintarVentas(box){
     const lista = delMes(mesVisto);
@@ -332,7 +352,7 @@ const EdVendedores = (() => {
         <section class="ev-detalle" id="evDia"></section>
       </div>
 
-      `;
+      ${tablaPagos(mesVisto)}`;
 
     if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
       if (campo === 'mes') mesVisto = valor;
@@ -357,6 +377,38 @@ const EdVendedores = (() => {
     }));
 
     pintarDia(box, porDia);
+  }
+
+  function tablaPagos(c){
+    const filas = paraPagar(c);
+    if (!filas.length) return '';
+    const suma = k => filas.reduce((a, f) => a + f[k], 0);
+    return `
+      <section class="ev-pagos">
+        <header class="ev-pagos-cab">
+          <h3>Para transferir este mes</h3>
+          <small>Solo cuenta lo aceptado. Las ventas locales ya están aprobadas; las de delivery, cuando las aceptas.</small>
+        </header>
+        <div class="ev-pagos-tabla">
+          <div class="ev-pagos-f cab">
+            <span>Vendedor</span><span>Local</span><span>Delivery</span><span>Total a pagar</span>
+          </div>
+          ${filas.map(f => `
+            <div class="ev-pagos-f">
+              <span class="ev-pagos-n">${esc(f.nombre)}<small>${f.ventas} venta${f.ventas === 1 ? '' : 's'}</small></span>
+              <span>${plata(f.local)}</span>
+              <span>${plata(f.delivery)}</span>
+              <span class="ev-pagos-t">${plata(f.total)}</span>
+            </div>`).join('')}
+          ${filas.length > 1 ? `
+            <div class="ev-pagos-f suma">
+              <span>Todo el equipo</span>
+              <span>${plata(suma('local'))}</span>
+              <span>${plata(suma('delivery'))}</span>
+              <span class="ev-pagos-t">${plata(suma('total'))}</span>
+            </div>` : ''}
+        </div>
+      </section>`;
   }
 
   function pintarDia(box, porDia){
