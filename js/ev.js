@@ -15,7 +15,7 @@ const EdVendedores = (() => {
   const hora = d => new Date(d).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
 
   const sb = window.sb;
-  let usuarios = [], ventas = [], comunas = [], sucursales = [], pestana = 'ventas';
+  let usuarios = [], ventas = [], comunas = [], sucursales = [], bancos = [], pagos = [], pestana = 'ventas';
   let toast = m => console.log(m), mensajeError = e => String(e && e.message || e), confirmarFn = null;
 
   function montarBoton(){
@@ -69,11 +69,13 @@ const EdVendedores = (() => {
   }
 
   async function cargar(){
-    const [u, v, c, s] = await Promise.all([
+    const [u, v, c, s, b, g] = await Promise.all([
       sb.from('profiles').select('*').order('created_at', { ascending:false }),
       sb.from('ventas').select('*').order('created_at', { ascending:false }).limit(500),
       sb.from('comunas').select('*').order('position'),
       sb.from('sucursales').select('*').order('position'),
+      sb.from('datos_bancarios').select('*'),
+      sb.from('pagos').select('*').order('periodo', { ascending:false }),
     ]);
     // La cuenta técnica entra como admin pero no se muestra en el equipo.
     // La regla de RLS ya la esconde; esto es por si alguna vez llega igual.
@@ -81,7 +83,17 @@ const EdVendedores = (() => {
     ventas = v.data || [];
     comunas = c.data || [];
     sucursales = s.data || [];
+    bancos = b.data || [];
+    pagos = g.data || [];
   }
+
+  const bancoDe = id => bancos.find(x => x.vendedor_id === id) || null;
+  const tieneCuenta = id => {
+    const b = bancoDe(id);
+    return !!(b && b.numero && b.banco);
+  };
+  const pagoDe = (id, periodo) => pagos.find(p => p.vendedor_id === id && p.periodo === periodo) || null;
+  const CUENTAS = ['Cuenta corriente','Cuenta vista','Cuenta RUT','Cuenta de ahorro'];
 
   const ROLES = { admin:'Administrador', moderador:'Moderador de caja', vendedor:'Vendedor' };
   const rolDe = u => ROLES[u.rol] || 'Vendedor';
@@ -104,6 +116,7 @@ const EdVendedores = (() => {
       `<div class="ev-tabs">
          <button type="button" class="ev-tab activa" data-p="ventas">Ventas</button>
          <button type="button" class="ev-tab" data-p="equipo">Equipo</button>
+         <button type="button" class="ev-tab" data-p="pagos">Pagos</button>
          <button type="button" class="ev-tab" data-p="despacho">Despacho</button>
          <div class="ev-filtros" id="evFiltros"></div>
        </div>
@@ -140,6 +153,7 @@ const EdVendedores = (() => {
     if (filtros) filtros.innerHTML = '';
     if (pestana === 'ventas')   return pintarVentas(box);
     if (pestana === 'equipo')   return pintarEquipo(ov, box);
+    if (pestana === 'pagos')    return pintarPagos(ov, box);
     if (pestana === 'despacho') return pintarDespacho(ov, box);
   }
 
@@ -202,6 +216,7 @@ const EdVendedores = (() => {
     no: '<circle cx="12" cy="12" r="8.6"/><path d="m9.2 9.2 5.6 5.6M14.8 9.2l-5.6 5.6"/>',
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
+    bajar: '<path d="M12 3.5v11"/><path d="m7.5 10.5 4.5 4.5 4.5-4.5"/><path d="M4 16.5v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     tienda: '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>',
     camion: '<path d="M3 7.5h10.5v8H3z"/><path d="M13.5 10.5H18l3 3v2h-7.5z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
@@ -307,7 +322,11 @@ const EdVendedores = (() => {
         ], 'Local y delivery', tipoVisto, false, ICO.tienda)}
       </div>
       ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
-      <button type="button" class="ed-btn ev-nueva-local" id="evNuevaLocal">${svg(ICO.tienda)}Nueva venta local</button>`;
+      <div class="ev-acciones">
+        <button type="button" class="ed-btn" id="evNuevaLocal">${svg(ICO.tienda)}Nueva venta local</button>
+        <button type="button" class="ed-btn" id="evBajarMes">${svg(ICO.bajar)}Bajar este mes</button>
+        <button type="button" class="ed-btn ghost" id="evBajarTodo">${svg(ICO.bajar)}Bajar todo</button>
+      </div>`;
 
     box.innerHTML = `
       <div class="ev-resumen">
@@ -350,9 +369,7 @@ const EdVendedores = (() => {
         </section>
 
         <section class="ev-detalle" id="evDia"></section>
-      </div>
-
-      ${tablaPagos(mesVisto)}`;
+      </div>`;
 
     if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
       if (campo === 'mes') mesVisto = valor;
@@ -367,6 +384,10 @@ const EdVendedores = (() => {
       if (typeof EdLocal === 'undefined') return;
       EdLocal.abrir(async () => { await cargar(); pintarVentas(box); });
     });
+    const bm = filtros && filtros.querySelector('#evBajarMes');
+    if (bm) bm.addEventListener('click', bajarMes);
+    const bt = filtros && filtros.querySelector('#evBajarTodo');
+    if (bt) bt.addEventListener('click', bajarTodo);
     box.querySelector('#evAntes').addEventListener('click', () => { correrMes(-1); pintarVentas(box); });
     box.querySelector('#evDespues').addEventListener('click', () => { correrMes(1); pintarVentas(box); });
     box.querySelector('#evHoy').addEventListener('click', () => {
@@ -377,38 +398,6 @@ const EdVendedores = (() => {
     }));
 
     pintarDia(box, porDia);
-  }
-
-  function tablaPagos(c){
-    const filas = paraPagar(c);
-    if (!filas.length) return '';
-    const suma = k => filas.reduce((a, f) => a + f[k], 0);
-    return `
-      <section class="ev-pagos">
-        <header class="ev-pagos-cab">
-          <h3>Para transferir este mes</h3>
-          <small>Solo cuenta lo aceptado. Las ventas locales ya están aprobadas; las de delivery, cuando las aceptas.</small>
-        </header>
-        <div class="ev-pagos-tabla">
-          <div class="ev-pagos-f cab">
-            <span>Vendedor</span><span>Local</span><span>Delivery</span><span>Total a pagar</span>
-          </div>
-          ${filas.map(f => `
-            <div class="ev-pagos-f">
-              <span class="ev-pagos-n">${esc(f.nombre)}<small>${f.ventas} venta${f.ventas === 1 ? '' : 's'}</small></span>
-              <span>${plata(f.local)}</span>
-              <span>${plata(f.delivery)}</span>
-              <span class="ev-pagos-t">${plata(f.total)}</span>
-            </div>`).join('')}
-          ${filas.length > 1 ? `
-            <div class="ev-pagos-f suma">
-              <span>Todo el equipo</span>
-              <span>${plata(suma('local'))}</span>
-              <span>${plata(suma('delivery'))}</span>
-              <span class="ev-pagos-t">${plata(suma('total'))}</span>
-            </div>` : ''}
-        </div>
-      </section>`;
   }
 
   function pintarDia(box, porDia){
@@ -731,6 +720,51 @@ const EdVendedores = (() => {
     })), lista.length ? 'Elige la sucursal' : 'Crea una sucursal en Despacho', elegido, true, ICO.tienda);
   }
 
+  // Dónde transferirle. Nada de esto es obligatorio: si falta, en Pagos sale
+  // un aviso con el atajo para completarlo.
+  function camposCuenta(pre, b){
+    const d = b || {};
+    return `
+      <p class="venta-sec">Para transferirle <small class="ev-opcional">opcional</small></p>
+      <div class="venta-g2">
+        <label class="venta-f"><span>Banco</span>
+          <input type="text" data-cu="${pre}banco" value="${esc(d.banco || '')}" placeholder="Ej: Banco Estado">
+        </label>
+        <div class="venta-f"><span>Tipo de cuenta</span>
+          ${Sesion.desplegable(pre + 'tipo', CUENTAS.map(c => ({ valor:c, texto:c })), 'Elige el tipo', d.tipo_cuenta || '')}
+        </div>
+        <label class="venta-f"><span>Número de cuenta</span>
+          <input type="text" data-cu="${pre}numero" value="${esc(d.numero || '')}" placeholder="Solo números" inputmode="numeric">
+        </label>
+        <label class="venta-f"><span>RUT del titular</span>
+          <input type="text" data-cu="${pre}rut" value="${esc(d.rut || '')}" placeholder="12.345.678-9">
+        </label>
+        <label class="venta-f venta-ancho"><span>Nombre del titular</span>
+          <input type="text" data-cu="${pre}titular" value="${esc(d.titular || '')}" placeholder="Si la cuenta no está a su nombre">
+        </label>
+      </div>`;
+  }
+
+  // Lee los campos de arriba y los deja en la libreta. Si están todos vacíos
+  // no escribe nada: una fila en blanco solo ensuciaría la tabla.
+  async function guardarCuenta(raiz, pre, id){
+    const val = c => (raiz.querySelector('[data-cu=' + pre + c + ']') || {}).value || '';
+    const tipoSel = raiz.querySelector('[name=' + pre + 'tipo]');
+    const fila = {
+      vendedor_id: id,
+      banco: val('banco').trim(),
+      tipo_cuenta: (tipoSel && tipoSel.value) || '',
+      numero: val('numero').trim(),
+      rut: val('rut').trim(),
+      titular: val('titular').trim(),
+      updated_at: new Date().toISOString(),
+    };
+    const vacia = !fila.banco && !fila.tipo_cuenta && !fila.numero && !fila.rut && !fila.titular;
+    if (vacia && !bancoDe(id)) return;
+    const { error } = await sb.from('datos_bancarios').upsert(fila, { onConflict: 'vendedor_id' });
+    if (error) throw error;
+  }
+
   function pintarEquipo(ov, box){
     box.innerHTML = `
       <div class="ev-nuevo" id="evNuevo">
@@ -752,6 +786,7 @@ const EdVendedores = (() => {
           </div>
           <label class="venta-f venta-ancho"><span>Observación</span><input type="text" id="nvObs" placeholder="Zona, horario, notas internas"></label>
         </div>
+        <div id="nvCuenta" hidden>${camposCuenta('nv', null)}</div>
         <button type="button" class="venta-btn" id="nvCrear" style="margin-top:14px">Crear persona</button>
         <p class="venta-msg" id="nvMsg"></p>
       </div>
@@ -768,10 +803,14 @@ const EdVendedores = (() => {
 
     // La sucursal solo tiene sentido para el moderador: aparece al elegir ese
     // rol y se va si cambia a otro.
+    // La sucursal es cosa del moderador; la cuenta bancaria, del vendedor:
+    // al admin y al moderador no se les paga comisión.
     Sesion.conectarDesplegables(box.querySelector('#evNuevo'), (campo, valor) => {
       if (campo !== 'nvRol') return;
       box.querySelector('#nvSucBox').hidden = valor !== 'moderador';
+      box.querySelector('#nvCuenta').hidden = valor !== 'vendedor';
     });
+    box.querySelector('#nvCuenta').hidden = false;
     ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, box, e.target));
 
     const grilla = box.querySelector('#evEquipo');
@@ -848,6 +887,7 @@ const EdVendedores = (() => {
             <input type="text" data-uf="clave" placeholder="Déjalo vacío para no cambiarla">
           </label>
         </div>
+        <div id="evCuenta"${u.rol === 'vendedor' ? '' : ' hidden'}>${camposCuenta('ed', bancoDe(id))}</div>
         <p class="venta-msg" id="evPersonaMsg"></p>
       </form>
 
@@ -871,6 +911,7 @@ const EdVendedores = (() => {
     Sesion.conectarDesplegables(ov, (campo, valor) => {
       if (campo !== 'rol') return;
       ov.querySelector('#evSucBox').hidden = valor !== 'moderador';
+      ov.querySelector('#evCuenta').hidden = valor !== 'vendedor';
     });
 
     ov.querySelector('#evActivo').addEventListener('click', async e => {
@@ -942,6 +983,12 @@ const EdVendedores = (() => {
       });
       const out = await r.json();
       if (!r.ok) throw new Error(out.error || 'No se pudo crear');
+      // La cuenta va después, con el id que acaba de devolver la API. Si
+      // falla, la persona ya quedó creada: se avisa y se carga a mano.
+      if (rol === 'vendedor' && out.id) {
+        try { await guardarCuenta(box, 'nv', out.id); }
+        catch (e) { toast('La persona quedó creada, pero no se pudo guardar la cuenta: ' + mensajeError(e), true); }
+      }
       await cargar();
       pintar(ov);
       toast(rol === 'moderador' ? 'Moderador creado' : rol === 'admin' ? 'Administrador creado' : 'Vendedor creado');
@@ -966,6 +1013,8 @@ const EdVendedores = (() => {
       sucursal_id: rol === 'moderador' ? f.querySelector('[name=sucursal]').value : null,
     }).eq('id', id);
     if (error) throw error;
+
+    if (rol === 'vendedor') await guardarCuenta(f, 'ed', id);
 
     if (clave) {
       if (clave.length < 8) throw new Error('La contraseña necesita 8 caracteres o más');
@@ -1037,6 +1086,326 @@ const EdVendedores = (() => {
     await cargar();
     pintar(ov);
     toast(u.activo ? 'Cuenta desactivada' : 'Cuenta activada');
+  }
+
+  /* ── Descarga a planilla ──────────────────────────────── */
+  // Un CSV que Excel abre con doble clic. Sin librerías: el proyecto no tiene
+  // ninguna dependencia propia y no vale la pena sumar media aplicación para
+  // armar una tabla de texto.
+  //
+  // Tres detalles que hacen que abra bien en un Excel en español:
+  //  · La marca de orden de bytes al principio, si no las tildes salen rotas.
+  //  · Punto y coma de separador, no coma: es lo que espera Excel en español.
+  //  · Cada campo entre comillas, con las comillas de adentro duplicadas.
+  const celda = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+  const fila = cs => cs.map(celda).join(';');
+
+  function bajarCsv(nombre, lineas){
+    const blob = new Blob(['﻿' + lineas.join('\r\n')], { type:'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+
+  // En el panel las ventas van de la más nueva a la más vieja, que es como se
+  // trabaja día a día. Una planilla se lee al revés: del 1 al 30.
+  function planilla(lista, titulo){
+    const ordenadas = [...lista].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const ok = ordenadas.filter(cuentaParaPago);
+
+    const porVendedor = new Map();
+    ok.forEach(v => {
+      const f = porVendedor.get(v.vendedor_id) || { nombre: v.vendedor_nombre || 'Sin nombre', local:0, delivery:0, ventas:0 };
+      f[esLocal(v) ? 'local' : 'delivery'] += comisionDe(v);
+      f.ventas++;
+      porVendedor.set(v.vendedor_id, f);
+    });
+
+    const lineas = [];
+    lineas.push(fila(['ESENCIAL EMPORIO · ' + titulo]));
+    lineas.push(fila(['Generado el', new Date().toLocaleString('es-CL')]));
+    lineas.push('');
+
+    lineas.push(fila(['COMISIONES POR VENDEDOR']));
+    lineas.push(fila(['Vendedor','Ventas','Comision local','Comision delivery','Total a pagar']));
+    [...porVendedor.values()]
+      .sort((a, b) => (b.local + b.delivery) - (a.local + a.delivery))
+      .forEach(f => lineas.push(fila([f.nombre, f.ventas, f.local, f.delivery, f.local + f.delivery])));
+    lineas.push(fila([
+      'TOTAL', ok.length,
+      ok.filter(esLocal).reduce((a, v) => a + comisionDe(v), 0),
+      ok.filter(v => !esLocal(v)).reduce((a, v) => a + comisionDe(v), 0),
+      ok.reduce((a, v) => a + comisionDe(v), 0),
+    ]));
+    lineas.push('');
+
+    lineas.push(fila(['DETALLE DE VENTAS']));
+    lineas.push(fila(['Fecha','Hora','Tipo','Vendedor','Producto','Cantidad',
+      'Precio unitario','Despacho','Total','Comision','Estado','Cliente',
+      'Telefono','Comuna','Sucursal','Forma de pago','Ticket']));
+    ordenadas.forEach(v => lineas.push(fila([
+      cuando(v.created_at),
+      hora(v.created_at),
+      esLocal(v) ? 'Local' : 'Delivery',
+      v.vendedor_nombre || '',
+      v.producto_nombre || '',
+      v.cantidad || 1,
+      v.precio_unitario || 0,
+      v.costo_despacho || 0,
+      v.total || 0,
+      estadoDe(v) === 'denegado' ? 0 : comisionDe(v),
+      estadoDe(v) === 'pendiente' ? 'Pendiente' : estadoDe(v) === 'aceptado' ? 'Aceptada' : 'Denegada',
+      v.cliente_nombre || '',
+      v.cliente_telefono || '',
+      esLocal(v) ? '' : (v.comuna || ''),
+      esLocal(v) ? sucursalDe(v.sucursal_id) : '',
+      v.metodo_pago || '',
+      v.ticket_id || '',
+    ])));
+
+    return lineas;
+  }
+
+  function bajarMes(){
+    const lista = delMes(mesVisto);
+    if (!lista.length) { toast('Ese mes no tiene ventas para bajar', true); return; }
+    const [anio, mes] = mesVisto.split('-').map(Number);
+    const quien = vendedorVisto ? ' · ' + ((usuarios.find(u => u.id === vendedorVisto) || {}).nombre || '') : '';
+    const tipo = tipoVisto ? ' · solo ' + tipoVisto : '';
+    bajarCsv('ventas-' + mesVisto + '.csv',
+      planilla(lista, MESES[mes - 1] + ' ' + anio + quien + tipo));
+    toast(lista.length + ' venta' + (lista.length === 1 ? '' : 's') + ' en la planilla');
+  }
+
+  function bajarTodo(){
+    if (!ventas.length) { toast('Todavía no hay ventas para bajar', true); return; }
+    bajarCsv('ventas-historial.csv', planilla(ventas, 'Historial completo'));
+    toast(ventas.length + ' ventas en la planilla');
+  }
+
+  /* ── Pagos ────────────────────────────────────────────── */
+  // Lo que hay que transferirle a cada vendedor, y el registro de lo que ya
+  // se transfirió. Un pago es una foto del momento: no se recalcula nunca.
+  // Si después entra otra venta de ese mes, la diferencia sale como saldo.
+  let mesPagos = clave(new Date());
+
+  function estadoPago(fila){
+    const p = pagoDe(fila.id, mesPagos);
+    if (!p) return { clave:'porpagar', texto:'Por pagar', pagado:0, saldo:fila.total, pago:null };
+    const saldo = Math.max(0, fila.total - p.monto);
+    return {
+      clave: saldo > 0 ? 'saldo' : 'pagado',
+      texto: saldo > 0 ? 'Saldo pendiente' : 'Pagado',
+      pagado: p.monto, saldo, pago: p,
+    };
+  }
+
+  const quienMarco = id => (usuarios.find(u => u.id === id) || {}).nombre || 'el administrador';
+
+  function pintarPagos(ov, box){
+    const filas = paraPagar(mesPagos).map(f => ({ ...f, estado: estadoPago(f) }));
+    const [anio, mes] = mesPagos.split('-').map(Number);
+    const total = filas.reduce((a, f) => a + f.total, 0);
+    const pagado = filas.reduce((a, f) => a + f.estado.pagado, 0);
+
+    const filtros = box.parentNode && box.parentNode.querySelector('#evFiltros');
+    if (filtros) filtros.innerHTML = `
+      <div class="ev-filtro">
+        <span>Mes</span>
+        ${Sesion.desplegable('mesPagos', MESES.map((n, k) => ({
+          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
+        })), 'Elige el mes', mesPagos, false, ICO.calendario)}
+      </div>`;
+
+    box.innerHTML = `
+      <div class="ev-resumen">
+        <div class="vt2">
+          <span class="vt2-ico">${svg(ICO.persona)}</span>
+          <div><span>Comisiones del mes</span><b>${plata(total)}</b></div>
+        </div>
+        <div class="vt2">
+          <span class="vt2-ico">${svg(ICO.ok)}</span>
+          <div><span>Ya transferido</span><b>${plata(pagado)}</b></div>
+        </div>
+        <div class="vt2 destacada">
+          <span class="vt2-ico">${svg(ICO.moneda)}</span>
+          <div><span>Falta pagar</span><b>${plata(Math.max(0, total - pagado))}</b></div>
+        </div>
+      </div>
+
+      <section class="ev-pagos">
+        <header class="ev-pagos-cab">
+          <h3>${MESES[mes - 1]} ${anio}</h3>
+          <small>Solo cuenta lo aceptado. Las ventas locales ya vienen aprobadas; las de delivery, cuando las aceptas. Toca a una persona para ver su cuenta y marcar el pago.</small>
+        </header>
+
+        ${filas.length ? `
+          <div class="ev-pagos-tabla">
+            <div class="ev-pagos-f cab">
+              <span>Vendedor</span><span>Local</span><span>Delivery</span><span>Total</span><span>Estado</span>
+            </div>
+            ${filas.map(f => `
+              <button type="button" class="ev-pagos-f fila ${f.estado.clave}" data-pagar="${esc(f.id)}">
+                <span class="ev-pagos-n">${esc(f.nombre)}<small>${f.ventas} venta${f.ventas === 1 ? '' : 's'}${tieneCuenta(f.id) ? '' : ' · sin cuenta cargada'}</small></span>
+                <span>${plata(f.local)}</span>
+                <span>${plata(f.delivery)}</span>
+                <span class="ev-pagos-t">${plata(f.total)}</span>
+                <span><i class="ev-chip ${f.estado.clave}">${f.estado.texto}</i></span>
+              </button>`).join('')}
+            ${filas.length > 1 ? `
+              <div class="ev-pagos-f suma">
+                <span>Todo el equipo</span>
+                <span>${plata(filas.reduce((a, f) => a + f.local, 0))}</span>
+                <span>${plata(filas.reduce((a, f) => a + f.delivery, 0))}</span>
+                <span class="ev-pagos-t">${plata(total)}</span>
+                <span></span>
+              </div>` : ''}
+          </div>`
+        : `<div class="ev-det-vacio">${svg(ICO.calendario)}<p>Nadie tiene comisiones aceptadas este mes.</p></div>`}
+      </section>`;
+
+    if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
+      if (campo !== 'mesPagos') return;
+      mesPagos = valor;
+      pintarPagos(ov, box);
+    });
+    box.querySelectorAll('[data-pagar]').forEach(b => b.addEventListener('click', () => {
+      const f = filas.find(x => x.id === b.dataset.pagar);
+      if (f) fichaPago(ov, box, f);
+    }));
+  }
+
+  // Un dato que hay que tipear en el banco se copia, no se transcribe.
+  function copiable(titulo, valor){
+    if (!valor) return '';
+    return `<div class="ev-datos-l"><span>${titulo}</span>
+      <b>${esc(valor)}<button type="button" class="ev-copiar" data-copiar="${esc(valor)}" aria-label="Copiar ${titulo}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+      </button></b></div>`;
+  }
+
+  function fichaPago(padre, box, f){
+    const est = f.estado;
+    const b = bancoDe(f.id) || {};
+    const u = usuarios.find(x => x.id === f.id) || {};
+    const [anio, mes] = mesPagos.split('-').map(Number);
+    const aCobrar = est.pago ? est.saldo : f.total;
+
+    const cuenta = tieneCuenta(f.id) ? `
+      <div class="ev-datos">
+        ${copiable('Banco', b.banco)}
+        ${b.tipo_cuenta ? `<div class="ev-datos-l"><span>Tipo de cuenta</span><b>${esc(b.tipo_cuenta)}</b></div>` : ''}
+        ${copiable('Número de cuenta', b.numero)}
+        ${copiable('RUT', b.rut)}
+        ${copiable('Titular', b.titular || u.nombre)}
+        ${copiable('Correo', u.email)}
+      </div>`
+      : `<div class="ev-previo">
+          <span>Todavía no tiene cuenta cargada</span>
+          <p>Puedes marcar el pago igual, pero para transferir vas a tener que buscar sus datos aparte.
+             Se cargan en Equipo, editando a ${esc(u.nombre || 'la persona')}.</p>
+        </div>`;
+
+    const cuerpo = `
+      <form id="evPago" novalidate>
+        <div class="ev-datos">
+          <div class="ev-datos-l"><span>Comisión local</span><b>${plata(f.local)}</b></div>
+          <div class="ev-datos-l"><span>Comisión delivery</span><b>${plata(f.delivery)}</b></div>
+          <div class="ev-datos-l total"><span>Comisión del mes</span><b>${plata(f.total)}</b></div>
+        </div>
+
+        ${est.pago ? `<div class="ev-previo ${est.saldo ? 'alerta' : 'listo'}">
+          <span>${est.saldo ? 'Pagado en parte' : 'Pagado'}</span>
+          <p>Se transfirieron ${plata(est.pago.monto)} el ${cuando(est.pago.pagado_en)}${est.pago.pagado_por ? ', marcado por ' + esc(quienMarco(est.pago.pagado_por)) : ''}.
+             ${est.saldo ? 'Después entraron más ventas: quedan ' + plata(est.saldo) + ' por pagar.' : ''}</p>
+          ${est.pago.nota ? `<p class="ev-pago-nota">${esc(est.pago.nota)}</p>` : ''}
+        </div>` : ''}
+
+        <p class="venta-sec">Dónde transferirle</p>
+        ${cuenta}
+
+        <label class="venta-f venta-ancho" style="margin-top:18px"><span>Nota (opcional)</span>
+          <input type="text" name="nota" value="${esc(est.pago ? est.pago.nota : '')}" placeholder="Número de operación, banco desde el que saliste…">
+        </label>
+        <p class="venta-msg" id="evPagoMsg"></p>
+      </form>
+
+      ${est.pago ? `<div class="ev-zona-roja">
+        <b>Deshacer el pago</b>
+        <p>Borra el registro de ${MESES[mes - 1]} y esta persona vuelve a quedar por pagar. No devuelve plata: solo borra la anotación.</p>
+        <button type="button" class="ev-borrar" id="evDesPago">${svg(ICO.tacho)}Deshacer</button>
+      </div>` : ''}`;
+
+    const pie = `<button type="submit" form="evPago" class="venta-btn">${
+      est.pago ? (est.saldo ? 'Pagar el saldo de ' + plata(est.saldo) : 'Actualizar el pago')
+               : 'Marcar como pagado · ' + plata(aCobrar)}</button>`;
+
+    const { ov, cerrar } = Sesion.panel(f.nombre, MESES[mes - 1] + ' ' + anio, cuerpo, pie);
+
+    ov.querySelectorAll('[data-copiar]').forEach(btn => btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(btn.dataset.copiar);
+        toast('Copiado');
+      } catch (_) { toast('Tu navegador no dejó copiar', true); }
+    }));
+
+    const des = ov.querySelector('#evDesPago');
+    if (des) des.addEventListener('click', () => deshacerPago(padre, box, f, est.pago, cerrar));
+
+    ov.querySelector('#evPago').addEventListener('submit', async e => {
+      e.preventDefault();
+      const btn = ov.querySelector('button[type=submit]');
+      const msg = ov.querySelector('#evPagoMsg');
+      const txt = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Guardando…';
+      try {
+        const { data:{ session } } = await sb.auth.getSession();
+        const { error } = await sb.from('pagos').upsert({
+          vendedor_id: f.id,
+          periodo: mesPagos,
+          monto: f.total,
+          monto_local: f.local,
+          monto_delivery: f.delivery,
+          ventas: f.ventas,
+          nota: ov.querySelector('[name=nota]').value.trim(),
+          pagado_en: new Date().toISOString(),
+          pagado_por: session ? session.user.id : null,
+        }, { onConflict: 'vendedor_id,periodo' });
+        if (error) throw error;
+        await cargar();
+        cerrar();
+        pintarPagos(padre, box);
+        toast(plata(f.total) + ' marcados como pagados a ' + f.nombre);
+      } catch (err) {
+        btn.disabled = false; btn.textContent = txt;
+        msg.className = 'venta-msg err';
+        msg.textContent = mensajeError(err);
+      }
+    });
+  }
+
+  async function deshacerPago(padre, box, f, pago, cerrar){
+    const ok = await confirmarFn(
+      '¿Deshacer el pago de ' + f.nombre + '? Vuelve a quedar por pagar. Esto no mueve plata: solo borra la anotación.',
+      'Deshacer', 0,
+      `<div class="ev-previo"><span>Lo que se borra</span>
+        <p>${plata(pago.monto)} marcados el ${cuando(pago.pagado_en)}.</p></div>`);
+    if (!ok) return;
+    try {
+      const { error } = await sb.from('pagos').delete().eq('id', pago.id);
+      if (error) throw error;
+      await cargar();
+      cerrar();
+      pintarPagos(padre, box);
+      toast('Pago deshecho');
+    } catch (err) {
+      toast(mensajeError(err), true);
+    }
   }
 
   /* ── Despacho ─────────────────────────────────────────── */

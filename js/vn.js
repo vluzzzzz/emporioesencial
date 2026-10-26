@@ -506,8 +506,14 @@ const Sesion = (() => {
     const box = ov.querySelector('.venta-body');
 
     await cargarSucursales();
-    const { data, error } = await sb.from('ventas')
-      .select('*').eq('vendedor_id', perfil.id).order('created_at', { ascending:false }).limit(500);
+    // Si ya le pagaron el mes es la pregunta que el vendedor hace por mensaje
+    // todos los meses: que la responda la página.
+    const [{ data, error }, { data: cobros }] = await Promise.all([
+      sb.from('ventas').select('*').eq('vendedor_id', perfil.id)
+        .order('created_at', { ascending:false }).limit(500),
+      sb.from('pagos').select('*').eq('vendedor_id', perfil.id),
+    ]);
+    const pagos = cobros || [];
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
     if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abre un producto y toca Agregar pedido.</p>'; return; }
 
@@ -590,6 +596,7 @@ const Sesion = (() => {
               ], 'Local y delivery', tipoVisto, false, ICO_TIENDA)}
             </div>
             ${pendientes ? `<span class="ev-aviso-pend">${pendientes} esperando aprobación</span>` : ''}
+            ${chipPago()}
           </div>
         </div>
 
@@ -691,6 +698,20 @@ const Sesion = (() => {
           ${delDia.length ? delDia.map(tarjetaMia).join('')
             : '<div class="ev-det-vacio">' + svgIco(ICO_CAL) + '<p>No registraste ninguna venta este día.</p></div>'}
         </div>`;
+    }
+
+    // Verde si ya se transfirió todo, amarillo si quedó un saldo por ventas
+    // que entraron después.
+    function chipPago(){
+      const p = pagos.find(x => x.periodo === mesVisto);
+      const total = data.filter(v => claveMes(new Date(v.created_at)) === mesVisto
+        && estadoDe(v) === 'aceptado').reduce((a, v) => a + comisionDe(v), 0);
+      if (!total) return '';
+      if (!p) return '<span class="ev-chip porpagar">Todavía sin pagar</span>';
+      const saldo = Math.max(0, total - p.monto);
+      return saldo
+        ? `<span class="ev-chip saldo">Te pagaron ${fmt(p.monto)} · faltan ${fmt(saldo)}</span>`
+        : `<span class="ev-chip pagado">Pagado el ${new Date(p.pagado_en).toLocaleDateString('es-CL')}</span>`;
     }
 
     function tarjetaMia(v){

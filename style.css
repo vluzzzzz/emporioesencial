@@ -3410,3 +3410,47 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 /* La ficha de borrado usa el mismo círculo que las personas, con icono */
 .ev-ini svg{width:22px;height:22px}
+
+/* ============================================================================
+   Pagos al vendedor · lo que se le debe y lo que ya se transfirió
+   ========================================================================== */
+
+.ev-acciones{display:flex;align-items:center;gap:8px;margin-left:auto;flex-wrap:wrap}
+.ev-acciones .ed-btn{display:inline-flex;align-items:center;gap:7px;flex:none}
+.ev-acciones .ed-btn svg{width:16px;height:16px}
+.ed-btn.ghost{background:transparent;border:1.5px solid var(--gray-light);color:var(--gray-mid)}
+.ed-btn.ghost:hover{border-color:#111;color:var(--black)}
+.ev-opcional{font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--gray-mid)}
+
+/* La fila de cada vendedor: se toca para abrir su ficha de pago */
+.ev-pagos-f{grid-template-columns:2fr 1fr 1fr 1.1fr 1.3fr}
+.ev-pagos-f.fila{width:100%;font:inherit;font-size:14px;background:none;border:0;border-top:1px solid var(--gray-light);text-align:left;cursor:pointer;transition:background .14s}
+.ev-pagos-f.fila:hover{background:var(--off-white)}
+.ev-pagos-f.fila.pagado{background:rgba(52,199,89,.06)}
+.ev-pagos-f.fila.pagado:hover{background:rgba(52,199,89,.12)}
+.ev-pagos-f.fila.saldo{background:rgba(224,162,26,.08)}
+.ev-pagos-f.fila.saldo:hover{background:rgba(224,162,26,.16)}
+.ev-pagos-f>span:last-child{text-align:right}
+
+.ev-chip{display:inline-block;font-style:normal;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:5px 11px;border-radius:999px;white-space:nowrap}
+.ev-chip.pagado{background:rgba(52,199,89,.16);color:#1e7a3a}
+.ev-chip.saldo{background:#fdf0d2;color:#8a6508}
+.ev-chip.porpagar{background:var(--off-white);color:var(--gray-mid)}
+
+/* El botón de copiar, pegado al dato que hay que tipear en el banco */
+.ev-datos-l b{display:inline-flex;align-items:center;gap:8px}
+.ev-copiar{display:grid;place-items:center;width:26px;height:26px;flex:none;border:1px solid var(--gray-light);border-radius:8px;background:#fff;color:var(--gray-mid);cursor:pointer}
+.ev-copiar:hover{border-color:#111;color:var(--black)}
+.ev-copiar svg{width:14px;height:14px}
+
+.ev-previo.listo{border-color:rgba(52,199,89,.35);background:rgba(52,199,89,.07)}
+.ev-previo.listo span{color:#1e7a3a}
+.ev-previo.alerta{border-color:#e8cf92;background:#fffdf7}
+.ev-previo.alerta span{color:#8a6508}
+.ev-pago-nota{margin-top:8px;font-style:italic}
+
+@media(max-width:760px){
+  .ev-acciones{width:100%;margin-left:0}
+  .ev-pagos-f{grid-template-columns:1fr auto}
+  .ev-pagos-f>span:last-child{grid-column:1 / -1;text-align:left;margin-top:6px}
+}
