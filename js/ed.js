@@ -24,7 +24,17 @@ const Edicion = (() => {
   const montadores = [];
 
   function init(p){
-    if (!p || p.rol !== 'admin' || boton) return;
+    if (!p || boton) return;
+
+    // El moderador no edita la web: solo entrega pedidos en la caja. Se lleva
+    // el módulo de caja y nada más.
+    if (p.rol === 'moderador') {
+      perfil = p;
+      cargarCss();
+      cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdCaja.montarBoton(p)));
+      return;
+    }
+    if (p.rol !== 'admin') return;
     perfil = p;
     boton = document.createElement('button');
     boton.type = 'button';
@@ -42,6 +52,7 @@ const Edicion = (() => {
     // siempre, con los lápices apagados.
     cargarCss();
     cargarUno('js/eu.js', () => cargarUno('js/ev.js', () => EdVendedores.montarBoton()));
+    cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdCaja.montarBoton(p)));
 
     if (localStorage.getItem(LLAVE) === '1') alternar(true);
   }

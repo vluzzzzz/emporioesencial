@@ -3255,3 +3255,81 @@ svg{ -webkit-user-select:none; user-select:none; }
 .vsel-nada{display:block;padding:14px 13px;font-size:13.5px;color:var(--gray-mid);text-align:center}
 .vsel-nada[hidden]{display:none}
 
+
+/* ============================================================================
+   Retiro en sucursal · el otro camino de un pedido
+   ========================================================================== */
+
+/* Despacho o retiro: lo primero que elige el vendedor, antes que nada más */
+.venta-tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 4px}
+.venta-tipo-b{display:flex;align-items:center;gap:11px;text-align:left;font:inherit;padding:13px 15px;border:1.5px solid var(--gray-light);border-radius:14px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s,background .16s}
+.venta-tipo-b:hover{border-color:var(--gray-mid)}
+.venta-tipo-b.activa{border-color:#111;background:#111;color:#e9d9a8}
+.venta-tipo-b svg{width:22px;height:22px;flex:none}
+.venta-tipo-b span{display:block;min-width:0}
+.venta-tipo-b b{display:block;font-size:14.5px;font-weight:700}
+.venta-tipo-b small{display:block;font-size:12.5px;opacity:.72;margin-top:2px}
+@media(max-width:560px){.venta-tipo{grid-template-columns:1fr}}
+
+.venta-nota-caja{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--gray-mid)}
+
+/* El código de retiro recién creado: es lo único que el cliente se lleva */
+.venta-codigo{text-align:center;padding:30px 20px}
+.venta-codigo>span{display:block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray-mid)}
+.venta-codigo>b{display:block;margin:12px 0 18px;font-size:64px;line-height:1;font-weight:700;letter-spacing:.16em;color:var(--black)}
+.venta-codigo>p{margin:0 auto;max-width:420px;font-size:14px;line-height:1.6;color:var(--gray-mid)}
+
+/* La línea que reemplaza a la dirección cuando el cliente pasa a buscarlo */
+.ev-retiro{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ev-retiro svg{width:15px;height:15px;flex:none}
+.ev-retiro b{font-weight:700;letter-spacing:.06em}
+.ev-aviso-pend.retiro{color:#8a6508}
+.ev-motivo.espera{color:var(--gray-mid);font-style:normal}
+
+/* ── El botón CAJA de la barra ─────────────────────────────────────────── */
+.nav-caja-btn{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s}
+.nav-caja-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.nav-caja-btn svg{width:18px;height:18px}
+.nav-caja-n{display:grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#e0a21a;color:#1d1d1f;font-size:12px;font-weight:700;font-style:normal}
+.nav-caja-n[hidden]{display:none}
+
+/* ── El panel de caja ──────────────────────────────────────────────────── */
+.ec-buscador{min-width:380px}
+@media(max-width:620px){.ec-buscador{min-width:0;width:100%}}
+
+.ec-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;max-width:1460px;margin:0 auto}
+@media(max-width:860px){.ec-lista{grid-template-columns:1fr}}
+
+.ec-pedido{position:relative;padding-top:0}
+.ec-codigo{display:flex;align-items:baseline;gap:10px;margin:0 0 12px;padding:10px 14px;border-radius:12px;background:var(--off-white)}
+.ec-codigo>span{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gray-mid)}
+.ec-codigo>b{font-size:28px;line-height:1;font-weight:700;letter-spacing:.14em;color:var(--black)}
+.ec-codigo.chico{margin:0;padding:8px 12px;flex:none}
+.ec-codigo.chico>b{font-size:20px}
+.ec-cliente b{font-weight:700;color:var(--black)}
+.ec-notas{font-style:italic;color:var(--gray-mid)}
+.ec-sello-hora{flex:1;font-size:13px;color:var(--gray-mid);align-self:center}
+.ec-aviso{margin:16px 0 0;padding:13px 15px;border-radius:12px;background:#fdf0d2;color:#6b4e06;font-size:13.5px;line-height:1.55}
+.ec-aviso b{font-weight:700}
+
+/* ── Sucursales, en la pestaña Despacho ────────────────────────────────── */
+.ev-sucursales-bloque{margin-bottom:34px;padding-bottom:30px;border-bottom:1px solid var(--gray-light)}
+.ev-sucursales{display:grid;gap:10px}
+.ev-sucursal{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#fff;padding:12px 14px;border:1px solid var(--gray-light);border-radius:12px}
+.ev-sucursal.apagada{opacity:.55}
+.ev-sucursal-campos{display:grid;grid-template-columns:1.2fr 1.4fr 1fr 1fr;gap:8px;flex:1 1 420px;min-width:0}
+.ev-sucursal-campos input{width:100%;min-width:0;font:inherit;font-size:14px;padding:9px 11px;border:1.5px solid transparent;border-radius:10px;background:var(--off-white)}
+.ev-sucursal-campos input:first-child{font-weight:600}
+.ev-sucursal-campos input:focus{outline:none;border-color:#111;background:#fff}
+.ev-sucursal-acc{display:flex;align-items:center;gap:8px;flex:none}
+.ev-sucursal-gente{font-size:12.5px;color:var(--gray-mid);white-space:nowrap;margin-right:4px}
+.ev-sucursal-gente.nueva{color:#b8860b;font-weight:600}
+.ev-sucursal .ec-ojo{padding:7px}
+.ev-sucursal .ec-borrar{width:30px;height:30px}
+@media(max-width:860px){
+  .ev-sucursal-campos{grid-template-columns:1fr 1fr}
+  .ev-sucursal-acc{width:100%;justify-content:flex-end}
+}
+
+/* La ficha de borrado usa el mismo círculo que las personas, con icono */
+.ev-ini svg{width:22px;height:22px}

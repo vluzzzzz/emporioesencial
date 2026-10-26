@@ -1,4 +1,4 @@
-const { sbRest, sbConfigurado, SB_URL } = require('./_supabase');
+const { sbRest, sbConfigurado, SB_URL, UUID_RE } = require('./_supabase');
 
 const SB_KEY = () => process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const ANON_KEY = () => process.env.SUPABASE_ANON_KEY || SB_KEY();
@@ -18,6 +18,17 @@ async function esAdmin(id) {
   });
   const p = Array.isArray(out) && out[0];
   return !!(p && p.activo && p.rol === 'admin');
+}
+
+// Un moderador sin sucursal no sabría qué caja atender, y una sucursal
+// apagada ya no recibe pedidos nuevos.
+async function sucursalValida(id) {
+  if (!UUID_RE.test(String(id || ''))) return false;
+  const out = await sbRest('sucursales', {
+    method: 'GET',
+    query: `?id=eq.${encodeURIComponent(id)}&activa=is.true&select=id`,
+  });
+  return Array.isArray(out) && out.length > 0;
 }
 
 async function crearUsuario(fila) {
@@ -97,12 +108,50 @@ module.exports = async (req, res) => {
       return res.status(200).json({ ok: true, ventas: ids.length });
     }
 
+    // Borrar una sucursal se lleva sus pedidos presenciales, y deja sin caja a
+    // sus moderadores. Van primero porque la base no deja borrarla mientras
+    // alguno de los dos siga apuntando a ella.
+    if (b.accion === 'borrar-sucursal') {
+      if (!UUID_RE.test(String(b.id || ''))) return res.status(400).json({ error: 'Falta la sucursal' });
+      const suya = `?sucursal_id=eq.${encodeURIComponent(b.id)}`;
+
+      const pedidos = await sbRest('ventas', { method: 'GET', query: suya + '&select=id' });
+      const ids = (Array.isArray(pedidos) ? pedidos : []).map(v => v.id);
+      if (ids.length) {
+        await sbRest('guias', {
+          method: 'DELETE',
+          query: `?venta_id=in.(${ids.map(encodeURIComponent).join(',')})`,
+        });
+        await sbRest('ventas', { method: 'DELETE', query: suya });
+      }
+
+      // Sus moderadores no se borran: quedan desactivados y como vendedores,
+      // para que el administrador decida después a qué caja los manda.
+      const gente = await sbRest('profiles', { method: 'GET', query: suya + '&select=id' });
+      const personas = (Array.isArray(gente) ? gente : []).length;
+      if (personas) {
+        await sbRest('profiles', {
+          method: 'PATCH',
+          query: suya,
+          body: { rol: 'vendedor', sucursal_id: null, activo: false },
+          prefer: 'return=minimal',
+        });
+      }
+
+      await sbRest('sucursales', { method: 'DELETE', query: `?id=eq.${encodeURIComponent(b.id)}` });
+      return res.status(200).json({ ok: true, ventas: ids.length, personas });
+    }
+
     const nombre = String(b.nombre || '').trim().slice(0, 120);
     const telefono = String(b.telefono || '').trim().slice(0, 50);
     const observacion = String(b.observacion || '').trim().slice(0, 500);
-    const rol = b.rol === 'admin' ? 'admin' : 'vendedor';
+    const rol = ['admin','moderador'].includes(b.rol) ? b.rol : 'vendedor';
+    const sucursal_id = rol === 'moderador' ? String(b.sucursal_id || '') : null;
 
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Correo no válido' });
+    if (rol === 'moderador' && !(await sucursalValida(sucursal_id))) {
+      return res.status(400).json({ error: 'Elige una sucursal activa para el moderador' });
+    }
 
     // Una cuenta oculta no se delata ni aquí: si alguien prueba crear un
     // vendedor con ese correo, la respuesta es la misma que daría un correo
@@ -123,12 +172,12 @@ module.exports = async (req, res) => {
       email,
       password,
       email_confirm: true,
-      user_metadata: { nombre, telefono, observacion, rol },
+      user_metadata: { nombre, telefono, observacion, rol, sucursal_id },
     });
 
     await sbRest('profiles', {
       method: 'POST',
-      body: { id: creado.id, email, nombre, telefono, observacion, rol, activo: true },
+      body: { id: creado.id, email, nombre, telefono, observacion, rol, sucursal_id, activo: true },
       prefer: 'resolution=merge-duplicates,return=minimal',
     });
 

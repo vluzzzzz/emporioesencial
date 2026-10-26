@@ -15,7 +15,7 @@ const EdVendedores = (() => {
   const hora = d => new Date(d).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' });
 
   const sb = window.sb;
-  let usuarios = [], ventas = [], comunas = [], pestana = 'ventas';
+  let usuarios = [], ventas = [], comunas = [], sucursales = [], pestana = 'ventas';
   let toast = m => console.log(m), mensajeError = e => String(e && e.message || e), confirmarFn = null;
 
   function montarBoton(){
@@ -69,17 +69,25 @@ const EdVendedores = (() => {
   }
 
   async function cargar(){
-    const [u, v, c] = await Promise.all([
+    const [u, v, c, s] = await Promise.all([
       sb.from('profiles').select('*').order('created_at', { ascending:false }),
       sb.from('ventas').select('*').order('created_at', { ascending:false }).limit(500),
       sb.from('comunas').select('*').order('position'),
+      sb.from('sucursales').select('*').order('position'),
     ]);
     // La cuenta técnica entra como admin pero no se muestra en el equipo.
     // La regla de RLS ya la esconde; esto es por si alguna vez llega igual.
     usuarios = (u.data || []).filter(x => !x.oculto);
     ventas = v.data || [];
     comunas = c.data || [];
+    sucursales = s.data || [];
   }
+
+  const ROLES = { admin:'Administrador', moderador:'Moderador de caja', vendedor:'Vendedor' };
+  const rolDe = u => ROLES[u.rol] || 'Vendedor';
+  const esRetiro = v => v.tipo === 'presencial';
+  const sucursalDe = id => (sucursales.find(s => s.id === id) || {}).nombre || 'Sucursal';
+  const ENTREGAS = { por_retirar:'Por retirar', entregado:'Entregado', no_retirado:'No retirado' };
 
 
 
@@ -191,6 +199,7 @@ const EdVendedores = (() => {
     rever: '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 3.5V7h-3.5"/>',
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
+    tienda: '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>',
     wasap: '<path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -385,15 +394,21 @@ const EdVendedores = (() => {
         <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Pendiente' : estado === 'aceptado' ? 'Aceptada' : 'Denegado'}</span>
       </div>
 
-      <p class="venta-sec">A quién se lo enviamos</p>
+      <p class="venta-sec">${esRetiro(v) ? 'Quién lo retira' : 'A quién se lo enviamos'}</p>
       <div class="ev-datos">
         ${linea('Cliente', v.cliente_nombre)}
         ${telLinea('Teléfono', v.cliente_telefono,
           'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.',
           v.cliente_nombre)}
         ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
-        ${linea('Dirección', v.cliente_direccion)}
-        ${linea('Comuna', v.comuna)}
+        ${esRetiro(v) ? `
+          ${linea('Sucursal', sucursalDe(v.sucursal_id))}
+          ${linea('Código de retiro', v.codigo_retiro)}
+          ${linea('Entrega', ENTREGAS[v.entrega] || '—')}
+          ${v.entregado_en ? linea('Entregado el', cuando(v.entregado_en) + ' · ' + hora(v.entregado_en)) : ''}`
+        : `
+          ${linea('Dirección', v.cliente_direccion)}
+          ${linea('Comuna', v.comuna)}`}
       </div>
 
       <p class="venta-sec">Quién lo vendió</p>
@@ -410,7 +425,7 @@ const EdVendedores = (() => {
       <div class="ev-datos">
         ${linea('Cobrado al cliente', plata(v.total))}
         <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-        ${linea('Despacho', plata(v.costo_despacho))}
+        ${esRetiro(v) ? linea('Retiro en sucursal', 'Sin costo') : linea('Despacho', plata(v.costo_despacho))}
         <div class="ev-datos-l total"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comisionDe(v))}</b></div>
       </div>
 
@@ -472,6 +487,13 @@ const EdVendedores = (() => {
   }
 
 
+  // La línea que reemplaza a la dirección cuando el cliente retira en tienda.
+  function marcaRetiro(v){
+    return `<small class="ev-retiro">${svg(ICO.tienda)}Retira en ${esc(sucursalDe(v.sucursal_id))}` +
+      (v.codigo_retiro ? ` · código <b>${esc(v.codigo_retiro)}</b>` : '') +
+      (ENTREGAS[v.entrega] ? ` · ${ENTREGAS[v.entrega]}` : '') + '</small>';
+  }
+
   function tarjetaVenta(v){
     const estado = estadoDe(v);
     const com = comisionDe(v);
@@ -482,7 +504,7 @@ const EdVendedores = (() => {
           <div class="ev-venta-datos">
             <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
             <small>${esc(v.cliente_nombre)} · ${Sesion.waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
-            <small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>
+            ${esRetiro(v) ? marcaRetiro(v) : `<small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>`}
             <small>${esc(v.metodo_pago)} · ${esc(v.vendedor_nombre)} · ${hora(v.created_at)}</small>
           </div>
           <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Pendiente' : estado === 'aceptado' ? 'Aceptada' : 'Denegado'}</span>
@@ -491,7 +513,7 @@ const EdVendedores = (() => {
         <div class="ev-cifras">
           <div><span>Cobrado</span><b>${plata(v.total)}</b></div>
           <div class="gana"><span>Ganancia</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div><span>Envío</span><b>${plata(v.costo_despacho)}</b></div>
+          <div><span>${esRetiro(v) ? 'Retiro' : 'Envío'}</span><b>${esRetiro(v) ? 'Sin costo' : plata(v.costo_despacho)}</b></div>
           <div class="pagar"><span>A pagar</span><b>${estado === 'denegado' ? '—' : plata(com)}</b></div>
         </div>
 
@@ -574,18 +596,38 @@ const EdVendedores = (() => {
   }
 
   /* ── Equipo ───────────────────────────────────────────── */
+  // Una sucursal apagada ya no se ofrece, salvo que sea la que esa persona
+  // ya tiene: si no, editarla la movería de local sin querer.
+  function selectorSucursal(nombre, elegido){
+    const lista = sucursales.filter(s => s.activa || s.id === elegido);
+    return Sesion.desplegable(nombre, lista.map(s => ({
+      valor: s.id, texto: s.nombre,
+      nota: [s.direccion, s.comuna].filter(Boolean).join(', '),
+    })), lista.length ? 'Elige la sucursal' : 'Crea una sucursal en Despacho', elegido, true, ICO.tienda);
+  }
+
   function pintarEquipo(ov, box){
     box.innerHTML = `
-      <div class="ev-nuevo">
-        <p class="venta-sec" style="margin-top:0">Vendedor nuevo</p>
+      <div class="ev-nuevo" id="evNuevo">
+        <p class="venta-sec" style="margin-top:0">Persona nueva</p>
         <div class="venta-g2">
           <label class="venta-f"><span>Nombre y apellido <i class="req">obligatorio</i></span><input type="text" id="nvNombre" placeholder="Ej: Camila Soto" required></label>
           <label class="venta-f"><span>Correo <i class="req">obligatorio</i></span><input type="email" id="nvEmail" placeholder="vendedor@correo.cl" required></label>
           <label class="venta-f"><span>Teléfono <i class="req">obligatorio</i></span>${Sesion.campoTel('id="nvTel" required')}</label>
           <label class="venta-f"><span>Contraseña provisoria <i class="req">obligatorio</i></span><input type="text" id="nvClave" placeholder="Mínimo 8 caracteres" required></label>
+          <div class="venta-f"><span>Rol</span>
+            ${Sesion.desplegable('nvRol', [
+              { valor:'vendedor', texto:'Vendedor', nota:'Registra pedidos' },
+              { valor:'moderador', texto:'Moderador de caja', nota:'Entrega en una sucursal' },
+              { valor:'admin', texto:'Administrador', nota:'Edita la web' },
+            ], 'Elige el rol', 'vendedor')}
+          </div>
+          <div class="venta-f" id="nvSucBox" hidden><span>Sucursal <i class="req">obligatorio</i></span>
+            ${selectorSucursal('nvSuc')}
+          </div>
           <label class="venta-f venta-ancho"><span>Observación</span><input type="text" id="nvObs" placeholder="Zona, horario, notas internas"></label>
         </div>
-        <button type="button" class="venta-btn" id="nvCrear" style="margin-top:14px">Crear vendedor</button>
+        <button type="button" class="venta-btn" id="nvCrear" style="margin-top:14px">Crear persona</button>
         <p class="venta-msg" id="nvMsg"></p>
       </div>
 
@@ -593,13 +635,19 @@ const EdVendedores = (() => {
         <p class="venta-sec" style="margin:0">Equipo</p>
         <label class="ev-buscador">
           ${svg(ICO.lupa)}
-          <input type="search" id="evBuscar" placeholder="Buscar por nombre, correo o teléfono" autocomplete="off">
+          <input type="search" id="evBuscar" placeholder="Buscar por nombre, correo, rol o sucursal" autocomplete="off">
         </label>
       </div>
       <div class="ev-grid" id="evEquipo"></div>
       <p class="venta-vacio" id="evNadie" hidden>Nadie del equipo coincide con esa búsqueda.</p>`;
 
-    ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, e.target));
+    // La sucursal solo tiene sentido para el moderador: aparece al elegir ese
+    // rol y se va si cambia a otro.
+    Sesion.conectarDesplegables(box.querySelector('#evNuevo'), (campo, valor) => {
+      if (campo !== 'nvRol') return;
+      box.querySelector('#nvSucBox').hidden = valor !== 'moderador';
+    });
+    ov.querySelector('#nvCrear').addEventListener('click', e => crearVendedor(ov, box, e.target));
 
     const grilla = box.querySelector('#evEquipo');
     const nadie = box.querySelector('#evNadie');
@@ -612,15 +660,15 @@ const EdVendedores = (() => {
     function pintarGrilla(){
       const q = limpio(buscador.value.trim());
       const vistos = usuarios.filter(u => !q ||
-        [u.nombre, u.email, u.telefono, u.observacion,
-         u.rol === 'admin' ? 'administrador' : 'vendedor'].some(c => limpio(c).includes(q)));
+        [u.nombre, u.email, u.telefono, u.observacion, rolDe(u),
+         u.sucursal_id ? sucursalDe(u.sucursal_id) : ''].some(c => limpio(c).includes(q)));
 
       grilla.innerHTML = vistos.map(u => `
         <div class="ev-ficha${u.activo ? '' : ' apagada'}">
           <span class="ev-ini">${esc((u.nombre || u.email).trim().charAt(0).toUpperCase())}</span>
           <span class="ev-txt">
             <b>${esc(u.nombre || u.email)}</b>
-            <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.activo ? '' : ' · desactivado'}</small>
+            <small>${esc(rolDe(u))}${u.rol === 'moderador' ? ' · ' + esc(sucursalDe(u.sucursal_id)) : ''}${u.activo ? '' : ' · desactivado'}</small>
             ${u.telefono ? `<small>${Sesion.waChip(u.telefono, 'Hola ' + (u.nombre || '') + ', te escribo de Esencial Emporio.', u.nombre)}</small>` : ''}
           </span>
           <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
@@ -661,8 +709,12 @@ const EdVendedores = (() => {
           <div class="venta-f"><span>Rol</span>
             ${Sesion.desplegable('rol', [
               { valor:'vendedor', texto:'Vendedor', nota:'Solo ventas' },
+              { valor:'moderador', texto:'Moderador de caja', nota:'Entrega en una sucursal' },
               { valor:'admin', texto:'Administrador', nota:'Edita la web' },
             ], 'Elige el rol', u.rol)}
+          </div>
+          <div class="venta-f" id="evSucBox"${u.rol === 'moderador' ? '' : ' hidden'}><span>Sucursal <i class="req">obligatorio</i></span>
+            ${selectorSucursal('sucursal', u.sucursal_id)}
           </div>
           <label class="venta-f venta-ancho"><span>Observación</span>
             <input type="text" data-uf="observacion" value="${esc(u.observacion)}">
@@ -691,7 +743,10 @@ const EdVendedores = (() => {
     const borrarBtn = ov.querySelector('#evBorrarU');
     if (borrarBtn) borrarBtn.addEventListener("click", () => borrarVendedor(padre, u, conVentas, cerrar));
     const f = ov.querySelector('#evPersona');
-    Sesion.conectarDesplegables(ov);
+    Sesion.conectarDesplegables(ov, (campo, valor) => {
+      if (campo !== 'rol') return;
+      ov.querySelector('#evSucBox').hidden = valor !== 'moderador';
+    });
 
     ov.querySelector('#evActivo').addEventListener('click', async e => {
       await cambiarActivo(padre, id, e.target);
@@ -706,6 +761,11 @@ const EdVendedores = (() => {
       if (!dato('nombre') || !dato('telefono')) {
         msg.className = 'venta-msg err';
         msg.textContent = 'El nombre y el teléfono son obligatorios: salen en cada pedido.';
+        return;
+      }
+      if (f.querySelector('[name=rol]').value === 'moderador' && !f.querySelector('[name=sucursal]').value) {
+        msg.className = 'venta-msg err';
+        msg.textContent = 'Elige la sucursal que va a atender. Un moderador sin sucursal no ve ningún pedido.';
         return;
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
@@ -727,21 +787,26 @@ const EdVendedores = (() => {
     return session ? session.access_token : '';
   }
 
-  async function crearVendedor(ov, btn){
+  async function crearVendedor(ov, box, btn){
     const g = id => ov.querySelector(id).value.trim();
+    const rol = box.querySelector('[name=nvRol]').value || 'vendedor';
     const cuerpo = {
       nombre: g('#nvNombre'), email: g('#nvEmail'), telefono: Sesion.telGuardar(g('#nvTel')),
-      password: ov.querySelector('#nvClave').value, observacion: g('#nvObs'), rol: 'vendedor',
+      password: ov.querySelector('#nvClave').value, observacion: g('#nvObs'), rol,
+      sucursal_id: rol === 'moderador' ? box.querySelector('[name=nvSuc]').value : null,
     };
     const msg = ov.querySelector('#nvMsg');
     msg.className = 'venta-msg';
     const falla = t => { msg.className = 'venta-msg err'; msg.textContent = t; };
     // El nombre y el teléfono salen en cada pedido, así que son obligatorios.
-    if (!cuerpo.nombre) return falla('Escribe el nombre y el apellido del vendedor.');
+    if (!cuerpo.nombre) return falla('Escribe el nombre y el apellido.');
     if (!cuerpo.email) return falla('Falta el correo.');
     if (!cuerpo.telefono) return falla('Escribe el teléfono: sale en cada pedido que registre.');
     if (cuerpo.telefono.replace(/\D/g, '').length < 8) return falla('Ese teléfono parece incompleto.');
     if (cuerpo.password.length < 8) return falla('La contraseña necesita 8 caracteres o más.');
+    if (rol === 'moderador' && !cuerpo.sucursal_id) {
+      return falla('Elige la sucursal que va a atender. Un moderador sin sucursal no ve ningún pedido.');
+    }
 
     btn.disabled = true; btn.textContent = 'Creando…';
     try {
@@ -754,9 +819,9 @@ const EdVendedores = (() => {
       if (!r.ok) throw new Error(out.error || 'No se pudo crear');
       await cargar();
       pintar(ov);
-      toast('Vendedor creado');
+      toast(rol === 'moderador' ? 'Moderador creado' : rol === 'admin' ? 'Administrador creado' : 'Vendedor creado');
     } catch (err) {
-      btn.disabled = false; btn.textContent = 'Crear vendedor';
+      btn.disabled = false; btn.textContent = 'Crear persona';
       msg.className = 'venta-msg err';
       msg.textContent = String(err.message || err);
     }
@@ -765,11 +830,15 @@ const EdVendedores = (() => {
   async function guardarUsuario(padre, f, id){
     const val = campo => f.querySelector('[data-uf=' + campo + ']').value.trim();
     const clave = val('clave');
+    const rol = f.querySelector('[name=rol]').value || 'vendedor';
 
     const { error } = await sb.from('profiles').update({
       nombre: val('nombre'), telefono: Sesion.telGuardar(val('telefono')),
       observacion: val('observacion'),
-      rol: f.querySelector('[name=rol]').value || 'vendedor',
+      rol,
+      // Quien deja de ser moderador deja de tener caja: si no, al volver al
+      // rol seguiría atado a un local que ya no atiende.
+      sucursal_id: rol === 'moderador' ? f.querySelector('[name=sucursal]').value : null,
     }).eq('id', id);
     if (error) throw error;
 
@@ -798,7 +867,7 @@ const EdVendedores = (() => {
         <div>
           <b>${esc(u.nombre || u.email)}</b>
           <small>${esc(u.email)}</small>
-          <small>${u.rol === 'admin' ? 'Administrador' : 'Vendedor'}${u.telefono ? ' · ' + esc(u.telefono) : ''}</small>
+          <small>${esc(rolDe(u))}${u.telefono ? ' · ' + esc(u.telefono) : ''}</small>
         </div>
       </div>
       ${conVentas ? `<div class="ev-previo">
@@ -856,6 +925,9 @@ const EdVendedores = (() => {
 
     function pintar(){
       box.innerHTML = `
+        <div class="ev-sucursales-bloque" id="evSucursales"></div>
+
+        <p class="venta-sec">Comunas de despacho</p>
         <p class="ec-intro">Es lo que se suma al precio cuando el vendedor elige la comuna. El ojo la saca del formulario sin perderla; el tacho la elimina para siempre.</p>
         <div class="ev-comunas">
           ${filas().map((c, i) => `
@@ -931,9 +1003,194 @@ const EdVendedores = (() => {
       });
 
       box.querySelector('#evGuardarComunas').addEventListener('click', e => guardarComunas(ov, box, e.target, nuevas, borradas));
+      pintarSucursales(ov, box.querySelector('#evSucursales'));
     }
 
     pintar();
+  }
+
+  /* ── Sucursales ───────────────────────────────────────── */
+  // Van arriba de las comunas a propósito: sin una sucursal cargada no se
+  // puede crear un moderador ni registrar un pedido para retirar.
+  function pintarSucursales(ov, caja){
+    const nuevas = [];
+
+    function filas(){ return sucursales.concat(nuevas); }
+
+    function pintar(){
+      caja.innerHTML = `
+        <p class="venta-sec" style="margin-top:0">Sucursales</p>
+        <p class="ec-intro">Son los locales donde el cliente retira. El vendedor elige una al registrar un pedido presencial, y el moderador de esa sucursal lo ve en su caja. El ojo la saca del formulario sin perderla; el tacho la elimina con sus pedidos.</p>
+        <div class="ev-sucursales">
+          ${filas().map((s, i) => `
+            <div class="ev-sucursal${s.activa ? '' : ' apagada'}" data-i="${i}">
+              <div class="ev-sucursal-campos">
+                <input type="text" data-sf="nombre" value="${esc(s.nombre)}" placeholder="Nombre del local">
+                <input type="text" data-sf="direccion" value="${esc(s.direccion || '')}" placeholder="Calle y número">
+                <input type="text" data-sf="comuna" value="${esc(s.comuna || '')}" placeholder="Comuna">
+                <input type="text" data-sf="telefono" value="${esc(s.telefono || '')}" placeholder="Teléfono">
+              </div>
+              <div class="ev-sucursal-acc">
+                ${s.id ? `<span class="ev-sucursal-gente">${cuentaGente(s.id)}</span>` : '<span class="ev-sucursal-gente nueva">Sin guardar</span>'}
+                <label class="ec-ojo" title="${s.activa ? 'Sacar del formulario' : 'Volver a ofrecer'}">
+                  <input type="checkbox" data-sf="activa" ${s.activa ? 'checked' : ''}>
+                  <svg class="ec-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+                  <svg class="ec-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+                </label>
+                <button type="button" class="ec-borrar" data-quitar-s="${i}" aria-label="Eliminar sucursal">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M7 7l1 13h8l1-13"/></svg>
+                </button>
+              </div>
+            </div>`).join('')
+          || '<p class="venta-vacio">Todavía no hay ninguna sucursal. Agrega la primera abajo.</p>'}
+        </div>
+        <div class="ev-nueva-comuna">
+          <input type="text" id="evSucNueva" placeholder="Sucursal nueva">
+          <button type="button" class="ed-btn" id="evSucAgregar">Agregar</button>
+        </div>
+        <div class="ev-pie-comunas">
+          <span class="ed-aviso" id="evSucAviso"></span>
+          <button type="button" class="venta-btn" id="evGuardarSuc">Guardar sucursales</button>
+        </div>`;
+
+      ['nombre','direccion','comuna','telefono'].forEach(campo => {
+        caja.querySelectorAll('[data-sf=' + campo + ']').forEach(x => x.addEventListener('input', e => {
+          filas()[+e.target.closest('.ev-sucursal').dataset.i][campo] = e.target.value;
+        }));
+      });
+      caja.querySelectorAll('[data-sf=activa]').forEach(x => x.addEventListener('change', e => {
+        filas()[+e.target.closest('.ev-sucursal').dataset.i].activa = e.target.checked;
+        pintar();
+      }));
+
+      caja.querySelectorAll('[data-quitar-s]').forEach(b => b.addEventListener('click', () => {
+        const i = +b.dataset.quitarS;
+        const s = filas()[i];
+        if (!s.id) { nuevas.splice(i - sucursales.length, 1); pintar(); return; }
+        borrarSucursal(ov, s);
+      }));
+
+      const agregar = () => {
+        const inp = caja.querySelector('#evSucNueva');
+        const nombre = inp.value.trim();
+        if (!nombre) return;
+        if (filas().some(s => (s.nombre || '').toLowerCase() === nombre.toLowerCase())) {
+          toast('Esa sucursal ya está en la lista', true);
+          return;
+        }
+        nuevas.push({ nombre, direccion:'', comuna:'', telefono:'', activa:true, position: filas().length + 1 });
+        inp.value = '';
+        pintar();
+        caja.querySelector('#evSucNueva').focus();
+      };
+      caja.querySelector('#evSucAgregar').addEventListener('click', agregar);
+      caja.querySelector('#evSucNueva').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); agregar(); }
+      });
+
+      caja.querySelector('#evGuardarSuc').addEventListener('click', e => guardarSucursales(ov, caja, e.target, nuevas));
+    }
+
+    pintar();
+  }
+
+  function cuentaGente(id){
+    const gente = usuarios.filter(u => u.sucursal_id === id).length;
+    const pedidos = ventas.filter(v => v.sucursal_id === id).length;
+    const partes = [];
+    if (gente) partes.push(gente + ' moderador' + (gente === 1 ? '' : 'es'));
+    if (pedidos) partes.push(pedidos + ' pedido' + (pedidos === 1 ? '' : 's'));
+    return partes.length ? esc(partes.join(' · ')) : 'Sin movimiento';
+  }
+
+  async function guardarSucursales(ov, caja, btn, nuevas){
+    const aviso = caja.querySelector('#evSucAviso');
+    const todas = sucursales.concat(nuevas);
+    const falla = t => { aviso.className = 'ed-aviso err'; aviso.textContent = t; };
+    if (todas.some(s => !String(s.nombre || '').trim())) return falla('Hay una sucursal sin nombre.');
+    const vistos = new Set();
+    if (todas.map(s => s.nombre.trim().toLowerCase()).some(n => vistos.has(n) ? true : (vistos.add(n), false))) {
+      return falla('Hay dos sucursales con el mismo nombre.');
+    }
+
+    btn.disabled = true; btn.textContent = 'Guardando…';
+    try {
+      // Las que ya existen se actualizan por id; las nuevas van sin id, igual
+      // que las comunas, para que la base les genere el suyo.
+      const conId = [], sinId = [];
+      todas.forEach((s, i) => {
+        const fila = {
+          nombre: s.nombre.trim(), direccion: String(s.direccion || '').trim(),
+          comuna: String(s.comuna || '').trim(), telefono: String(s.telefono || '').trim(),
+          activa: s.activa, position: i + 1,
+        };
+        if (s.id) { fila.id = s.id; conId.push(fila); } else sinId.push(fila);
+      });
+      if (conId.length) {
+        const { error } = await sb.from('sucursales').upsert(conId, { onConflict: 'id' });
+        if (error) throw error;
+      }
+      if (sinId.length) {
+        const { error } = await sb.from('sucursales').insert(sinId);
+        if (error) throw error;
+      }
+      await cargar();
+      pintar(ov);
+      toast('Sucursales guardadas');
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Guardar sucursales';
+      falla(mensajeError(err));
+    }
+  }
+
+  // Borrar una sucursal arrastra sus pedidos y deja sin caja a sus
+  // moderadores, así que avisa con la cuenta y espera 5 segundos, igual que
+  // al borrar un pedido o un vendedor. Para sacarla de circulación sin perder
+  // nada está el ojo.
+  async function borrarSucursal(ov, s){
+    const pedidos = ventas.filter(v => v.sucursal_id === s.id).length;
+    const gente = usuarios.filter(u => u.sucursal_id === s.id);
+
+    const ficha = `
+      <div class="ev-resumen-pedido">
+        <span class="ev-ini">${svg(ICO.tienda)}</span>
+        <div>
+          <b>${esc(s.nombre)}</b>
+          <small>${esc([s.direccion, s.comuna].filter(Boolean).join(', ') || 'Sin dirección')}</small>
+          <small>${s.activa ? 'Activa' : 'Apagada'}</small>
+        </div>
+      </div>
+      ${pedidos || gente.length ? `<div class="ev-previo">
+        <span>Qué se lleva por delante</span>
+        <p>${[
+          pedidos ? pedidos + ' pedido' + (pedidos === 1 ? '' : 's') + ' presencial' + (pedidos === 1 ? '' : 'es') + ', que se borran con sus comisiones' : '',
+          gente.length ? gente.length + ' moderador' + (gente.length === 1 ? '' : 'es') + ' (' + esc(gente.map(u => u.nombre || u.email).join(', ')) + '), que quedan desactivados y como vendedores' : '',
+        ].filter(Boolean).join('. ')}.</p>
+      </div>` : ''}`;
+
+    const ok = await confirmarFn(
+      pedidos || gente.length
+        ? 'Esta sucursal tiene movimiento. Al eliminarla se borran sus pedidos y sus moderadores se quedan sin caja. ¿Estás seguro? No se puede deshacer.'
+        : '¿Seguro que quieres eliminar esta sucursal? No se puede deshacer.',
+      'Eliminar sucursal', 5, ficha);
+    if (!ok) return;
+
+    try {
+      const r = await fetch('/api/crear-vendedor', {
+        method: 'POST',
+        headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + await token() },
+        body: JSON.stringify({ accion:'borrar-sucursal', id: s.id }),
+      });
+      const out = await r.json();
+      if (!r.ok) throw new Error(out.error || 'No se pudo eliminar');
+      await cargar();
+      pintar(ov);
+      toast(out.ventas || out.personas
+        ? 'Sucursal eliminada, con sus ' + out.ventas + ' pedido' + (out.ventas === 1 ? '' : 's')
+        : 'Sucursal eliminada');
+    } catch (err) {
+      toast(mensajeError(err));
+    }
   }
 
   async function guardarComunas(ov, box, btn, nuevas, borradas){
