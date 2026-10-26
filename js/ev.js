@@ -108,6 +108,15 @@ const EdVendedores = (() => {
   const pagoDe = (id, periodo) => pagos.find(p => p.vendedor_id === id && p.periodo === periodo) || null;
   const CUENTAS = ['Cuenta corriente','Cuenta vista','Cuenta RUT','Cuenta de ahorro'];
 
+  // El número entero no hace falta para confirmar que quedó guardado, y en
+  // una grilla a la vista de cualquiera que pase conviene que no esté.
+  function resumenCuenta(id){
+    const b = bancoDe(id);
+    if (!tieneCuenta(id)) return 'Sin cuenta para transferir';
+    const fin = String(b.numero || '').replace(/\D/g, '').slice(-4);
+    return [b.banco, fin ? '····' + fin : b.rut].filter(Boolean).join(' · ');
+  }
+
   const ROLES = { admin:'Administrador', moderador:'Moderador de caja', vendedor:'Vendedor' };
   const rolDe = u => ROLES[u.rol] || 'Vendedor';
   // La venta local la carga el moderador en el mostrador y ya viene aceptada;
@@ -848,6 +857,7 @@ const EdVendedores = (() => {
           <span class="ev-txt">
             <b>${esc(u.nombre || u.email)}</b>
             <small>${esc(rolDe(u))}${u.rol === 'moderador' ? ' · ' + esc(sucursalDe(u.sucursal_id)) : ''}${u.activo ? '' : ' · desactivado'}</small>
+            ${u.rol === 'vendedor' ? `<small class="ev-cuenta-chip">${resumenCuenta(u.id)}</small>` : ''}
             ${u.telefono ? `<small>${Sesion.waChip(u.telefono, 'Hola ' + (u.nombre || '') + ', te escribo de Esencial Emporio.', u.nombre)}</small>` : ''}
           </span>
           <button type="button" class="ev-lapiz" data-editar-u="${esc(u.id)}" aria-label="Editar ${esc(u.nombre || u.email)}">
@@ -1362,6 +1372,7 @@ const EdVendedores = (() => {
                : 'Marcar como pagado · ' + plata(aCobrar)}</button>`;
 
     const { ov, cerrar } = Sesion.panel(f.nombre, MESES[mes - 1] + ' ' + anio, cuerpo, pie);
+    ov.classList.add('venta-centro');
 
     ov.querySelectorAll('[data-copiar]').forEach(btn => btn.addEventListener('click', async () => {
       try {

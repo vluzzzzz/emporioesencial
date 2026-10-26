@@ -3454,3 +3454,31 @@ svg{ -webkit-user-select:none; user-select:none; }
   .ev-pagos-f{grid-template-columns:1fr auto}
   .ev-pagos-f>span:last-child{grid-column:1 / -1;text-align:left;margin-top:6px}
 }
+
+/* ── Ventana centrada ──────────────────────────────────────────────────────
+   Para gestos cortos sobre una lista, como marcar un pago. El cajón lateral
+   es de alto completo y tapa lo que estabas leyendo; esto flota encima y
+   deja ver la lista alrededor. */
+.venta-ov.venta-centro{display:flex;align-items:center;justify-content:center;padding:18px}
+.venta-ov.venta-centro .venta-panel{
+  position:relative;top:auto;right:auto;margin:auto;
+  width:min(560px,100%);height:auto;max-height:min(86vh,780px);
+  border-radius:20px;overflow:hidden;
+  box-shadow:0 30px 80px rgba(0,0,0,.32);
+  transform:translateY(18px) scale(.97);opacity:0;
+  transition:transform .3s var(--ease-spring),opacity .22s var(--ease-smooth);
+}
+.venta-ov.venta-centro.abierto .venta-panel{transform:none;opacity:1}
+.venta-ov.venta-centro .venta-head{padding:20px 24px 17px}
+.venta-ov.venta-centro .venta-head h2{font-size:25px}
+.venta-ov.venta-centro .venta-body{padding:20px 24px 22px}
+.venta-ov.venta-centro .venta-pie{padding:15px 24px}
+.venta-ov.venta-centro .venta-pie .venta-btn{width:100%}
+@media(max-width:560px){
+  .venta-ov.venta-centro{padding:10px}
+  .venta-ov.venta-centro .venta-panel{max-height:94vh}
+}
+
+/* La cuenta, resumida en la ficha del equipo: confirma de una mirada que
+   quedó guardada, sin mostrar el número entero */
+.ev-cuenta-chip{color:var(--gray-mid)}
