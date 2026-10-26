@@ -66,7 +66,7 @@ const EdProducto = (() => {
             <input type="number" name="antes" min="0" step="1" value="${p.compare ?? ''}" placeholder="Para el chip de descuento">
           </label>
           <div class="venta-f venta-ancho"><span>Categoría</span>
-            ${Sesion.desplegable('cat', Cats.planas().map(c => ({ valor:c.slug, texto:c.nombre })), Cats.nombre(p.cat))}
+            ${Sesion.desplegable('cat', catsConLaSuya(p.cat), 'Elige la categoría', p.cat, true)}
           </div>
           <label class="venta-f venta-ancho"><span>Descripción</span>
             <textarea name="desc" rows="3">${escH(p.desc)}</textarea>
@@ -154,6 +154,16 @@ const EdProducto = (() => {
         msg.textContent = mensajeError(err);
       }
     });
+  }
+
+  // `Cats.planas()` solo trae las visibles. Si el producto está en una
+  // categoría oculta, o en una que ya no está en el árbol, igual tiene que
+  // poder verla y conservarla.
+  function catsConLaSuya(cat){
+    const base = Cats.planas().map(c => ({ valor:c.slug, texto:c.nombre }));
+    if (!cat || base.some(c => c.valor === cat)) return base;
+    const nom = Cats.nombre(cat);
+    return [{ valor:cat, texto: nom === cat ? cat : nom, nota:'La que tiene ahora' }].concat(base);
   }
 
   function pintarFotos(ov, estado){

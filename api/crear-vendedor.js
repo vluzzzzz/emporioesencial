@@ -31,6 +31,16 @@ async function sucursalValida(id) {
   return Array.isArray(out) && out.length > 0;
 }
 
+// Las tablas de pagos llegaron después. Si el proyecto todavía no corrió
+// ese archivo, el borrado tiene que seguir igual.
+async function soltar(tabla, query, method, body) {
+  try {
+    await sbRest(tabla, { method, query, body, prefer: 'return=minimal' });
+  } catch (err) {
+    if (!/does not exist|42P01|PGRST205/i.test(String(err && err.message || err))) throw err;
+  }
+}
+
 async function crearUsuario(fila) {
   const r = await fetch(`${SB_URL()}/auth/v1/admin/users`, {
     method: 'POST',
@@ -100,11 +110,42 @@ module.exports = async (req, res) => {
       }
       await sbRest('ventas', { method: 'DELETE', query: suyo });
 
+      // Sus pagos y su cuenta bancaria se van solos con la cuenta, pero solo
+      // si las tablas de pagos ya están creadas. Si todavía no se corrió ese
+      // archivo, no es motivo para frenar el borrado.
+      await soltar('pagos',          `?vendedor_id=eq.${encodeURIComponent(b.id)}`, 'DELETE');
+      await soltar('datos_bancarios', `?vendedor_id=eq.${encodeURIComponent(b.id)}`, 'DELETE');
+
+      // Lo que esta persona tocó en ventas de OTROS no se borra: esas ventas
+      // son de otro vendedor y su comisión tiene que quedar. Lo que se suelta
+      // es la huella de quién las cargó o las resolvió.
+      const huellas = [
+        ['ventas', 'vendido_por'],
+        ['ventas', 'resuelto_por'],
+        ['pagos',  'pagado_por'],
+        ['guias',  'creada_por'],
+      ];
+      for (const [tabla, campo] of huellas) {
+        await soltar(tabla, `?${campo}=eq.${encodeURIComponent(b.id)}`, 'PATCH', { [campo]: null });
+      }
+
       const r = await fetch(`${SB_URL()}/auth/v1/admin/users/${encodeURIComponent(b.id)}`, {
         method: 'DELETE',
         headers: { apikey: SB_KEY(), Authorization: `Bearer ${SB_KEY()}` },
       });
-      if (!r.ok) return res.status(r.status).json({ error: await r.text() });
+      if (!r.ok) {
+        const txt = await r.text();
+        // La base frena el borrado si queda algo apuntando a esa cuenta.
+        // Decir cuál es la tabla ahorra media hora de adivinanzas.
+        if (/foreign key|still referenced/i.test(txt)) {
+          const tabla = (txt.match(/table "([^"]+)"/g) || []).pop() || '';
+          return res.status(409).json({
+            error: 'Todavía queda algo apuntando a esta cuenta' + (tabla ? ' en ' + tabla.replace(/table |"/g, '') : '') +
+              '. Corre supabase/borrar-persona.sql en Supabase y prueba de nuevo.',
+          });
+        }
+        return res.status(r.status).json({ error: txt });
+      }
       return res.status(200).json({ ok: true, ventas: ids.length });
     }
 
