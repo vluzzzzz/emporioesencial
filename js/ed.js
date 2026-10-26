@@ -26,12 +26,12 @@ const Edicion = (() => {
   function init(p){
     if (!p || boton) return;
 
-    // El moderador no edita la web: solo entrega pedidos en la caja. Se lleva
-    // el módulo de caja y nada más.
+    // El moderador no edita la web: solo carga las ventas del mostrador. Se
+    // lleva ese módulo y nada más.
     if (p.rol === 'moderador') {
       perfil = p;
       cargarCss();
-      cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdCaja.montarBoton(p)));
+      cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdLocal.montarBoton(p)));
       return;
     }
     if (p.rol !== 'admin') return;
@@ -51,8 +51,10 @@ const Edicion = (() => {
     // El panel de vendedores no depende del interruptor: el admin lo ve
     // siempre, con los lápices apagados.
     cargarCss();
+    // El de venta local no monta botón propio: el administrador lo abre desde
+    // Vendedores → Ventas, que es donde mira los números.
     cargarUno('js/eu.js', () => cargarUno('js/ev.js', () => EdVendedores.montarBoton()));
-    cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdCaja.montarBoton(p)));
+    cargarUno('js/eu.js', () => cargarUno('js/ec.js', () => EdLocal.usar(p)));
 
     if (localStorage.getItem(LLAVE) === '1') alternar(true);
   }

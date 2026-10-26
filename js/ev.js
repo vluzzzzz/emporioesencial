@@ -85,9 +85,11 @@ const EdVendedores = (() => {
 
   const ROLES = { admin:'Administrador', moderador:'Moderador de caja', vendedor:'Vendedor' };
   const rolDe = u => ROLES[u.rol] || 'Vendedor';
-  const esRetiro = v => v.tipo === 'presencial';
+  // La venta local la carga el moderador en el mostrador y ya viene aceptada;
+  // el delivery lo registra el vendedor y espera aprobación.
+  const esLocal = v => v.tipo === 'local';
   const sucursalDe = id => (sucursales.find(s => s.id === id) || {}).nombre || 'Sucursal';
-  const ENTREGAS = { por_retirar:'Por retirar', entregado:'Entregado', no_retirado:'No retirado' };
+  const quienCargo = v => (usuarios.find(u => u.id === v.vendido_por) || {}).nombre || 'La caja';
 
 
 
@@ -173,6 +175,7 @@ const EdVendedores = (() => {
   let mesVisto = clave(new Date());
   let diaVisto = null;
   let vendedorVisto = '';
+  let tipoVisto = '';
 
   function correrMes(pasos){
     const [a, m] = mesVisto.split('-').map(Number);
@@ -185,7 +188,8 @@ const EdVendedores = (() => {
 
   function delMes(c){
     return ventas.filter(v => clave(new Date(v.created_at)) === c
-      && (!vendedorVisto || v.vendedor_id === vendedorVisto));
+      && (!vendedorVisto || v.vendedor_id === vendedorVisto)
+      && (!tipoVisto || (tipoVisto === 'local') === esLocal(v)));
   }
 
   const ICO = {
@@ -200,6 +204,7 @@ const EdVendedores = (() => {
     tacho: '<path d="M4 6.5h16M9.5 6.5V4.2h5v2.3M6.5 6.5l.9 13a1.6 1.6 0 0 0 1.6 1.5h6a1.6 1.6 0 0 0 1.6-1.5l.9-13"/><path d="M10.3 10.5v6.5M13.7 10.5v6.5"/>',
     lupa: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/>',
     tienda: '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>',
+    camion: '<path d="M3 7.5h10.5v8H3z"/><path d="M13.5 10.5H18l3 3v2h-7.5z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>',
     wasap: '<path d="M3.5 20.5 5 16.3a7.8 7.8 0 1 1 3 3z"/><path d="M9.2 9c-.3 1.6 1.2 3.6 2.3 4.5s2.5 1.5 3.6 1.2l.6-1.4-1.9-1-.8.8a5.6 5.6 0 0 1-2-2l.9-.8-1-1.9z" fill="currentColor" stroke="none"/>',
   };
   const svg = (d, cls) => `<svg class="${cls || ''}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -273,7 +278,16 @@ const EdVendedores = (() => {
                   .map(u => ({ valor:u.id, texto:u.nombre || u.email }))),
           'Todo el equipo', vendedorVisto, true, ICO.persona)}
       </div>
-      ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}`;
+      <div class="ev-filtro">
+        <span>Tipo</span>
+        ${Sesion.desplegable('tipo', [
+          { valor:'', texto:'Local y delivery' },
+          { valor:'local', texto:'Venta local', nota:'En la sucursal' },
+          { valor:'delivery', texto:'Venta delivery', nota:'A domicilio' },
+        ], 'Local y delivery', tipoVisto, false, ICO.tienda)}
+      </div>
+      ${pendientes.length ? `<span class="ev-aviso-pend">${pendientes.length} por aprobar este mes</span>` : ''}
+      <button type="button" class="ed-btn ev-nueva-local" id="evNuevaLocal">${svg(ICO.tienda)}Nueva venta local</button>`;
 
     box.innerHTML = `
       <div class="ev-resumen">
@@ -323,8 +337,15 @@ const EdVendedores = (() => {
     if (filtros) Sesion.conectarDesplegables(filtros, (campo, valor) => {
       if (campo === 'mes') mesVisto = valor;
       if (campo === 'quien') vendedorVisto = valor;
+      if (campo === 'tipo') tipoVisto = valor;
       diaVisto = null;
       pintarVentas(box);
+    });
+    // El mismo panel del moderador, pero el administrador elige la sucursal.
+    const nueva = filtros && filtros.querySelector('#evNuevaLocal');
+    if (nueva) nueva.addEventListener('click', () => {
+      if (typeof EdLocal === 'undefined') return;
+      EdLocal.abrir(async () => { await cargar(); pintarVentas(box); });
     });
     box.querySelector('#evAntes').addEventListener('click', () => { correrMes(-1); pintarVentas(box); });
     box.querySelector('#evDespues').addEventListener('click', () => { correrMes(1); pintarVentas(box); });
@@ -359,7 +380,7 @@ const EdVendedores = (() => {
       </header>
 
       <div class="ev-det-cuerpo">
-        ${delDia.length ? delDia.map(tarjetaVenta).join('')
+        ${delDia.length ? agrupar(delDia).map(tarjetaVenta).join('')
           : `<div class="ev-det-vacio">${svg(ICO.calendario)}<p>No se registró ninguna venta este día.</p></div>`}
 
       </div>`;
@@ -383,29 +404,37 @@ const EdVendedores = (() => {
     const telLinea = (t, tel, msg, quien) =>
       `<div class="ev-datos-l"><span>${t}</span><b>${Sesion.waChip(tel, msg, quien)}</b></div>`;
 
+    const lineas = hermanas(v);
+    const varias = lineas.length > 1;
+    const totalT = lineas.reduce((a, l) => a + (l.total || 0), 0);
+    const comT = lineas.reduce((a, l) => a + comisionDe(l), 0);
+    const ganaT = lineas.reduce((a, l) => a + (l.precio_unitario || 0) * (l.cantidad || 1), 0);
+
     const cuerpo = `
       <div class="ev-resumen-pedido">
         <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
         <div>
-          <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-          <small>${plata(v.precio_unitario)} por unidad · ${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</small>
+          <b>${varias ? lineas.length + ' productos' : esc(v.producto_nombre) + (v.cantidad > 1 ? ' × ' + v.cantidad : '')}</b>
+          <small>${varias ? lineas.reduce((a, l) => a + (l.cantidad || 1), 0) + ' unidades' : plata(v.precio_unitario) + ' por unidad · ' + (v.cantidad || 1) + ' unidad' + ((v.cantidad || 1) === 1 ? '' : 'es')}</small>
           <small>${cuando(v.created_at)} · ${hora(v.created_at)}</small>
         </div>
         <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Pendiente' : estado === 'aceptado' ? 'Aceptada' : 'Denegado'}</span>
       </div>
 
-      <p class="venta-sec">${esRetiro(v) ? 'Quién lo retira' : 'A quién se lo enviamos'}</p>
+      ${varias ? `<div class="ev-ticket-lineas">${lineas.map(l =>
+        `<div class="ev-ticket-l"><span>${esc(l.producto_nombre)}${l.cantidad > 1 ? ' × ' + l.cantidad : ''}</span><b>${plata(l.total)}</b></div>`
+      ).join('')}</div>` : ''}
+
+      <p class="venta-sec">${esLocal(v) ? 'Quién se lo llevó' : 'A quién se lo enviamos'}</p>
       <div class="ev-datos">
         ${linea('Cliente', v.cliente_nombre)}
         ${telLinea('Teléfono', v.cliente_telefono,
           'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.',
           v.cliente_nombre)}
         ${v.cliente_email ? linea('Correo', v.cliente_email) : ''}
-        ${esRetiro(v) ? `
+        ${esLocal(v) ? `
           ${linea('Sucursal', sucursalDe(v.sucursal_id))}
-          ${linea('Código de retiro', v.codigo_retiro)}
-          ${linea('Entrega', ENTREGAS[v.entrega] || '—')}
-          ${v.entregado_en ? linea('Entregado el', cuando(v.entregado_en) + ' · ' + hora(v.entregado_en)) : ''}`
+          ${linea('La cargó', quienCargo(v))}`
         : `
           ${linea('Dirección', v.cliente_direccion)}
           ${linea('Comuna', v.comuna)}`}
@@ -423,10 +452,10 @@ const EdVendedores = (() => {
 
       <p class="venta-sec">Total</p>
       <div class="ev-datos">
-        ${linea('Cobrado al cliente', plata(v.total))}
-        <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-        ${esRetiro(v) ? linea('Retiro en sucursal', 'Sin costo') : linea('Despacho', plata(v.costo_despacho))}
-        <div class="ev-datos-l total"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comisionDe(v))}</b></div>
+        ${linea('Cobrado al cliente', plata(totalT))}
+        <div class="ev-datos-l verde"><span>Ganancia del negocio</span><b>${plata(ganaT)}</b></div>
+        ${esLocal(v) ? linea('Venta local', 'Sin despacho') : linea('Despacho', plata(v.costo_despacho))}
+        <div class="ev-datos-l total"><span>Pagar al vendedor</span><b>${estado === 'denegado' ? '—' : plata(comT)}</b></div>
       </div>
 
       ${v.motivo ? `<div class="ev-previo">
@@ -474,46 +503,90 @@ const EdVendedores = (() => {
       'Eliminar pedido', 5, ficha);
     if (!ok) return;
     try {
-      const { error } = await sb.from('ventas').delete().eq('id', v.id);
+      const lineas = hermanas(v);
+      const ids = lineas.map(l => l.id);
+      const { error } = await sb.from('ventas').delete().in('id', ids);
       if (error) throw error;
-      ventas = ventas.filter(x => String(x.id) !== String(v.id));
-      await refrescarStock(v.producto_slug);
+      ventas = ventas.filter(x => !ids.includes(x.id));
+      await Promise.all([...new Set(lineas.map(l => l.producto_slug))].map(refrescarStock));
       cerrar();
       pintarVentas(box);
-      toast('Pedido eliminado');
+      toast(lineas.length > 1 ? 'Venta eliminada, con sus ' + lineas.length + ' productos' : 'Pedido eliminado');
     } catch (err) {
       toast(mensajeError(err));
     }
   }
 
 
-  // La línea que reemplaza a la dirección cuando el cliente retira en tienda.
-  function marcaRetiro(v){
-    return `<small class="ev-retiro">${svg(ICO.tienda)}Retira en ${esc(sucursalDe(v.sucursal_id))}` +
-      (v.codigo_retiro ? ` · código <b>${esc(v.codigo_retiro)}</b>` : '') +
-      (ENTREGAS[v.entrega] ? ` · ${ENTREGAS[v.entrega]}` : '') + '</small>';
+  // Una venta local con varios productos son varias filas con el mismo
+  // ticket. Aquí se vuelven a juntar para mostrarlas como la venta que
+  // fueron; los totales del mes se siguen sacando de las filas sueltas.
+  function agrupar(lista){
+    const vistos = new Map(), salida = [];
+    lista.forEach(v => {
+      if (!v.ticket_id) { salida.push(v); return; }
+      const ya = vistos.get(v.ticket_id);
+      if (!ya) {
+        const cabeza = { ...v, lineas: [v] };
+        vistos.set(v.ticket_id, cabeza);
+        salida.push(cabeza);
+        return;
+      }
+      ya.lineas.push(v);
+      ya.total += v.total || 0;
+      ya.cantidad += v.cantidad || 0;
+    });
+    return salida;
+  }
+
+  // Las otras filas del mismo ticket, para cuando hay que mostrarlas o
+  // borrarlas todas juntas. Un delivery siempre viaja solo.
+  const hermanas = v => v.ticket_id
+    ? ventas.filter(x => x.ticket_id === v.ticket_id)
+    : [v];
+
+  const comisionTicket = v => (v.lineas || [v]).reduce((a, l) => a + comisionDe(l), 0);
+  const productosTicket = v => (v.lineas || [v])
+    .reduce((a, l) => a + (l.precio_unitario || 0) * (l.cantidad || 1), 0);
+
+  // La línea que dice de qué tipo fue la venta.
+  function marcaTipo(v){
+    return esLocal(v)
+      ? `<small class="ev-retiro local">${svg(ICO.tienda)}Venta local · ${esc(sucursalDe(v.sucursal_id))}</small>`
+      : `<small class="ev-retiro">${svg(ICO.camion)}Venta delivery · ${esc(v.cliente_direccion || 'Sin dirección')}, ${esc(v.comuna)}</small>`;
   }
 
   function tarjetaVenta(v){
     const estado = estadoDe(v);
-    const com = comisionDe(v);
+    const com = comisionTicket(v);
+    const varias = v.lineas && v.lineas.length > 1;
+    const titulo = varias
+      ? v.lineas.length + ' productos · ' + v.cantidad + ' unidades'
+      : esc(v.producto_nombre) + (v.cantidad > 1 ? ' × ' + v.cantidad : '');
+    const cliente = esLocal(v)
+      ? `<small>${esc(v.cliente_nombre || 'Cliente del mostrador')}</small>`
+      : `<small>${esc(v.cliente_nombre)} · ${Sesion.waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>`;
     return `
       <article class="ev-venta ${estado}" data-ver="${esc(v.id)}" title="Clic para ver el pedido completo">
         <div class="ev-venta-top">
           <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
           <div class="ev-venta-datos">
-            <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-            <small>${esc(v.cliente_nombre)} · ${Sesion.waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
-            ${esRetiro(v) ? marcaRetiro(v) : `<small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>`}
+            <b>${titulo}</b>
+            ${cliente}
+            ${marcaTipo(v)}
             <small>${esc(v.metodo_pago)} · ${esc(v.vendedor_nombre)} · ${hora(v.created_at)}</small>
           </div>
           <span class="ev-sello ${estado}">${estado === 'pendiente' ? 'Pendiente' : estado === 'aceptado' ? 'Aceptada' : 'Denegado'}</span>
         </div>
 
+        ${varias ? `<div class="ev-ticket-lineas">${v.lineas.map(l =>
+          `<div class="ev-ticket-l"><span>${esc(l.producto_nombre)}${l.cantidad > 1 ? ' × ' + l.cantidad : ''}</span><b>${plata(l.total)}</b></div>`
+        ).join('')}</div>` : ''}
+
         <div class="ev-cifras">
           <div><span>Cobrado</span><b>${plata(v.total)}</b></div>
-          <div class="gana"><span>Ganancia</span><b>${plata((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-          <div><span>${esRetiro(v) ? 'Retiro' : 'Envío'}</span><b>${esRetiro(v) ? 'Sin costo' : plata(v.costo_despacho)}</b></div>
+          <div class="gana"><span>Ganancia</span><b>${plata(productosTicket(v))}</b></div>
+          <div><span>${esLocal(v) ? 'Local' : 'Envío'}</span><b>${esLocal(v) ? 'Sin costo' : plata(v.costo_despacho)}</b></div>
           <div class="pagar"><span>A pagar</span><b>${estado === 'denegado' ? '—' : plata(com)}</b></div>
         </div>
 
@@ -1020,7 +1093,7 @@ const EdVendedores = (() => {
     function pintar(){
       caja.innerHTML = `
         <p class="venta-sec" style="margin-top:0">Sucursales</p>
-        <p class="ec-intro">Son los locales donde el cliente retira. El vendedor elige una al registrar un pedido presencial, y el moderador de esa sucursal lo ve en su caja. El ojo la saca del formulario sin perderla; el tacho la elimina con sus pedidos.</p>
+        <p class="ec-intro">Son los locales donde se atiende en persona. El moderador de cada sucursal carga ahí sus ventas locales. El ojo la saca de los formularios sin perderla; el tacho la elimina con sus ventas.</p>
         <div class="ev-sucursales">
           ${filas().map((s, i) => `
             <div class="ev-sucursal${s.activa ? '' : ' apagada'}" data-i="${i}">
@@ -1163,7 +1236,7 @@ const EdVendedores = (() => {
       ${pedidos || gente.length ? `<div class="ev-previo">
         <span>Qué se lleva por delante</span>
         <p>${[
-          pedidos ? pedidos + ' pedido' + (pedidos === 1 ? '' : 's') + ' presencial' + (pedidos === 1 ? '' : 'es') + ', que se borran con sus comisiones' : '',
+          pedidos ? pedidos + ' venta' + (pedidos === 1 ? '' : 's') + ' local' + (pedidos === 1 ? '' : 'es') + ', que se borran con sus comisiones' : '',
           gente.length ? gente.length + ' moderador' + (gente.length === 1 ? '' : 'es') + ' (' + esc(gente.map(u => u.nombre || u.email).join(', ')) + '), que quedan desactivados y como vendedores' : '',
         ].filter(Boolean).join('. ')}.</p>
       </div>` : ''}`;

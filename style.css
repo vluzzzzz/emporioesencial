@@ -3256,82 +3256,103 @@ svg{ -webkit-user-select:none; user-select:none; }
 .vsel-nada{display:block;padding:14px 13px;font-size:13.5px;color:var(--gray-mid);text-align:center}
 .vsel-nada[hidden]{display:none}
 
-
 /* ============================================================================
-   Retiro en sucursal · el otro camino de un pedido
+   Venta local · el mostrador de la sucursal
    ========================================================================== */
 
-/* Despacho o retiro: lo primero que elige el vendedor, antes que nada más */
-.venta-tipo{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0 4px}
-.venta-tipo-b{display:flex;align-items:center;gap:11px;text-align:left;font:inherit;padding:13px 15px;border:1.5px solid var(--gray-light);border-radius:14px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s,background .16s}
-.venta-tipo-b:hover{border-color:var(--gray-mid)}
-.venta-tipo-b.activa{border-color:#111;background:#111;color:#e9d9a8}
-.venta-tipo-b svg{width:22px;height:22px;flex:none}
-.venta-tipo-b span{display:block;min-width:0}
-.venta-tipo-b b{display:block;font-size:14.5px;font-weight:700}
-.venta-tipo-b small{display:block;font-size:12.5px;opacity:.72;margin-top:2px}
-@media(max-width:560px){.venta-tipo{grid-template-columns:1fr}}
-
-.venta-nota-caja{margin:10px 0 0;font-size:13px;line-height:1.5;color:var(--gray-mid)}
-
-/* El código de retiro recién creado: es lo único que el cliente se lleva */
-.venta-codigo{text-align:center;padding:30px 20px}
-.venta-codigo>span{display:block;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gray-mid)}
-.venta-codigo>b{display:block;margin:12px 0 18px;font-size:64px;line-height:1;font-weight:700;letter-spacing:.16em;color:var(--black)}
-.venta-codigo>p{margin:0 auto;max-width:420px;font-size:14px;line-height:1.6;color:var(--gray-mid)}
+/* El botón de la barra */
+.nav-local-btn{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s}
+.nav-local-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
+.nav-local-btn svg{width:18px;height:18px}
 
 /* Un <b> dentro de un <small> es un dato resaltado, no un título: sin esto
    hereda el tamaño grande de .ev-venta-datos b y se come la línea entera */
 .ev-venta-datos small b{display:inline;font-size:inherit;line-height:inherit;font-weight:700;color:var(--black)}
 
-/* La línea que reemplaza a la dirección cuando el cliente pasa a buscarlo */
+/* De qué tipo fue la venta: en el mostrador o a domicilio */
 .ev-retiro{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
 .ev-retiro svg{width:15px;height:15px;flex:none}
-.ev-retiro b{font-weight:700;letter-spacing:.06em}
-.ev-aviso-pend.retiro{color:#8a6508}
-.ev-motivo.espera{color:var(--gray-mid);font-style:normal}
+.ev-retiro.local{color:#1e7a3a;font-weight:600}
+.vt2-parte{display:block;margin-top:3px;font-size:11.5px;font-weight:600;color:var(--gray-mid)}
 
-/* ── El botón CAJA de la barra ─────────────────────────────────────────── */
-.nav-caja-btn{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:transparent;border:1.5px solid rgba(233,217,168,.45);color:#e9d9a8;font-family:inherit;font-weight:700;font-size:14px;cursor:pointer;padding:9px 16px;border-radius:999px;white-space:nowrap;transition:background .18s,border-color .18s}
-.nav-caja-btn:hover{background:rgba(233,217,168,.12);border-color:#e9d9a8}
-.nav-caja-btn svg{width:18px;height:18px}
-.nav-caja-n{display:grid;place-items:center;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#e0a21a;color:#1d1d1f;font-size:12px;font-weight:700;font-style:normal}
-.nav-caja-n[hidden]{display:none}
+/* Las líneas de un ticket con varios productos */
+.ev-ticket-lineas{margin-top:12px;border:1px solid var(--gray-light);border-radius:11px;overflow:hidden}
+.ev-ticket-l{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;font-size:13.5px}
+.ev-ticket-l+.ev-ticket-l{border-top:1px solid var(--gray-light)}
+.ev-ticket-l span{min-width:0;color:var(--gray-mid)}
+.ev-ticket-l b{flex:none;font-weight:700}
 
-/* ── El panel de caja ──────────────────────────────────────────────────── */
-.ec-buscador{min-width:380px}
-@media(max-width:620px){.ec-buscador{min-width:0;width:100%}}
+.ev-nueva-local{display:inline-flex;align-items:center;gap:7px;margin-left:auto}
+.ev-nueva-local svg{width:16px;height:16px}
 
-.ec-lista{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px;max-width:1460px;margin:0 auto;align-items:stretch}
-.ec-lista .ev-venta{margin-bottom:0}
-@media(max-width:860px){.ec-lista{grid-template-columns:1fr}}
+/* ── El panel: catálogo a la izquierda, el pedido a la derecha ──────────── */
+.el-columnas{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;max-width:1460px;margin:0 auto;align-items:start}
+@media(max-width:980px){.el-columnas{grid-template-columns:1fr}}
 
-/* La tarjeta conserva su respiro de arriba: sin eso la caja del código
-   llegaba al borde y se montaba sobre las esquinas redondeadas */
-.ec-pedido{position:relative;display:flex;flex-direction:column}
-.ec-pedido .ev-resolver{margin-top:auto}
+.el-catalogo,.el-ticket{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:16px}
+.el-catalogo h3,.el-ticket h3{margin:0 0 12px;font-size:15px;font-weight:700}
+.el-cat-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.el-cat-top h3{margin:0}
+.el-buscador{min-width:260px;flex:1 1 260px}
 
-/* El código es lo primero que dice el cliente, así que va centrado y solo,
-   con su etiqueta debajo. El número puede crecer sin salirse de la caja. */
-.ec-codigo{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--off-white);text-align:center;min-width:0}
-.ec-codigo>b{display:block;max-width:100%;font-size:30px;line-height:1.1;font-weight:700;letter-spacing:.14em;color:var(--black);word-break:break-all}
-.ec-codigo>span{display:block;font-size:10.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray-mid)}
-.ec-codigo.chico{margin:0;padding:9px 13px;flex:none}
-.ec-codigo.chico>b{font-size:21px}
-.ec-codigo.grande{padding:22px;margin-bottom:18px}
-.ec-codigo.grande>b{font-size:46px;letter-spacing:.18em}
+.el-grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;max-height:62vh;overflow-y:auto;padding-right:4px}
+@media(max-width:560px){.el-grilla{grid-template-columns:1fr;max-height:none}}
 
-/* Quién viene a buscarlo y quién se lo vendió: la etiqueta chica arriba y el
-   nombre completo abajo, que puede ocupar dos líneas sin cortarse.
-   Van calificadas por el padre para pesar más que `.ev-venta-datos small`,
-   que recorta cada línea con puntos suspensivos. */
-.ev-venta-datos .ec-quien{margin-top:7px;white-space:normal;overflow:visible;font-size:14px;font-weight:700;color:var(--black)}
-.ev-venta-datos .ec-quien i{display:block;font-style:normal;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-mid);margin-bottom:1px}
-.ev-venta-datos .ec-cuando{white-space:normal;overflow:visible;line-height:1.45}
-.ec-notas{font-style:italic;color:var(--gray-mid)}
-.ec-sello-hora{flex:1;font-size:13px;color:var(--gray-mid);align-self:center}
-.ec-aviso{margin:16px 0 0;padding:13px 15px;border-radius:12px;background:#fdf0d2;color:#6b4e06;font-size:13.5px;line-height:1.55}
-.ec-aviso b{font-weight:700}
+.el-prod{position:relative;display:flex;align-items:center;gap:11px;text-align:left;font:inherit;padding:9px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s,background .16s}
+.el-prod:hover:not(.agotado){border-color:#111;background:var(--off-white)}
+.el-prod img{width:46px;height:46px;object-fit:contain;border-radius:9px;background:var(--off-white);flex:none}
+.el-prod-txt{min-width:0;flex:1}
+.el-prod-txt b{display:block;font-size:13.5px;line-height:1.3;font-weight:600}
+.el-prod-txt small{display:block;margin-top:3px;font-size:12px;color:var(--gray-mid)}
+.el-prod-n{display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#111;color:#e9d9a8;font-size:12px;font-weight:700;flex:none}
+.el-prod.agotado{opacity:.5;cursor:not-allowed}
+.el-prod-ago{position:absolute;top:7px;right:7px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#c0392b}
+
+/* ── El pedido que se está armando ─────────────────────────────────────── */
+.el-vacio{padding:26px 16px}
+.el-lineas{display:grid;gap:8px}
+.el-linea{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:10px;padding:9px;border:1px solid var(--gray-light);border-radius:12px}
+.el-linea img{width:42px;height:42px;object-fit:contain;border-radius:9px;background:var(--off-white)}
+.el-linea-txt{min-width:0}
+.el-linea-txt b{display:block;font-size:13.5px;line-height:1.3;font-weight:600}
+.el-linea-txt small{display:block;margin-top:2px;font-size:12px;color:var(--gray-mid)}
+.el-linea-sub{font-size:14px;font-weight:700;white-space:nowrap}
+.el-linea-x{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:none;color:var(--gray-mid);cursor:pointer}
+.el-linea-x:hover{background:var(--off-white);color:#c0392b}
+.el-linea-x svg{width:14px;height:14px}
+
+.el-cant{display:flex;align-items:center;gap:2px;background:var(--off-white);border-radius:9px;padding:3px}
+.el-cant button{width:26px;height:26px;border:0;border-radius:7px;background:none;font:inherit;font-size:16px;font-weight:700;line-height:1;color:var(--black);cursor:pointer}
+.el-cant button:hover{background:#fff}
+.el-cant b{min-width:22px;text-align:center;font-size:14px;font-weight:700}
+
+.el-datos{display:grid;gap:12px;margin-top:18px;padding-top:18px;border-top:1px solid var(--gray-light)}
+
+.el-pie{margin-top:18px}
+.el-cuentas{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:14px}
+@media(max-width:560px){.el-cuentas{grid-template-columns:1fr}}
+.el-cuentas>div{border:1px solid var(--gray-light);border-radius:11px;padding:10px 12px;min-width:0}
+.el-cuentas span{display:block;font-size:10.5px;color:var(--gray-mid);font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.el-cuentas b{display:block;margin-top:4px;font-size:16px;font-weight:700;white-space:nowrap}
+.el-cuentas .el-cobrar{background:var(--off-white)}
+.el-cuentas .el-comision b{color:#1e9e4a}
+.el-pie .venta-btn{width:100%}
+
+/* ── El historial del mostrador ────────────────────────────────────────── */
+.el-ticket-card{cursor:default}
+.el-ticket-card:hover{transform:none;box-shadow:none}
+.el-ticket-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.el-ticket-top small{display:block;font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-mid)}
+.el-ticket-top b{display:block;margin-top:2px;font-size:16px;font-weight:700}
+.el-ticket-hora{font-size:13px;color:var(--gray-mid);flex:none}
+.el-ticket-lineas{border:1px solid var(--gray-light);border-radius:11px;overflow:hidden}
+.el-ticket-l{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;font-size:13.5px}
+.el-ticket-l+.el-ticket-l{border-top:1px solid var(--gray-light)}
+.el-ticket-l span{min-width:0;color:var(--gray-mid)}
+.el-ticket-l b{flex:none;font-weight:700}
+.el-ticket-pie{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:12px}
+.el-ticket-pie small{font-size:12.5px;color:var(--gray-mid)}
+.el-ticket-pie .ev-borrar{margin:0}
 
 /* ── Sucursales, en la pestaña Despacho ────────────────────────────────── */
 .ev-sucursales-bloque{margin-bottom:34px;padding-bottom:30px;border-bottom:1px solid var(--gray-light)}

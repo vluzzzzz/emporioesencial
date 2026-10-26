@@ -171,13 +171,18 @@ const Sesion = (() => {
     return sucursales;
   }
 
-  const esRetiro = v => v.tipo === 'presencial';
+  // Una venta local la carga el moderador en el mostrador; el vendedor solo
+  // registra delivery. Pero las ve las dos, y tiene que distinguirlas: de ahí
+  // sale cada peso de su comisión.
+  const esLocal = v => v.tipo === 'local';
   const nombreSucursal = id => (sucursales.find(s => s.id === id) || {}).nombre || 'Sucursal';
   const ICO_TIENDA = '<path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/>';
+  const ICO_CAMION = '<path d="M3 7.5h10.5v8H3z"/><path d="M13.5 10.5H18l3 3v2h-7.5z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/>';
 
-  function marcaRetiro(v){
-    return `<small class="ev-retiro">${svgIco(ICO_TIENDA)}Retira en ${esc(nombreSucursal(v.sucursal_id))}` +
-      (v.codigo_retiro ? ` · código <b>${esc(v.codigo_retiro)}</b>` : '') + '</small>';
+  function marcaTipo(v){
+    return esLocal(v)
+      ? `<small class="ev-retiro local">${svgIco(ICO_TIENDA)}Venta local · ${esc(nombreSucursal(v.sucursal_id))}</small>`
+      : `<small class="ev-retiro">${svgIco(ICO_CAMION)}Venta delivery · ${esc(v.comuna || 'Sin comuna')}</small>`;
   }
 
   /* ── Desplegable propio ───────────────────────────────── */
@@ -330,7 +335,7 @@ const Sesion = (() => {
 
   /* ── Formulario de venta ──────────────────────────────── */
   async function abrirFormulario(slug){
-    await Promise.all([cargarComunas(), cargarSucursales()]);
+    await cargarComunas();
     const prod = productos().find(p => p.slug === slug);
     if (!prod) return;
 
@@ -342,18 +347,6 @@ const Sesion = (() => {
             <b>${esc(prod.name)}</b>
             <small>${fmt(precioDe(slug))} por unidad</small>
           </div>
-        </div>
-
-        <div class="venta-tipo" role="radiogroup" aria-label="Cómo recibe el cliente">
-          <button type="button" class="venta-tipo-b activa" data-tipo="despacho" role="radio" aria-checked="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7.5h10.5v8H3z"/><path d="M13.5 10.5H18l3 3v2h-7.5z"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>
-            <span><b>Despacho</b><small>Se lo llevamos a la casa</small></span>
-          </button>
-          <button type="button" class="venta-tipo-b" data-tipo="presencial" role="radio" aria-checked="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5h16V20H4z"/><path d="M3 9.5 5 4h14l2 5.5"/><path d="M9.5 20v-5h5v5"/></svg>
-            <span><b>Retira en sucursal</b><small>El cliente pasa a buscarlo</small></span>
-          </button>
-          <input type="hidden" name="tipo" value="despacho">
         </div>
 
         <div class="venta-g2">
@@ -369,32 +362,18 @@ const Sesion = (() => {
           </div>
         </div>
 
-        <div id="ventaEnvio">
-          <p class="venta-sec">Despacho</p>
-          <div class="venta-g2">
-            <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
-              ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
-            </div>
-            <div class="venta-f"><span>Costo de despacho</span>
-              <p class="venta-fijo" id="ventaDespacho">
-                Elige la comuna
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-              </p>
-              <input type="hidden" name="despacho" value="0">
-            </div>
+        <p class="venta-sec">Despacho</p>
+        <div class="venta-g2">
+          <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
+            ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
           </div>
-        </div>
-
-        <div id="ventaRetiro" hidden>
-          <p class="venta-sec">Dónde retira</p>
-          <div class="venta-g2">
-            <div class="venta-f venta-ancho"><span>Sucursal</span>
-              ${desplegable('sucursal', sucursales.filter(s => s.activa).map(s => ({
-                valor:s.id, texto:s.nombre, nota:[s.direccion, s.comuna].filter(Boolean).join(', '),
-              })), sucursales.some(s => s.activa) ? 'Elige la sucursal' : 'Todavía no hay sucursales', '', true)}
-            </div>
+          <div class="venta-f"><span>Costo de despacho</span>
+            <p class="venta-fijo" id="ventaDespacho">
+              Elige la comuna
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+            </p>
+            <input type="hidden" name="despacho" value="0">
           </div>
-          <p class="venta-nota-caja">El pedido va a aparecer en la caja de esa sucursal. Al guardar te damos un código de 4 dígitos: dáselo al cliente para que lo retire más rápido.</p>
         </div>
 
         <p class="venta-sec">Datos del cliente</p>
@@ -411,7 +390,7 @@ const Sesion = (() => {
           <div class="venta-f venta-ancho"><span>Método de pago</span>
             ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método')}
           </div>
-          <label class="venta-f venta-ancho" id="ventaDir"><span>Dirección de entrega</span>
+          <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
             <input type="text" name="direccion" required placeholder="Calle, número, depto">
           </label>
           <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
@@ -431,10 +410,8 @@ const Sesion = (() => {
     const { ov, cerrar } = panel('Agregar pedido', 'Registro de venta', cuerpo, pie);
     const f = ov.querySelector('#ventaForm');
 
-    const presencial = () => f.tipo.value === 'presencial';
     const total = () => {
-      const n = +f.cantidad.value || 0, p = +f.precio.value || 0;
-      const d = presencial() ? 0 : (+f.despacho.value || 0);
+      const n = +f.cantidad.value || 0, p = +f.precio.value || 0, d = +f.despacho.value || 0;
       ov.querySelector('#ventaTotal').textContent = fmt(n * p + d);
     };
     conectarDesplegables(ov, (campo, valor, extra) => {
@@ -443,21 +420,6 @@ const Sesion = (() => {
       ov.querySelector('#ventaDespacho').childNodes[0].nodeValue = fmt(extra || 0) + ' ';
       total();
     });
-
-    // Retirar en sucursal no lleva comuna, dirección ni costo de envío.
-    ov.querySelectorAll('[data-tipo]').forEach(b => b.addEventListener('click', () => {
-      f.tipo.value = b.dataset.tipo;
-      ov.querySelectorAll('[data-tipo]').forEach(x => {
-        const activa = x === b;
-        x.classList.toggle('activa', activa);
-        x.setAttribute('aria-checked', String(activa));
-      });
-      ov.querySelector('#ventaEnvio').hidden = presencial();
-      ov.querySelector('#ventaRetiro').hidden = !presencial();
-      ov.querySelector('#ventaDir').hidden = presencial();
-      f.direccion.required = !presencial();
-      total();
-    }));
 
     f.cantidad.addEventListener('input', total);
     total();
@@ -470,16 +432,14 @@ const Sesion = (() => {
     const msg = ov.querySelector('#ventaMsg');
     const cantidad = +f.cantidad.value || 1;
     const precio = +f.precio.value || 0;
-    const presencial = f.tipo.value === 'presencial';
-    const despacho = presencial ? 0 : (+f.despacho.value || 0);
+    const despacho = +f.despacho.value || 0;
 
     msg.textContent = ''; msg.className = 'venta-msg';
-    const falla = t => { msg.className = 'venta-msg err'; msg.textContent = t; };
-    if (presencial && !f.sucursal.value) return falla('Elige en qué sucursal lo retira el cliente.');
-    if (!presencial && !f.comuna.value) return falla('Elige la comuna de despacho.');
-    // En la caja buscan al cliente por su nombre: sin eso no hay cómo
-    // reconocer el pedido cuando llega.
-    if (presencial && !f.cliente.value.trim()) return falla('Escribe el nombre del cliente: con eso lo buscan en la caja.');
+    if (!f.comuna.value) {
+      msg.className = 'venta-msg err';
+      msg.textContent = 'Elige la comuna de despacho.';
+      return;
+    }
     btn.disabled = true; btn.textContent = 'Guardando…';
 
     const { data: creada, error } = await sb.from('ventas').insert({
@@ -488,18 +448,17 @@ const Sesion = (() => {
       producto_slug: prod.slug,
       producto_nombre: prod.name,
       cantidad, precio_unitario: precio,
-      tipo: presencial ? 'presencial' : 'despacho',
-      sucursal_id: presencial ? f.sucursal.value : null,
-      comuna: presencial ? '' : f.comuna.value,
+      tipo: 'delivery',
+      comuna: f.comuna.value,
       costo_despacho: despacho,
       total: cantidad * precio + despacho,
       cliente_nombre: f.cliente.value.trim(),
       cliente_telefono: telGuardar(f.telefono.value),
       cliente_email: f.email.value.trim(),
-      cliente_direccion: presencial ? '' : f.direccion.value.trim(),
+      cliente_direccion: f.direccion.value.trim(),
       metodo_pago: f.pago.value,
       notas: f.notas.value.trim(),
-    }).select('id,codigo_retiro').single();
+    }).select('id').single();
 
     if (error) {
       btn.disabled = false; btn.textContent = 'Registrar venta';
@@ -508,25 +467,8 @@ const Sesion = (() => {
       return;
     }
     btn.textContent = 'Venta registrada';
-    // El despacho avisa por correo con la etiqueta; el retiro en sucursal no
-    // la necesita, porque el pedido ya está en la caja que corresponde.
-    if (presencial) { mostrarCodigo(creada, f.cliente.value.trim(), cerrar); return; }
     if (creada && creada.id) avisarPorCorreo(creada.id);
     setTimeout(cerrar, 700);
-  }
-
-  // El código es lo único que el vendedor tiene que pasarle al cliente, así
-  // que ocupa toda la pantalla y no se pierde entre los otros datos.
-  function mostrarCodigo(venta, cliente, cerrar){
-    const codigo = (venta && venta.codigo_retiro) || '';
-    const { ov } = panel('Pedido listo para retirar', 'Retiro en sucursal', `
-      <div class="venta-codigo">
-        <span>Código de retiro</span>
-        <b>${esc(codigo || '—')}</b>
-        <p>Dáselo a ${esc(cliente || 'tu cliente')}. En la caja lo escriben y aparece este pedido al tiro.
-           Si lo pierde, igual lo encuentran por su nombre o por el tuyo.</p>
-      </div>`, '<button type="button" class="venta-btn" data-acc="cerrar">Entendido</button>');
-    ov.addEventListener('click', e => { if (e.target.closest('[data-acc=cerrar]')) cerrar(); });
   }
 
   // El aviso al dueño va aparte y sin esperarlo: la venta ya quedó guardada,
@@ -571,6 +513,7 @@ const Sesion = (() => {
 
     let mesVisto = claveMes(new Date(data[0].created_at));
     let diaVisto = null;
+    let tipoVisto = '';
     pintarMes();
 
     function correrMes(pasos){
@@ -580,13 +523,16 @@ const Sesion = (() => {
     }
 
     function pintarMes(){
-      const lista = data.filter(v => claveMes(new Date(v.created_at)) === mesVisto);
+      const lista = data.filter(v => claveMes(new Date(v.created_at)) === mesVisto
+        && (!tipoVisto || (tipoVisto === 'local') === esLocal(v)));
       const ok = lista.filter(v => estadoDe(v) === 'aceptado');
-      const porRetirar = lista.filter(v => esRetiro(v) && v.entrega === 'por_retirar').length;
-      const pendientes = lista.filter(v => estadoDe(v) === 'pendiente' && !esRetiro(v)).length;
+      const pendientes = lista.filter(v => estadoDe(v) === 'pendiente').length;
       const unidades = ok.reduce((a, v) => a + (v.cantidad || 1), 0);
       const vendido = ok.reduce((a, v) => a + (v.total || 0), 0);
       const comision = ok.reduce((a, v) => a + comisionDe(v), 0);
+      // De dónde viene cada peso: lo que trajo al mostrador y lo que despachó.
+      const comLocal = ok.filter(esLocal).reduce((a, v) => a + comisionDe(v), 0);
+      const comDelivery = comision - comLocal;
 
       const [anio, mes] = mesVisto.split('-').map(Number);
       const dias = new Date(anio, mes, 0).getDate();
@@ -631,8 +577,15 @@ const Sesion = (() => {
                 valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
               })), 'Elige el mes', mesVisto, false, ICO_CAL)}
             </div>
+            <div class="ev-filtro">
+              <span>Tipo</span>
+              ${desplegable('tipo', [
+                { valor:'', texto:'Local y delivery' },
+                { valor:'local', texto:'Venta local', nota:'En la sucursal' },
+                { valor:'delivery', texto:'Venta delivery', nota:'A domicilio' },
+              ], 'Local y delivery', tipoVisto, false, ICO_TIENDA)}
+            </div>
             ${pendientes ? `<span class="ev-aviso-pend">${pendientes} esperando aprobación</span>` : ''}
-            ${porRetirar ? `<span class="ev-aviso-pend retiro">${porRetirar} esperando retiro en sucursal</span>` : ''}
           </div>
         </div>
 
@@ -648,7 +601,10 @@ const Sesion = (() => {
             </div>
             <div class="vt2 destacada">
               <span class="vt2-ico">${svgIco(ICO_PERSONA)}</span>
-              <div><span>Te deben pagar</span><b>${fmt(comision)}</b></div>
+              <div>
+                <span>Te deben pagar</span><b>${fmt(comision)}</b>
+                ${comision ? `<small class="vt2-parte">${fmt(comLocal)} local · ${fmt(comDelivery)} delivery</small>` : ''}
+              </div>
             </div>
           </div>
 
@@ -681,8 +637,8 @@ const Sesion = (() => {
         </div>`;
 
       conectarDesplegables(box, (campo, valor) => {
-        if (campo !== 'mes') return;
-        mesVisto = valor; diaVisto = null; pintarMes();
+        if (campo === 'mes') { mesVisto = valor; diaVisto = null; pintarMes(); }
+        if (campo === 'tipo') { tipoVisto = valor; diaVisto = null; pintarMes(); }
       });
       box.querySelector('#mvAntes').addEventListener('click', () => { correrMes(-1); pintarMes(); });
       box.querySelector('#mvDespues').addEventListener('click', () => { correrMes(1); pintarMes(); });
@@ -722,22 +678,20 @@ const Sesion = (() => {
 
     function tarjetaMia(v){
       const estado = estadoDe(v);
-      const retiro = esRetiro(v);
-      const sello = retiro && v.entrega === 'por_retirar' ? 'Por retirar'
-                  : retiro && v.entrega === 'no_retirado' ? 'No retirado'
-                  : estado === 'pendiente' ? 'Esperando aprobación'
+      const local = esLocal(v);
+      const sello = estado === 'pendiente' ? 'Esperando aprobación'
                   : estado === 'aceptado'  ? 'Aceptada' : 'Denegada';
-      const donde = retiro
-        ? marcaRetiro(v)
-        : `<small>${esc(v.cliente_direccion)}, ${esc(v.comuna)}</small>`;
+      const quien = local
+        ? `<small>${esc(v.cliente_nombre || 'Cliente del mostrador')}</small>`
+        : `<small>${esc(v.cliente_nombre)} · ${waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>`;
       return `
         <article class="ev-venta ${estado}">
           <div class="ev-venta-top">
             <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
             <div class="ev-venta-datos">
               <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
-              <small>${esc(v.cliente_nombre)} · ${waChip(v.cliente_telefono, 'Hola ' + (v.cliente_nombre || '') + ', te escribo de Esencial Emporio por tu pedido de ' + v.producto_nombre + '.', v.cliente_nombre)}</small>
-              ${donde}
+              ${quien}
+              ${marcaTipo(v)}
               <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' })}</small>
             </div>
             <span class="ev-sello ${estado}">${sello}</span>
@@ -745,12 +699,10 @@ const Sesion = (() => {
 
           <div class="ev-cifras tres">
             <div><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-            <div><span>${retiro ? 'Retiro' : 'Despacho'}</span><b>${retiro ? 'Sin costo' : fmt(v.costo_despacho)}</b></div>
+            <div><span>${local ? 'Retiro' : 'Despacho'}</span><b>${local ? 'Sin costo' : fmt(v.costo_despacho)}</b></div>
             <div class="pagar"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
           </div>
 
-          ${retiro && v.entrega === 'por_retirar'
-            ? '<p class="ev-motivo espera">La comisión se suma cuando el cliente retira el producto en la sucursal.</p>' : ''}
           ${estado === 'denegado' && v.motivo ? `<p class="ev-motivo">${esc(v.motivo)}</p>` : ''}
         </article>`;
     }
