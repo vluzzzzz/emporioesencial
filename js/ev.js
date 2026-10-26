@@ -85,12 +85,25 @@ const EdVendedores = (() => {
     sucursales = s.data || [];
     bancos = b.data || [];
     pagos = g.data || [];
+    if (b.error) avisarTabla('datos_bancarios', b.error);
+    if (g.error) avisarTabla('pagos', g.error);
+  }
+
+  // Las dos tablas de pagos llegaron después que el resto. Si faltan, el
+  // panel sigue andando, pero callarse el motivo deja a cualquiera mirando
+  // una pantalla vacía sin saber qué pasó.
+  function avisarTabla(nombre, error){
+    const falta = /does not exist|schema cache/i.test(String(error.message || error));
+    console.warn('No se pudo leer ' + nombre + ':', error);
+    toast(falta
+      ? 'Falta correr supabase/pagos-vendedor.sql: no existe la tabla ' + nombre
+      : 'No se pudo leer ' + nombre + ': ' + mensajeError(error), true);
   }
 
   const bancoDe = id => bancos.find(x => x.vendedor_id === id) || null;
   const tieneCuenta = id => {
     const b = bancoDe(id);
-    return !!(b && b.numero && b.banco);
+    return !!(b && (b.numero || b.rut));
   };
   const pagoDe = (id, periodo) => pagos.find(p => p.vendedor_id === id && p.periodo === periodo) || null;
   const CUENTAS = ['Cuenta corriente','Cuenta vista','Cuenta RUT','Cuenta de ahorro'];
@@ -760,9 +773,11 @@ const EdVendedores = (() => {
       updated_at: new Date().toISOString(),
     };
     const vacia = !fila.banco && !fila.tipo_cuenta && !fila.numero && !fila.rut && !fila.titular;
-    if (vacia && !bancoDe(id)) return;
-    const { error } = await sb.from('datos_bancarios').upsert(fila, { onConflict: 'vendedor_id' });
+    if (vacia && !bancoDe(id)) return null;
+    const { data, error } = await sb.from('datos_bancarios')
+      .upsert(fila, { onConflict: 'vendedor_id' }).select().maybeSingle();
     if (error) throw error;
+    return data;
   }
 
   function pintarEquipo(ov, box){
@@ -937,9 +952,9 @@ const EdVendedores = (() => {
       btn.disabled = true; btn.textContent = 'Guardando…';
       msg.className = 'venta-msg'; msg.textContent = '';
       try {
-        await guardarUsuario(padre, f, id);
+        const cuenta = await guardarUsuario(padre, f, id);
         cerrar();
-        toast('Guardado');
+        toast(cuenta ? 'Guardado, con su cuenta para transferir' : 'Guardado');
       } catch (err) {
         btn.disabled = false; btn.textContent = 'Guardar';
         msg.className = 'venta-msg err';
@@ -1014,7 +1029,7 @@ const EdVendedores = (() => {
     }).eq('id', id);
     if (error) throw error;
 
-    if (rol === 'vendedor') await guardarCuenta(f, 'ed', id);
+    const cuenta = rol === 'vendedor' ? await guardarCuenta(f, 'ed', id) : null;
 
     if (clave) {
       if (clave.length < 8) throw new Error('La contraseña necesita 8 caracteres o más');
@@ -1027,6 +1042,7 @@ const EdVendedores = (() => {
     }
     await cargar();
     pintar(padre);
+    return cuenta;
   }
 
   // Borrar a alguien del equipo es definitivo: avisa con su ficha y el
