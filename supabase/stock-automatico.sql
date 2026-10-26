@@ -36,25 +36,15 @@ set in_stock = stock_qty > 0
 where stock_qty is not null and in_stock is distinct from (stock_qty > 0);
 
 
--- ── 2 · Mover unidades de un producto ───────────────────────────────────────
---  Un número negativo descuenta, uno positivo devuelve. Nunca baja de cero.
-create or replace function public.mover_stock(p_id uuid, p_slug text, delta int)
-returns void language plpgsql security definer set search_path = public as $$
-begin
-  if delta = 0 then return; end if;
-  update public.products
-  set stock_qty = greatest(0, stock_qty + delta)
-  where stock_qty is not null
-    and ( (p_id is not null and id = p_id) or (p_id is null and slug = p_slug) );
-end $$;
-
-
--- ── 3 · El pedido aceptado descuenta; el resto devuelve ─────────────────────
+-- ── 2 · El pedido aceptado descuenta; el resto devuelve ─────────────────────
+--  Todo va dentro del disparador a propósito. Como función suelta quedaba
+--  expuesta en la API y cualquiera podía mover el stock desde afuera.
 create or replace function public.venta_ajusta_stock()
 returns trigger language plpgsql security definer set search_path = public as $$
 declare
-  antes  int := 0;  -- unidades que el pedido ya tenía descontadas
-  ahora  int := 0;  -- unidades que tiene que tener descontadas
+  antes int := 0;  -- unidades que el pedido ya tenía descontadas
+  ahora int := 0;  -- unidades que tiene que tener descontadas
+  paso  int;
 begin
   if tg_op in ('UPDATE','DELETE') and old.estado = 'aceptado' then
     antes := coalesce(old.cantidad, 0);
@@ -67,16 +57,33 @@ begin
   if tg_op = 'UPDATE' and antes > 0
      and ( old.producto_id is distinct from new.producto_id
         or old.producto_slug is distinct from new.producto_slug ) then
-    perform public.mover_stock(old.producto_id, old.producto_slug, antes);
+    update public.products
+    set stock_qty = greatest(0, stock_qty + antes)
+    where stock_qty is not null
+      and ( (old.producto_id is not null and id = old.producto_id)
+         or (old.producto_id is null and slug = old.producto_slug) );
     antes := 0;
   end if;
 
   if tg_op = 'DELETE' then
-    perform public.mover_stock(old.producto_id, old.producto_slug, antes);
+    if antes <> 0 then
+      update public.products
+      set stock_qty = greatest(0, stock_qty + antes)
+      where stock_qty is not null
+        and ( (old.producto_id is not null and id = old.producto_id)
+           or (old.producto_id is null and slug = old.producto_slug) );
+    end if;
     return old;
   end if;
 
-  perform public.mover_stock(new.producto_id, new.producto_slug, antes - ahora);
+  paso := antes - ahora;
+  if paso <> 0 then
+    update public.products
+    set stock_qty = greatest(0, stock_qty + paso)
+    where stock_qty is not null
+      and ( (new.producto_id is not null and id = new.producto_id)
+         or (new.producto_id is null and slug = new.producto_slug) );
+  end if;
   return new;
 end $$;
 
@@ -84,6 +91,19 @@ drop trigger if exists venta_stock on public.ventas;
 create trigger venta_stock
   after insert or update or delete on public.ventas
   for each row execute function public.venta_ajusta_stock();
+
+-- Por si quedó la versión anterior, que sí era llamable desde la API.
+drop function if exists public.mover_stock(uuid, text, int);
+
+
+-- ── 3 · Comprobación ────────────────────────────────────────────────────────
+--  Al terminar tiene que decir: producto_stock SÍ · venta_stock SÍ
+select
+  case when exists (select 1 from pg_trigger where tgname = 'producto_stock' and not tgisinternal)
+       then 'producto_stock SÍ' else 'producto_stock NO' end
+  || ' · ' ||
+  case when exists (select 1 from pg_trigger where tgname = 'venta_stock' and not tgisinternal)
+       then 'venta_stock SÍ' else 'venta_stock NO' end as instalado;
 
 -- ============================================================================
 --  LISTO. Carga las unidades de cada producto desde Editar → el producto, y
