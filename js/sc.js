@@ -38,12 +38,10 @@ let MAS_PRODUCTOS = [
 // usar: escala de imagen, estrellas, descuento y stock.
 function pintarProductos(el, lista, opts){
   if(!el) return false;
-  // Si lo que hay que pintar es idéntico a lo que ya está, no se toca nada.
-  // Esto corre dos veces: al arrancar con lo de los archivos y de nuevo
-  // cuando contesta Supabase. Sin esta comparación, la segunda vuelta borra
-  // y rehace tarjetas iguales, y se ve el parpadeo.
   const nuevo = lista.map(p=>cardHTML(p, opts)).join('');
-  if (nuevo.replace(/\s+/g,'') === (el.dataset.pintado||'')) return false;
+  // Para grillas con paginación o que se actualizan dinámicamente, siempre repintar
+  const forzar = el.id === 'masGrid' || el.id === 'cpageGrid' || el.id === 'cpageMasGrid';
+  if (!forzar && nuevo.replace(/\s+/g,'') === (el.dataset.pintado||'')) return false;
   el.innerHTML = nuevo;
   el.dataset.pintado = nuevo.replace(/\s+/g,'');
   el.querySelectorAll('.product-card').forEach(c=>c.style.setProperty('--card-img-scale',c.dataset.imgScale??0.75));
