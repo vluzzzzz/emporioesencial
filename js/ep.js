@@ -83,17 +83,11 @@ const EdProducto = (() => {
           Agregar característica
         </button>
 
-        <p class="venta-sec">Stock / Visibilidad</p>
+        <p class="venta-sec">Stock</p>
         <div class="venta-g2">
           <label class="venta-f venta-ancho"><span>Unidades disponibles</span>
             <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? (p.inStock === false ? 0 : '')}" placeholder="Déjalo vacío para no llevar la cuenta">
             <small class="ep-stock-ayuda" id="epStockAyuda"></small>
-          </label>
-        </div>
-        <div class="venta-g2" style="margin-top:8px">
-          <label class="venta-f venta-ancho" style="flex-direction:row;align-items:center;gap:10px">
-            <input type="checkbox" name="activar" id="epActivar" ${(p.activo !== false && p.active !== false && p.enabled !== false && p.visible !== false && p.is_visible !== false && p.is_active !== false && p.published !== false && p.oculto !== true && p.hidden !== true) ? 'checked' : ''} style="width:auto">
-            <span>Mostrar producto en la web</span>
           </label>
         </div>
         <p class="venta-msg" id="edMsg"></p>
@@ -139,7 +133,6 @@ const EdProducto = (() => {
       btn.disabled = true; btn.textContent = 'Guardando…';
       msg.className = 'venta-msg'; msg.textContent = '';
       const n = unidades(f);
-      const mostrar = f.activar ? f.activar.checked : true;
       try {
         await guardar(s, {
           name: f.nombre.value,
@@ -151,16 +144,7 @@ const EdProducto = (() => {
           precio: parseInt(f.precio.value, 10) || 0,
           compare_at_price: f.antes.value === '' ? null : (parseInt(f.antes.value, 10) || null),
           stock_qty: n,
-          in_stock: n === null ? (mostrar) : (n > 0),
-          activo: mostrar,
-          active: mostrar,
-          enabled: mostrar,
-          visible: mostrar,
-          is_visible: mostrar,
-          is_active: mostrar,
-          published: mostrar,
-          oculto: !mostrar,
-          hidden: !mostrar,
+          in_stock: n === null ? true : n > 0,
         });
         toast('Producto guardado');
         cerrar();
@@ -311,6 +295,26 @@ const EdProducto = (() => {
     } catch (err) { toast(mensajeError(err), true); }
   }
 
+  // Ocultar / mostrar: el producto NO se borra. Queda en la base y en el panel
+  // (en gris, con "Producto oculto"), y desaparece de la web pública hasta que
+  // se lo vuelva a mostrar.
+  async function ocultar(s, valor){
+    const p = findProduct(s);
+    if (!p) return;
+    const oculto = !!valor;
+    try {
+      const { data, error } = await sb.from('products')
+        .update({ oculto })
+        .eq('id', p.id)
+        .select('*, price_tiers(qty,price,active)').maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error('SIN_PERMISO');
+      aplicarProducto(data);
+      refrescar(s);
+      toast(oculto ? 'Producto oculto' : 'Producto visible');
+    } catch (err) { toast(mensajeError(err), true); }
+  }
+
   // Repinta todo lo que puede estar mostrando este producto, sin recargar.
   function refrescar(s){
     try{ if (typeof Filas !== 'undefined' && Filas.forceRefresh) Filas.forceRefresh(); else if (typeof Filas !== 'undefined') Filas.init(); }catch(e){}
@@ -323,5 +327,5 @@ const EdProducto = (() => {
 
   Edicion.registrar(montarAnclas);
 
-  return { abrir, crear, borrar, guardar };
+  return { abrir, crear, borrar, guardar, ocultar };
 })();

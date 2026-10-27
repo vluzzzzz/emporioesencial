@@ -18,6 +18,32 @@ body.editando .product-card::after{
 body.editando .product-card:hover::after{opacity:1;transform:scale(1.08)}
 body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;border-radius:14px}
 
+/* Producto oculto: sigue en el panel (en gris, avisado) para poder volver a
+   mostrarlo. Nunca se ve así en la web pública. */
+body.editando .product-card.producto-oculto{opacity:.5;filter:grayscale(1)}
+body.editando .product-card.producto-oculto:hover{opacity:.75;filter:grayscale(.4)}
+.po-oculto-tag{
+  position:absolute;left:8px;bottom:8px;z-index:6;margin:0;
+  background:#c0392b;color:#fff;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.22);
+}
+/* El ojito va arriba a la izquierda: el lápiz ya ocupa la derecha. */
+.po-ojo{
+  position:absolute;top:10px;left:10px;z-index:6;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;cursor:pointer;
+  background:#111;color:#e9d9a8;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  opacity:.85;transition:opacity .16s,transform .16s,background .16s,color .16s;
+}
+.po-ojo:hover{opacity:1;transform:scale(1.08)}
+.po-ojo svg{width:17px;height:17px}
+.po-ojo .po-ojo-no{display:none}
+.po-ojo.no{background:#fff;color:#c0392b;border:1.5px solid rgba(192,57,43,.35)}
+.po-ojo.no .po-ojo-si{display:none}
+.po-ojo.no .po-ojo-no{display:block}
+
 /* Botones anclados a una sección (no se los lleva un repintado) */
 .ed-btn{display:inline-flex;align-items:center;gap:8px;background:#111;color:#e9d9a8;border:0;border-radius:999px;font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 20px;cursor:pointer;transition:background .18s,transform .18s}
 .ed-btn:hover{background:#000;transform:translateY(-1px)}

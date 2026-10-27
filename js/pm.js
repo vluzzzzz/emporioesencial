@@ -120,7 +120,7 @@ const ProductModal=(()=>{
     const el=document.getElementById('ppageSimilares');
     if(!el)return;
     const yo=findProduct(actual);
-    const resto=CATALOGO.filter(p=>p.slug!==actual);
+    const resto=productosVisibles().filter(p=>p.slug!==actual);
     const mia=yo?yo.cat:'';
     const lista=[...resto.filter(p=>p.cat===mia),...resto.filter(p=>p.cat!==mia)].slice(0,8);
     if(!lista.length){el.innerHTML='';el.hidden=true;return;}

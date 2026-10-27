@@ -33,7 +33,7 @@ const Buscador = (() => {
       if (norm(p.desc || '').includes(t)) return 3;
       return 9;
     };
-    return CATALOGO.map(p => ({ p, w: pesa(p) }))
+    return productosVisibles().map(p => ({ p, w: pesa(p) }))
       .filter(x => x.w < 9)
       .sort((a, b) => a.w - b.w)
       .map(x => x.p);

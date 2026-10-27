@@ -82,7 +82,21 @@ const FAMILIAS = {set:'cocina', calentador:'belleza', kit:'belleza', espejo:'bel
 const familiaDe = slug => FAMILIAS[String(slug||'').split('-')[0]] || 'otros';
 
 const findProduct  = slug => CATALOGO.find(p => p.slug === slug) || null;
-const porCategoria = cat  => CATALOGO.filter(p => Cats.incluye(cat, p.cat));
+
+// ¿El que está mirando es el admin con el modo edición prendido? Solo él ve
+// los productos ocultos, en gris, para poder volver a mostrarlos.
+// El try/catch cubre el arranque: ed.js todavía no existe cuando se pinta la
+// primera grilla, y tocar una const en TDZ da ReferenceError.
+const enEdicion = () => {
+  try { return typeof Edicion !== 'undefined' && Edicion.activa(); }
+  catch (e) { return false; }
+};
+
+// Lo que ve la web: todo menos los ocultos. En el panel de edición sí van,
+// porque si no el admin no tendría cómo volver a activarlos.
+const productosVisibles = () => CATALOGO.filter(p => !p.oculto || enEdicion());
+
+const porCategoria = cat  => productosVisibles().filter(p => Cats.incluye(cat, p.cat));
 
 function fmt(n){ return '$'+n.toLocaleString('es-CL'); }
 
@@ -169,7 +183,17 @@ function cardHTML(p, opts){
   const precioBase = hayDcto ? p3 : p1;
   const sin = p.inStock === false;
   const oos = sin ? '<p class="oos-tag">Agotado</p>' : '';
-  return `<div class="product-card temu-card${sin ? ' out-of-stock' : ''}" data-id="${escAttr(p.slug)}" data-name="${escAttr(p.name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.imgScale ?? 0.75}" data-desc="${escAttr(p.desc)}"${sin ? ' aria-disabled="true"' : ''}>
+  // El ojito y el cartel "Producto oculto" son solo del panel de edición: el
+  // cliente nunca ve un producto oculto ni sabe que existe.
+  const editando = enEdicion();
+  const oculto = p.oculto === true;
+  const ojo = editando ? `<button type="button" class="po-ojo${oculto ? ' no' : ''}" data-ver-producto="${escAttr(p.slug)}" data-oculto="${oculto ? '1' : '0'}" title="${oculto ? 'Mostrar en la web' : 'Ocultar de la web'}" aria-label="${oculto ? 'Mostrar en la web' : 'Ocultar de la web'}" aria-pressed="${oculto ? 'false' : 'true'}">
+        <svg class="po-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
+        <svg class="po-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
+      </button>` : '';
+  const etiqueta = (editando && oculto) ? '<p class="po-oculto-tag">Producto oculto</p>' : '';
+  return `<div class="product-card temu-card${sin ? ' out-of-stock' : ''}${(editando && oculto) ? ' producto-oculto' : ''}" data-id="${escAttr(p.slug)}" data-name="${escAttr(p.name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.imgScale ?? 0.75}" data-desc="${escAttr(p.desc)}"${sin ? ' aria-disabled="true"' : ''}>
+      ${ojo}${etiqueta}
       <div class="card-img-wrap"><img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="card-img-placeholder" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>
       <div class="card-info">
         <p class="card-name">${escTxt(p.name)}</p>
@@ -212,17 +236,6 @@ const aWebp = u => String(u || '').replace(/^(images\/emporio-images\/[0-9.]+)\.
 // loadCatalog al arrancar, y el modo edición para refrescar un solo producto
 // sin recargar la página.
 function aplicarProducto(p){
-  // No agregar productos desactivados
-  if (p.activo === false || p.active === false || p.enabled === false || p.visible === false || p.is_visible === false || p.is_active === false || p.published === false || p.oculto === true || p.hidden === true) {
-    const i = CATALOGO.findIndex(x => x.slug === p.slug);
-    if (i >= 0) CATALOGO.splice(i, 1);
-    delete PRICE_TIERS[p.slug];
-    delete FEATURES[p.slug];
-    delete GALLERY[p.slug];
-    delete COLOR_VARIANTS[p.slug];
-    return null;
-  }
-
   const tiers = (p.price_tiers || [])
     .filter(t => t.active !== false && t.price > 0)
     .sort((a,b)=>a.qty-b.qty)
@@ -248,6 +261,9 @@ function aplicarProducto(p){
     compare: p.compare_at_price,
     stock: p.stock_qty,
     inStock: p.in_stock !== false,
+    // Oculto no es lo mismo que agotado: sigue en la base y en el panel, pero
+    // no se muestra en la web pública.
+    oculto: p.oculto === true,
   };
   const i = CATALOGO.findIndex(x => x.slug === p.slug);
   if (i >= 0) CATALOGO[i] = fila; else CATALOGO.push(fila);
@@ -271,34 +287,19 @@ async function loadCatalog(){
       .select('*, price_tiers(qty,price,active)')
       .order('position', { ascending: true });
     if (error) throw error;
-    let products = data || [];
-    products = products.filter(p => {
-      if (p.activo === false) return false;
-      if (p.active === false) return false;
-      if (p.enabled === false) return false;
-      if (p.visible === false) return false;
-      if (p.is_visible === false) return false;
-      if (p.is_active === false) return false;
-      if (p.published === false) return false;
-      if (p.oculto === true) return false;
-      if (p.hidden === true) return false;
-      return true;
-    });
+    const products = data || [];
+    // Los ocultos NO se descartan: quedan en memoria para que el panel de
+    // edición los muestre en gris y se puedan volver a activar. La web
+    // pública los saltea con productosVisibles().
     if (!products.length) return false;   // sin datos → se queda el fallback
 
     CATALOGO.length = 0;
     products.forEach(aplicarProducto);
 
-    // HERO (carrusel principal)
+    // HERO (carrusel principal). Un producto oculto no sale en el carrusel.
     PRODUCTS.length = 0;
     Object.keys(HERO_STOCK).forEach(k => delete HERO_STOCK[k]);
-    products.filter(p => {
-      if (p.is_hero) {
-        if (p.activo === false || p.active === false || p.enabled === false || p.visible === false || p.is_visible === false || p.is_active === false || p.published === false || p.oculto === true || p.hidden === true) return false;
-        return true;
-      }
-      return false;
-    })
+    products.filter(p => p.is_hero && p.oculto !== true)
       .sort((a,b)=>(a.hero_order||0)-(b.hero_order||0))
       .forEach((p, idx) => {
         const p1 = tierOne(p.slug);

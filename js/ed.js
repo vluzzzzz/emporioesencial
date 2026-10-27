@@ -96,6 +96,13 @@ const Edicion = (() => {
     if (boton) boton.classList.toggle('on', activa);
     try { localStorage.setItem(LLAVE, activa ? '1' : '0'); } catch {}
     if (activa) remontar();
+    // Al prender o apagar el modo edición hay que repintar las grillas: el
+    // ojito y el cartel "Producto oculto" solo existen para el admin. Sin
+    // esto, los productos ocultos recién aparecían al recargar la página.
+    try {
+      if (typeof Filas !== 'undefined') Filas.init();
+      if (typeof CatPage !== 'undefined' && CatPage.estaAbierta()) CatPage.abrir(CatPage.catActual());
+    } catch (e) { console.error('Edición:', e); }
   }
 
   function cargarModulos(){
@@ -122,6 +129,15 @@ const Edicion = (() => {
   // clic sobre una tarjeta abre el editor y nunca la ficha del producto.
   document.addEventListener('click', e => {
     if (!activa) return;
+    // El ojito de cada tarjeta oculta/muestra sin abrir el editor. Va antes
+    // que el clic general de la tarjeta, que si no se lo come.
+    const ojo = e.target.closest('[data-ver-producto]');
+    if (ojo) {
+      e.preventDefault();
+      e.stopPropagation();
+      despachar('ocultar', ojo);
+      return;
+    }
     const zona = e.target.closest('[data-editar]');
     if (zona) {
       e.preventDefault();
@@ -146,6 +162,10 @@ const Edicion = (() => {
       return;
     }
     if (que === 'producto-nuevo' && typeof EdProducto !== 'undefined') { EdProducto.crear(); return; }
+    if (que === 'ocultar' && typeof EdProducto !== 'undefined') {
+      EdProducto.ocultar(el.dataset.verProducto, el.dataset.oculto !== '1');
+      return;
+    }
     if (que === 'ficha' && typeof EdProducto !== 'undefined') {
       EdProducto.abrir(document.getElementById('ppage')?.dataset.slug);
       return;

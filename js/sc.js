@@ -132,10 +132,10 @@ const Filas=(()=>{
   function una(id, slugs, reserva, opts){
     const row=document.getElementById(id);
     if(!row)return;
-    const elegidos=slugs.map(findProduct).filter(Boolean);
+    const elegidos=slugs.map(findProduct).filter(Boolean).filter(p => !p.oculto);
     // Si ningún slug de la lista existe en el catálogo, la fila no se queda
     // vacía: se rellena con los primeros del catálogo.
-    const lista=elegidos.length?elegidos:CATALOGO.slice(0,reserva);
+    const lista=elegidos.length?elegidos:productosVisibles().slice(0,reserva);
     pintarProductos(row,lista,opts);
     animarProductos(row);
     Carru.revisar(row);
@@ -145,10 +145,10 @@ const Filas=(()=>{
   let pagina=1;
 
   function paginar(){
-    const total=CATALOGO.length;
+    const total=productosVisibles().length;
     const paginasReales=Math.max(1, Math.ceil(total/POR_PAGINA));
     const paginas=paginasReales;
-    const base=CATALOGO.slice();
+    const base=productosVisibles().slice();
     return{base,total,paginas,paginasReales};
   }
 
@@ -197,7 +197,6 @@ const Filas=(()=>{
     pintarPagina(grid);
     pintarControles();
     if(typeof Edicion!=='undefined')Edicion.remontar();
-    try{ console.log('[Filas.init] total:', Array.isArray(window.CATALOGO)?window.CATALOGO.length:(Array.isArray(CATALOGO)?CATALOGO.length:0), 'paginas:', Math.ceil((Array.isArray(window.CATALOGO)?window.CATALOGO.length:(Array.isArray(CATALOGO)?CATALOGO.length:0))/POR_PAGINA)); }catch(e){}
   }
   function forceRefresh(){
     pagina = 1;
@@ -273,8 +272,8 @@ const CatPage=(()=>{
   function abrir(cat){
     if(!sec)return;
     catActual=cat;
-    const dentro = cat==='todos' ? CATALOGO.slice() : porCategoria(cat);
-    const fuera  = cat==='todos' ? []               : CATALOGO.filter(p=>p.cat!==cat);
+    const dentro = cat==='todos' ? productosVisibles() : porCategoria(cat);
+    const fuera  = cat==='todos' ? []               : productosVisibles().filter(p=>p.cat!==cat);
     pintar(
       cat==='todos' ? 'Todo el catálogo' : 'Categoría',
       Cats.nombre(cat), dentro, fuera,
@@ -290,7 +289,7 @@ const CatPage=(()=>{
     if(!sec)return;
     const t=norm(q);
     if(!t){cerrar();return;}
-    const hit=CATALOGO.filter(p=>norm(`${p.name} ${p.slug} ${p.desc||''}`).includes(t));
+    const hit=productosVisibles().filter(p=>norm(`${p.name} ${p.slug} ${p.desc||''}`).includes(t));
     pintar('Resultados de búsqueda',`"${q.trim()}"`,hit,[],`Sin resultados para "${q.trim()}"`,'');
     mostrar();
   }
