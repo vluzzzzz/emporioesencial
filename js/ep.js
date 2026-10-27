@@ -297,7 +297,7 @@ const EdProducto = (() => {
 
   // Repinta todo lo que puede estar mostrando este producto, sin recargar.
   function refrescar(s){
-    Filas.init();
+    try{ if (typeof Filas !== 'undefined' && Filas.forceRefresh) Filas.forceRefresh(); else if (typeof Filas !== 'undefined') Filas.init(); }catch(e){}
     if (CatPage.estaAbierta()) CatPage.abrir(CatPage.catActual());
     const ficha = document.getElementById('ppage');
     if (ficha && ficha.dataset.slug === s && ficha.style.display !== 'none') ProductModal.irA(s);
