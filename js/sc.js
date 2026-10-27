@@ -148,18 +148,18 @@ const Filas=(()=>{
 
   function paginar(){
     const total=CATALOGO.length;
-    const necesarios=POR_PAGINA*MAX_PAGINAS;
+    const paginasReales=Math.max(1, Math.ceil(total/POR_PAGINA));
+    const paginas=Math.min(paginasReales, MAX_PAGINAS);
     const base=CATALOGO.slice();
-    const full=[];
-    for(let i=0;i<necesarios;i++)full.push(base[i%total]);
-    const paginas=MAX_PAGINAS;
-    return{full,paginas};
+    return{base,total,paginas,paginasReales};
   }
 
   function pintarPagina(grid){
-    const{full}=paginar();
+    const{base,paginas}=paginar();
+    if(pagina>paginas) pagina=paginas;
+    if(pagina<1) pagina=1;
     const ini=(pagina-1)*POR_PAGINA;
-    const lista=full.slice(ini,ini+POR_PAGINA);
+    const lista=base.slice(ini,ini+POR_PAGINA);
     grid.dataset.pintado='';delete grid.dataset.animado;
     pintarProductos(grid,lista);
     animarProductos(grid);
@@ -169,6 +169,11 @@ const Filas=(()=>{
     const nav=document.getElementById('paginacion');
     if(!nav)return;
     const{paginas}=paginar();
+    if(paginas<=1){
+      nav.innerHTML='';
+      return;
+    }
+    if(pagina>paginas) pagina=paginas;
     let html='';
     html+=`<button class="pag-btn pag-prev" data-pag="${pagina-1}" ${pagina===1?'disabled':''} aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>`;
     for(let i=1;i<=paginas;i++){
