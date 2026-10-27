@@ -143,13 +143,13 @@ const Filas=(()=>{
     Carru.revisar(row);
   }
   const POR_PAGINA=20;
-  const MAX_PAGINAS=2;
+  
   let pagina=1;
 
   function paginar(){
     const total=CATALOGO.length;
     const paginasReales=Math.max(1, Math.ceil(total/POR_PAGINA));
-    const paginas=Math.min(paginasReales, MAX_PAGINAS);
+    const paginas=paginasReales;
     const base=CATALOGO.slice();
     return{base,total,paginas,paginasReales};
   }
