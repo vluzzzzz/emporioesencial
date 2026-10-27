@@ -195,6 +195,8 @@ const Filas=(()=>{
   function init(){
     const grid=document.getElementById('masGrid');
     if(!grid)return;
+    // Reset to page 1 on reinit to ensure pagination updates correctly
+    pagina = 1;
     pintarPagina(grid);
     pintarControles();
     if(typeof Edicion!=='undefined')Edicion.remontar();
