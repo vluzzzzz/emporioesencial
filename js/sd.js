@@ -212,6 +212,17 @@ const aWebp = u => String(u || '').replace(/^(images\/emporio-images\/[0-9.]+)\.
 // loadCatalog al arrancar, y el modo edición para refrescar un solo producto
 // sin recargar la página.
 function aplicarProducto(p){
+  // No agregar productos desactivados
+  if (p.activo === false || p.active === false || p.enabled === false || p.visible === false || p.is_visible === false || p.is_active === false || p.published === false || p.oculto === true || p.hidden === true) {
+    const i = CATALOGO.findIndex(x => x.slug === p.slug);
+    if (i >= 0) CATALOGO.splice(i, 1);
+    delete PRICE_TIERS[p.slug];
+    delete FEATURES[p.slug];
+    delete GALLERY[p.slug];
+    delete COLOR_VARIANTS[p.slug];
+    return null;
+  }
+
   const tiers = (p.price_tiers || [])
     .filter(t => t.active !== false && t.price > 0)
     .sort((a,b)=>a.qty-b.qty)
@@ -260,7 +271,19 @@ async function loadCatalog(){
       .select('*, price_tiers(qty,price,active)')
       .order('position', { ascending: true });
     if (error) throw error;
-    const products = data || [];
+    let products = data || [];
+    products = products.filter(p => {
+      if (p.activo === false) return false;
+      if (p.active === false) return false;
+      if (p.enabled === false) return false;
+      if (p.visible === false) return false;
+      if (p.is_visible === false) return false;
+      if (p.is_active === false) return false;
+      if (p.published === false) return false;
+      if (p.oculto === true) return false;
+      if (p.hidden === true) return false;
+      return true;
+    });
     if (!products.length) return false;   // sin datos → se queda el fallback
 
     CATALOGO.length = 0;
@@ -269,7 +292,13 @@ async function loadCatalog(){
     // HERO (carrusel principal)
     PRODUCTS.length = 0;
     Object.keys(HERO_STOCK).forEach(k => delete HERO_STOCK[k]);
-    products.filter(p => p.is_hero)
+    products.filter(p => {
+      if (p.is_hero) {
+        if (p.activo === false || p.active === false || p.enabled === false || p.visible === false || p.is_visible === false || p.is_active === false || p.published === false || p.oculto === true || p.hidden === true) return false;
+        return true;
+      }
+      return false;
+    })
       .sort((a,b)=>(a.hero_order||0)-(b.hero_order||0))
       .forEach((p, idx) => {
         const p1 = tierOne(p.slug);

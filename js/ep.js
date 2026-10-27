@@ -83,11 +83,17 @@ const EdProducto = (() => {
           Agregar característica
         </button>
 
-        <p class="venta-sec">Stock</p>
+        <p class="venta-sec">Stock / Visibilidad</p>
         <div class="venta-g2">
           <label class="venta-f venta-ancho"><span>Unidades disponibles</span>
             <input type="number" name="unidades" min="0" step="1" value="${p.stock ?? (p.inStock === false ? 0 : '')}" placeholder="Déjalo vacío para no llevar la cuenta">
             <small class="ep-stock-ayuda" id="epStockAyuda"></small>
+          </label>
+        </div>
+        <div class="venta-g2" style="margin-top:8px">
+          <label class="venta-f venta-ancho" style="flex-direction:row;align-items:center;gap:10px">
+            <input type="checkbox" name="activar" id="epActivar" ${(p.activo !== false && p.active !== false && p.enabled !== false && p.visible !== false && p.is_visible !== false && p.is_active !== false && p.published !== false && p.oculto !== true && p.hidden !== true) ? 'checked' : ''} style="width:auto">
+            <span>Mostrar producto en la web</span>
           </label>
         </div>
         <p class="venta-msg" id="edMsg"></p>
@@ -133,6 +139,7 @@ const EdProducto = (() => {
       btn.disabled = true; btn.textContent = 'Guardando…';
       msg.className = 'venta-msg'; msg.textContent = '';
       const n = unidades(f);
+      const mostrar = f.activar ? f.activar.checked : true;
       try {
         await guardar(s, {
           name: f.nombre.value,
@@ -144,7 +151,16 @@ const EdProducto = (() => {
           precio: parseInt(f.precio.value, 10) || 0,
           compare_at_price: f.antes.value === '' ? null : (parseInt(f.antes.value, 10) || null),
           stock_qty: n,
-          in_stock: n === null ? true : n > 0,
+          in_stock: n === null ? (mostrar) : (n > 0),
+          activo: mostrar,
+          active: mostrar,
+          enabled: mostrar,
+          visible: mostrar,
+          is_visible: mostrar,
+          is_active: mostrar,
+          published: mostrar,
+          oculto: !mostrar,
+          hidden: !mostrar,
         });
         toast('Producto guardado');
         cerrar();
