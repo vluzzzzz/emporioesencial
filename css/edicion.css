@@ -117,9 +117,26 @@ body.editando .product-card.producto-oculto:hover{opacity:.75;filter:grayscale(.
 .ec-mano:hover{opacity:1;transform:scale(1.08)}
 .ec-mano:active{cursor:grabbing}
 .ec-mano svg{width:17px;height:17px;pointer-events:none}
-.ec-card.arrastrando{opacity:.65;outline:2px dashed #111;outline-offset:3px;border-radius:16px}
+.ec-card.arrastrando{
+  box-sizing:border-box;
+  opacity:.96;border-radius:16px;
+  outline:2px solid #111;outline-offset:3px;
+  box-shadow:0 24px 50px rgba(0,0,0,.32),0 4px 14px rgba(0,0,0,.18);
+  transform:scale(1.03) rotate(.6deg);
+  transform-origin:center;
+  cursor:grabbing;
+  transition:none;
+}
+/* El hueco punteado marca dónde va a caer la tarjeta que se arrastra. */
+.ec-hueco{
+  border-radius:16px;
+  border:2px dashed rgba(17,17,17,.35);
+  background:rgba(17,17,17,.045);
+  pointer-events:none;
+}
 body.ec-arrastrando{cursor:grabbing;user-select:none}
-body.ec-arrastrando .ec-card{transition:border-color .12s}
+body.ec-arrastrando .ec-card:not(.arrastrando){transition:border-color .12s}
+body.ec-arrastrando .ec-mano{cursor:grabbing}
 .ec-card:not(.arrastrando):hover{border-color:rgba(17,17,17,.25)}
 /* La vista previa es un círculo igual que en el menú: antes se mostraba en
    4:3 y al guardar la foto salía recortada distinto de lo que se veía aquí. */

@@ -185,13 +185,45 @@ const EdSitio = (() => {
     const marcar = () => { estado.sucio = true; ov.querySelector('#edCatAviso').textContent = 'Hay cambios sin guardar'; };
 
     /* ── Orden por arrastre ──────────────────────────────── */
-    // La manito de cada tarjeta reordena la lista. Se mueve el nodo en el DOM
-    // mientras se arrastra (así no se pierde el puntero) y, al soltar, se
-    // reescribe el array del estado y se repinta. Al guardar, el orden del
+    // La manito levanta la tarjeta: queda pegada al puntero, un hueco punteado
+    // marca el lugar de destino y las demás se corren con una animación corta
+    // (FLIP). Al soltar, la tarjeta cae en el hueco. Al guardar, el orden del
     // array es el que se sube: `orden` para categorías y el propio orden del
     // array para las subcategorías.
     const listaActual = () => estado.dentro !== null ? estado.arbol[estado.dentro].subs : estado.arbol;
+    const sinMovimiento = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const DURACION = 170;
     let drag = null;
+
+    // FLIP: se mide dónde está cada tarjeta, el llamador reordena el DOM y acá
+    // se anima cada una desde su posición vieja a la nueva. Es lo que hace que
+    // "se corran" en vez de saltar de golpe.
+    function medir(box){
+      const mapa = new Map();
+      box.querySelectorAll('.ec-card').forEach(c => mapa.set(c, c.getBoundingClientRect()));
+      return mapa;
+    }
+
+    function animarDesde(box, antes){
+      const dur = sinMovimiento() ? 0 : DURACION;
+      box.querySelectorAll('.ec-card').forEach(c => {
+        const a = antes.get(c);
+        if (!a) return;
+        const b = c.getBoundingClientRect();
+        const dx = Math.round(a.left - b.left), dy = Math.round(a.top - b.top);
+        if (!dx && !dy) return;
+        c.animate(
+          [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
+          { duration: dur, easing: 'cubic-bezier(.2,.85,.25,1)' }
+        );
+      });
+    }
+
+    function reacomodar(box, cambiar){
+      const antes = medir(box);
+      cambiar();
+      animarDesde(box, antes);
+    }
 
     // El nodo que se arrastra no cambia de posición en el array hasta soltar,
     // así que hay que realinear índices y los data-* de cada control.
@@ -211,13 +243,46 @@ const EdSitio = (() => {
     }
 
     function agarrar(e){
-      if (e.button !== 0) return;
+      if (e.button !== 0 || drag) return;
       const card = e.currentTarget.closest('.ec-card');
-      if (!card) return;
+      const box = card && card.parentElement;
+      if (!card || !box) return;
       e.preventDefault();
-      drag = { card, id: e.pointerId, x0: e.clientX, y0: e.clientY, movido: false };
+
+      const r = card.getBoundingClientRect();
+      // El hueco ocupa el lugar de la tarjeta para que la grilla no se achique
+      // mientras la tarjeta está levantada.
+      const hueco = document.createElement('div');
+      hueco.className = 'ec-hueco';
+      hueco.style.width = r.width + 'px';
+      hueco.style.height = r.height + 'px';
+      box.insertBefore(hueco, card);
+
       card.classList.add('arrastrando');
+      card.style.position = 'fixed';
+      card.style.left = r.left + 'px';
+      card.style.top = r.top + 'px';
+      card.style.width = r.width + 'px';
+      card.style.height = r.height + 'px';
+      card.style.margin = '0';
+      card.style.zIndex = '999';
+      card.style.pointerEvents = 'none';
+
+      // La tarjeta sale del panel mientras vuela. Así no la recorta el cuerpo
+      // con scroll ni la tapa la barra de Guardar, y las coordenadas del
+      // puntero son las de la pantalla.
+      ov.appendChild(card);
+
+      drag = {
+        card, hueco, id: e.pointerId,
+        x0: e.clientX, y0: e.clientY,
+        dx: e.clientX - r.left, dy: e.clientY - r.top,
+        movido: false,
+      };
       document.body.classList.add('ec-arrastrando');
+      document.addEventListener('pointermove', mover);
+      document.addEventListener('pointerup', soltar);
+      document.addEventListener('pointercancel', soltar);
       try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
     }
 
@@ -226,33 +291,63 @@ const EdSitio = (() => {
       if (!drag.movido && Math.abs(e.clientY - drag.y0) < 5 && Math.abs(e.clientX - drag.x0) < 5) return;
       drag.movido = true;
       e.preventDefault();
+
+      // La tarjeta sigue al puntero.
+      drag.card.style.left = (e.clientX - drag.dx) + 'px';
+      drag.card.style.top = (e.clientY - drag.dy) + 'px';
+
+      // ¿Sobre qué tarjeta está? (la levantada no molesta: no recibe puntero).
       const el = document.elementFromPoint(e.clientX, e.clientY);
       const otra = el && el.closest ? el.closest('.ec-card') : null;
       if (!otra || otra === drag.card) return;
-      const box = drag.card.parentElement;
+      const box = drag.hueco.parentElement;
       if (!box || !box.contains(otra)) return;
+
       const r = otra.getBoundingClientRect();
       // La grilla tiene varias columnas: si el puntero está a la altura de la
       // tarjeta destino, manda el eje horizontal; si está en otra fila, el
-      // vertical. Antes solo miraba la mitad vertical y en una misma fila no
-      // se podía reordenar.
+      // vertical.
       const mismaFila = e.clientY >= r.top && e.clientY <= r.bottom;
       const antes = mismaFila
         ? e.clientX < r.left + r.width / 2
         : e.clientY < r.top + r.height / 2;
-      box.insertBefore(drag.card, antes ? otra : otra.nextSibling);
-      sincronizarOrden(box);
+      const destino = antes ? otra : otra.nextSibling;
+      if (destino === drag.hueco) return;
+      reacomodar(box, () => box.insertBefore(drag.hueco, destino));
     }
 
     function soltar(e){
       if (!drag || (e.pointerId != null && e.pointerId !== drag.id)) return;
-      const { card, movido } = drag;
-      card.classList.remove('arrastrando');
-      document.body.classList.remove('ec-arrastrando');
+      const { card, hueco, movido } = drag;
+      const box = hueco.parentElement;
       drag = null;
+      document.removeEventListener('pointermove', mover);
+      document.removeEventListener('pointerup', soltar);
+      document.removeEventListener('pointercancel', soltar);
+      document.body.classList.remove('ec-arrastrando');
+      card.classList.remove('arrastrando');
+
+      // Se mide con la tarjeta todavía pegada al puntero, para animarla
+      // también a ella al caer en su lugar.
+      const antes = box ? medir(box) : null;
+      if (antes) antes.set(card, card.getBoundingClientRect());
+      card.style.position = '';
+      card.style.left = '';
+      card.style.top = '';
+      card.style.width = '';
+      card.style.height = '';
+      card.style.margin = '';
+      card.style.zIndex = '';
+      card.style.pointerEvents = '';
+
+      if (!box) { hueco.remove(); card.remove(); return; }
+      box.insertBefore(card, hueco);
+      hueco.remove();
+      animarDesde(box, antes);
+
       if (!movido) return;
+      sincronizarOrden(box);
       marcar();
-      pintar();
     }
 
     function tarjeta(it, idx, esSub){
@@ -319,15 +414,10 @@ const EdSitio = (() => {
 
       const lista = () => estado.dentro !== null ? estado.arbol[estado.dentro].subs : estado.arbol;
 
-      // El arrastre se conecta una sola vez por panel: los oyentes van en la
-      // caja fija (#edCats), no en las tarjetas, que se repintan enteras.
+      // El arrastre se conecta por tarjeta; los oyentes de mover/soltar se
+      // ponen en document solo mientras dura el arrastre (la tarjeta viaja
+      // fuera de la grilla y sus eventos ya no pasan por la caja).
       box.querySelectorAll('[data-mano]').forEach(m => m.addEventListener('pointerdown', agarrar));
-      if (!box.dataset.arrastre) {
-        box.dataset.arrastre = '1';
-        box.addEventListener('pointermove', mover);
-        box.addEventListener('pointerup', soltar);
-        box.addEventListener('pointercancel', soltar);
-      }
 
       box.querySelectorAll('[data-nombre]').forEach(x => x.addEventListener('input', e => {
         lista()[+e.target.dataset.nombre].nombre = e.target.value;
