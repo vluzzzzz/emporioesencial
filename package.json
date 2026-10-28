@@ -3,5 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "description": "Catálogo de productos para el hogar (Supabase + Vercel)",
-  "dependencies": {}
+  "dependencies": {
+    "mercadopago": "^2.13.0",
+    "resend": "^4.8.0"
+  }
 }
