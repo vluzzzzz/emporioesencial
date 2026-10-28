@@ -163,6 +163,23 @@ const Filas=(()=>{
     animarProductos(grid);
   }
 
+  // Números que se muestran: la primera, la última y las de alrededor de la
+  // actual. Con muchas páginas (10, 20…) no tiene sentido listarlas todas:
+  // entre medio va un "…". Con 5 páginas o menos se ven todas.
+  function numerosDePagina(actual, total){
+    if (total <= 5) return Array.from({length: total}, (_, i) => i + 1);
+    const ver = new Set([1, total, actual - 1, actual, actual + 1]);
+    if (actual <= 3) { ver.add(2); ver.add(3); }
+    if (actual >= total - 2) { ver.add(total - 1); ver.add(total - 2); }
+    const nums = [...ver].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
+    const salida = [];
+    nums.forEach((n, i) => {
+      if (i && n - nums[i - 1] > 1) salida.push('…');
+      salida.push(n);
+    });
+    return salida;
+  }
+
   function pintarControles(){
     const nav=document.getElementById('paginacion');
     if(!nav)return;
@@ -174,9 +191,11 @@ const Filas=(()=>{
     if(pagina>paginas) pagina=paginas;
     let html='';
     html+=`<button class="pag-btn pag-prev" data-pag="${pagina-1}" ${pagina===1?'disabled':''} aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>`;
-    for(let i=1;i<=paginas;i++){
-      html+=`<button class="pag-btn pag-num${i===pagina?' active':''}" data-pag="${i}">${i}</button>`;
-    }
+    numerosDePagina(pagina, paginas).forEach(n => {
+      html += n === '…'
+        ? '<span class="pag-puntos" aria-hidden="true">…</span>'
+        : `<button class="pag-btn pag-num${n===pagina?' active':''}" data-pag="${n}"${n===pagina?' aria-current="page"':''}>${n}</button>`;
+    });
     html+=`<button class="pag-btn pag-next" data-pag="${pagina+1}" ${pagina===paginas?'disabled':''} aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>`;
     nav.innerHTML=html;
     nav.querySelectorAll('.pag-btn[data-pag]').forEach(b=>b.addEventListener('click',()=>{
@@ -190,16 +209,18 @@ const Filas=(()=>{
     }));
   }
 
+  // Ojo: ni init() ni forceRefresh() vuelven a la página 1. Si el admin está
+  // editando un producto de la página 3 y guarda, tiene que seguir en la 3
+  // para pasar al siguiente; antes cada guardado lo devolvía al principio.
+  // La página se recorta sola si el catálogo se achicó (ver pintarPagina).
   function init(){
     const grid=document.getElementById('masGrid');
     if(!grid)return;
-    pagina = 1;
     pintarPagina(grid);
     pintarControles();
     if(typeof Edicion!=='undefined')Edicion.remontar();
   }
   function forceRefresh(){
-    pagina = 1;
     const grid=document.getElementById('masGrid');
     if(grid){
       pintarPagina(grid);

@@ -184,11 +184,85 @@ const EdSitio = (() => {
     const cuantos = n => n === 0 ? 'Sin productos' : n === 1 ? '1 producto' : n + ' productos';
     const marcar = () => { estado.sucio = true; ov.querySelector('#edCatAviso').textContent = 'Hay cambios sin guardar'; };
 
+    /* ── Orden por arrastre ──────────────────────────────── */
+    // La manito de cada tarjeta reordena la lista. Se mueve el nodo en el DOM
+    // mientras se arrastra (así no se pierde el puntero) y, al soltar, se
+    // reescribe el array del estado y se repinta. Al guardar, el orden del
+    // array es el que se sube: `orden` para categorías y el propio orden del
+    // array para las subcategorías.
+    const listaActual = () => estado.dentro !== null ? estado.arbol[estado.dentro].subs : estado.arbol;
+    let drag = null;
+
+    // El nodo que se arrastra no cambia de posición en el array hasta soltar,
+    // así que hay que realinear índices y los data-* de cada control.
+    function sincronizarOrden(box){
+      const cards = [...box.querySelectorAll('.ec-card')];
+      const actual = listaActual();
+      const nuevo = cards.map(c => actual[+c.dataset.idx]).filter(Boolean);
+      if (nuevo.length !== actual.length) return;
+      actual.length = 0;
+      actual.push(...nuevo);
+      cards.forEach((c, i) => {
+        c.dataset.idx = i;
+        ['nombre', 'ver', 'foto', 'quitafoto', 'borrar', 'entrar', 'mano'].forEach(k => {
+          c.querySelectorAll('[data-' + k + ']').forEach(n => { n.dataset[k] = i; });
+        });
+      });
+    }
+
+    function agarrar(e){
+      if (e.button !== 0) return;
+      const card = e.currentTarget.closest('.ec-card');
+      if (!card) return;
+      e.preventDefault();
+      drag = { card, id: e.pointerId, x0: e.clientX, y0: e.clientY, movido: false };
+      card.classList.add('arrastrando');
+      document.body.classList.add('ec-arrastrando');
+      try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    }
+
+    function mover(e){
+      if (!drag || e.pointerId !== drag.id) return;
+      if (!drag.movido && Math.abs(e.clientY - drag.y0) < 5 && Math.abs(e.clientX - drag.x0) < 5) return;
+      drag.movido = true;
+      e.preventDefault();
+      const el = document.elementFromPoint(e.clientX, e.clientY);
+      const otra = el && el.closest ? el.closest('.ec-card') : null;
+      if (!otra || otra === drag.card) return;
+      const box = drag.card.parentElement;
+      if (!box || !box.contains(otra)) return;
+      const r = otra.getBoundingClientRect();
+      // La grilla tiene varias columnas: si el puntero está a la altura de la
+      // tarjeta destino, manda el eje horizontal; si está en otra fila, el
+      // vertical. Antes solo miraba la mitad vertical y en una misma fila no
+      // se podía reordenar.
+      const mismaFila = e.clientY >= r.top && e.clientY <= r.bottom;
+      const antes = mismaFila
+        ? e.clientX < r.left + r.width / 2
+        : e.clientY < r.top + r.height / 2;
+      box.insertBefore(drag.card, antes ? otra : otra.nextSibling);
+      sincronizarOrden(box);
+    }
+
+    function soltar(e){
+      if (!drag || (e.pointerId != null && e.pointerId !== drag.id)) return;
+      const { card, movido } = drag;
+      card.classList.remove('arrastrando');
+      document.body.classList.remove('ec-arrastrando');
+      drag = null;
+      if (!movido) return;
+      marcar();
+      pintar();
+    }
+
     function tarjeta(it, idx, esSub){
       const oculta = it.oculta === true;
       const n = esSub ? usanCat(it.slug) : usanTodo(it);
       return `
         <div class="ec-card${oculta ? ' oculta' : ''}" data-idx="${idx}" data-sub="${esSub ? 1 : 0}">
+          <button type="button" class="ec-mano" data-mano="${idx}" aria-label="Arrastrar para cambiar el orden" title="Arrastra para cambiar el orden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11V6.5a1.5 1.5 0 0 1 3 0V11m0 0V5.5a1.5 1.5 0 0 1 3 0V11m0 0V7a1.5 1.5 0 0 1 3 0v6.5c0 3.6-2.4 6.5-6 6.5h-1a6 6 0 0 1-4.6-2.2L4 14.4a1.6 1.6 0 0 1 2.4-2.1L9 15"/></svg>
+          </button>
           <div class="ec-foto">
             ${it.img ? `<img src="${escH(it.img)}" alt="" onerror="this.closest('.ec-foto').classList.add('vacia')">`
                      : '<span class="ec-sinfoto">Sin foto</span>'}
@@ -233,8 +307,8 @@ const EdSitio = (() => {
 
       box.innerHTML = `
         <p class="ec-intro">${dentro
-          ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. La foto se ve en círculo dentro del menú, así que conviene <b>cuadrada, de 400 × 400</b>, con el producto al centro.'
-          : 'Cambia la foto y el nombre de cada una. La foto se ve en círculo dentro del menú: conviene <b>cuadrada, de 400 × 400</b>. El ojo decide si aparece en la tienda: lo que apagas se guarda igual, solo deja de verse.'}</p>
+          ? 'Las subcategorías de <b>' + escH(dentro.nombre) + '</b>. La foto se ve en círculo dentro del menú, así que conviene <b>cuadrada, de 400 × 400</b>, con el producto al centro. Arrastra la <b>manito</b> para cambiar el orden en que aparecen.'
+          : 'Cambia la foto y el nombre de cada una. La foto se ve en círculo dentro del menú: conviene <b>cuadrada, de 400 × 400</b>. El ojo decide si aparece en la tienda: lo que apagas se guarda igual, solo deja de verse. Arrastra la <b>manito</b> para cambiar el orden del menú.'}</p>
         <div class="ec-grid">
           ${items.map((it, i) => tarjeta(it, i, esSub)).join('')}
           <button type="button" class="ec-nueva" id="ecNueva">
@@ -244,6 +318,16 @@ const EdSitio = (() => {
         </div>`;
 
       const lista = () => estado.dentro !== null ? estado.arbol[estado.dentro].subs : estado.arbol;
+
+      // El arrastre se conecta una sola vez por panel: los oyentes van en la
+      // caja fija (#edCats), no en las tarjetas, que se repintan enteras.
+      box.querySelectorAll('[data-mano]').forEach(m => m.addEventListener('pointerdown', agarrar));
+      if (!box.dataset.arrastre) {
+        box.dataset.arrastre = '1';
+        box.addEventListener('pointermove', mover);
+        box.addEventListener('pointerup', soltar);
+        box.addEventListener('pointercancel', soltar);
+      }
 
       box.querySelectorAll('[data-nombre]').forEach(x => x.addEventListener('input', e => {
         lista()[+e.target.dataset.nombre].nombre = e.target.value;
@@ -357,7 +441,11 @@ const EdSitio = (() => {
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
       try {
-        const arbol = estado.arbol.map((c, i) => ({ ...c, orden: i + 1 }));
+        const arbol = estado.arbol.map((c, i) => ({
+          ...c,
+          orden: i + 1,
+          subs: c.subs.map((s, j) => ({ ...s, orden: j + 1 })),
+        }));
         await guardarConfig('categorias_arbol', arbol);
         Cats.aplicar(arbol);
         Banners.init();

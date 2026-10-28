@@ -101,8 +101,26 @@ body.editando .product-card.producto-oculto:hover{opacity:.75;filter:grayscale(.
 .ec-intro{margin:0 0 20px;font-size:14px;color:var(--gray-mid);line-height:1.55}
 .ec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
 
-.ec-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;overflow:hidden;display:flex;flex-direction:column}
+.ec-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;position:relative}
 .ec-card.oculta{opacity:.55}
+/* Manito para ordenar: se arrastra la tarjeta desde acá. Va arriba a la
+   izquierda para no chocar con el ojo de la foto ni con el tacho. */
+.ec-mano{
+  position:absolute;top:8px;left:8px;z-index:5;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;padding:0;
+  background:rgba(17,17,17,.78);color:#e9d9a8;
+  cursor:grab;touch-action:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  opacity:.9;transition:opacity .16s,transform .16s;
+}
+.ec-mano:hover{opacity:1;transform:scale(1.08)}
+.ec-mano:active{cursor:grabbing}
+.ec-mano svg{width:17px;height:17px;pointer-events:none}
+.ec-card.arrastrando{opacity:.65;outline:2px dashed #111;outline-offset:3px;border-radius:16px}
+body.ec-arrastrando{cursor:grabbing;user-select:none}
+body.ec-arrastrando .ec-card{transition:border-color .12s}
+.ec-card:not(.arrastrando):hover{border-color:rgba(17,17,17,.25)}
 /* La vista previa es un círculo igual que en el menú: antes se mostraba en
    4:3 y al guardar la foto salía recortada distinto de lo que se veía aquí. */
 .ec-foto{position:relative;aspect-ratio:4/3;background:var(--off-white);display:grid;place-items:center;overflow:hidden}
