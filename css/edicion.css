@@ -43,6 +43,69 @@ body.editando .product-card.producto-oculto:hover{opacity:.75;filter:grayscale(.
 .po-ojo.no{background:#fff;color:#c0392b;border:1.5px solid rgba(192,57,43,.35)}
 .po-ojo.no .po-ojo-si{display:none}
 .po-ojo.no .po-ojo-no{display:block}
+/* La manito va justo debajo del ojito y solo aparece en la grilla paginada
+   mientras se edita: sirve para levantar la tarjeta y reordenarla. */
+.po-mano{
+  position:absolute;top:52px;left:10px;z-index:6;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;cursor:grab;touch-action:none;
+  background:#fff;color:#111;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  opacity:.85;transition:opacity .16s,transform .16s;
+}
+.po-mano:hover{opacity:1;transform:scale(1.08)}
+.po-mano:active{cursor:grabbing}
+.po-mano svg{width:18px;height:18px}
+
+/* Producto que se arrastra: vuela pegado al puntero, sin contorno negro. */
+.product-card.producto-arrastrando{
+  box-sizing:border-box;
+  border-color:transparent!important;
+  outline:0!important;
+  border-radius:14px;
+  box-shadow:0 26px 60px rgba(0,0,0,.34),0 6px 18px rgba(0,0,0,.18);
+  transform:scale(1.02) rotate(.5deg);
+  transform-origin:center;
+  cursor:grabbing;
+  transition:none;
+  pointer-events:none;
+}
+/* El hueco punteado marca dónde va a caer. */
+.po-hueco{
+  border-radius:14px;
+  border:2px dashed rgba(17,17,17,.3);
+  background:rgba(17,17,17,.04);
+  pointer-events:none;
+}
+body.arrastrando-producto{cursor:grabbing;user-select:none}
+body.arrastrando-producto .product-card:not(.producto-arrastrando){transition:box-shadow .12s,border-color .12s}
+
+/* Barra flotante para cambiar de página sin soltar el producto que se
+   arrastra. Se queda abajo, centrada, por encima de todo. */
+.po-paginas{
+  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+  z-index:10002;display:flex;align-items:center;gap:6px;
+  background:#111;color:#f6f2e8;border-radius:999px;
+  padding:8px 10px;box-shadow:0 18px 44px rgba(0,0,0,.36);
+  font-size:12.5px;line-height:1;
+  animation:po-paginas-entra .18s ease-out;
+}
+.po-paginas[hidden]{display:none}
+@keyframes po-paginas-entra{
+  from{opacity:0;transform:translate(-50%,10px)}
+  to{opacity:1;transform:translate(-50%,0)}
+}
+.po-paginas-txt{padding:0 8px;white-space:nowrap;opacity:.8}
+.po-pag-btn{
+  border:0;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.12);color:inherit;
+  font-family:inherit;font-size:12.5px;font-weight:700;
+  padding:9px 14px;white-space:nowrap;
+  transition:background .14s,color .14s,transform .14s;
+}
+.po-pag-btn:hover:not(:disabled){background:rgba(255,255,255,.24)}
+.po-pag-btn:disabled{opacity:.32;cursor:default}
+.po-pag-btn.sobre{background:#e9d9a8;color:#111;transform:scale(1.04)}
 
 /* Botones anclados a una sección (no se los lleva un repintado) */
 .ed-btn{display:inline-flex;align-items:center;gap:8px;background:#111;color:#e9d9a8;border:0;border-radius:999px;font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 20px;cursor:pointer;transition:background .18s,transform .18s}

@@ -141,8 +141,14 @@ const Filas=(()=>{
     Carru.revisar(row);
   }
   const POR_PAGINA=20;
-  
+
   let pagina=1;
+  // Arrastre de productos (solo con Editar prendido).
+  let arrastre=null;      // { slug, item, card, hueco, id, dx, dy, movido }
+  let arrastreSlug=null;  // se saca del repintado mientras la tarjeta vuela
+  let barra=null;         // barra flotante para cambiar de página
+  let bloqueoHasta=0;     // ignora el clic que queda pegado al soltar
+  let sobrePag=null, tPag=null, ultimoPunto=null, enganchado=false;
 
   function paginar(){
     const total=productosVisibles().length;
@@ -152,15 +158,37 @@ const Filas=(()=>{
     return{base,total,paginas,paginasReales};
   }
 
-  function pintarPagina(grid){
+  // Posición de cada tarjeta en pantalla, por slug. Sirve para animar los
+  // cambios de lugar (FLIP) cuando se reordena o se cambia de página.
+  function medir(grid){
+    const mapa=new Map();
+    grid.querySelectorAll('.product-card').forEach(c=>mapa.set(c.dataset.id, c.getBoundingClientRect()));
+    return mapa;
+  }
+  function animarCambios(grid, antes){
+    if(!antes || (typeof reduceMotion==='function' && reduceMotion())) return;
+    grid.querySelectorAll('.product-card').forEach(c=>{
+      const a=antes.get(c.dataset.id);
+      if(!a) return;
+      const b=c.getBoundingClientRect();
+      const dx=Math.round(a.left-b.left), dy=Math.round(a.top-b.top);
+      if(!dx&&!dy) return;
+      c.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],
+        {duration:170,easing:'cubic-bezier(.2,.85,.25,1)'});
+    });
+  }
+
+  function pintarPagina(grid, antes){
     const{base,paginas}=paginar();
     if(pagina>paginas) pagina=paginas;
     if(pagina<1) pagina=1;
     const ini=(pagina-1)*POR_PAGINA;
-    const lista=base.slice(ini,ini+POR_PAGINA);
+    // Mientras una tarjeta vuela no se pinta también en la grilla.
+    const lista=base.slice(ini,ini+POR_PAGINA).filter(p=>p.slug!==arrastreSlug);
     grid.dataset.pintado='';delete grid.dataset.animado;
-    pintarProductos(grid,lista);
-    animarProductos(grid);
+    pintarProductos(grid,lista,{mover:true});
+    if(antes) animarCambios(grid,antes);
+    else if(!arrastre) animarProductos(grid);
   }
 
   // Números que se muestran: la primera, la última y las de alrededor de la
@@ -178,6 +206,22 @@ const Filas=(()=>{
       salida.push(n);
     });
     return salida;
+  }
+
+  // Cambia de página sin reiniciar nada más. Devuelve si hubo cambio.
+  function irA(n, sinScroll){
+    const{paginas}=paginar();
+    n=Math.max(1,Math.min(paginas,n));
+    const cambio=n!==pagina;
+    if(cambio){
+      pagina=n;
+      const grid=document.getElementById('masGrid');
+      if(grid) pintarPagina(grid);
+      pintarControles();
+      if(arrastre){ colocarHueco(0); actualizarBarra(); }
+    }
+    if(!sinScroll && cambio) document.getElementById('mas')?.scrollIntoView({behavior:'smooth',block:'start'});
+    return cambio;
   }
 
   function pintarControles(){
@@ -201,12 +245,267 @@ const Filas=(()=>{
     nav.querySelectorAll('.pag-btn[data-pag]').forEach(b=>b.addEventListener('click',()=>{
       const n=Number(b.dataset.pag);
       if(n<1||n>paginas||n===pagina)return;
-      pagina=n;
-      const grid=document.getElementById('masGrid');
-      pintarPagina(grid);
-      pintarControles();
-      document.getElementById('mas')?.scrollIntoView({behavior:'smooth',block:'start'});
+      irA(n);
     }));
+  }
+
+  /* ── Arrastre de productos ──────────────────────────────
+     Solo con Editar prendido. La tarjeta se levanta y sigue al puntero; las
+     demás se corren con animación. Abajo aparece una barra con página
+     anterior/siguiente: pasando el puntero por ella un momento, la grilla
+     cambia de página sin soltar el producto, para poder dejarlo en otra.
+     Al soltar, el orden se guarda en `products.position`. */
+
+  function medirCards(box){
+    const mapa=new Map();
+    box.querySelectorAll('.product-card').forEach(c=>mapa.set(c, c.getBoundingClientRect()));
+    return mapa;
+  }
+  function reacomodar(box, cambiar){
+    const antes=medirCards(box);
+    cambiar();
+    const dur=(typeof reduceMotion==='function' && reduceMotion())?0:170;
+    box.querySelectorAll('.product-card').forEach(c=>{
+      const a=antes.get(c);
+      if(!a) return;
+      const b=c.getBoundingClientRect();
+      const dx=Math.round(a.left-b.left), dy=Math.round(a.top-b.top);
+      if(!dx&&!dy) return;
+      c.animate([{transform:'translate('+dx+'px,'+dy+'px)'},{transform:'none'}],
+        {duration:dur,easing:'cubic-bezier(.2,.85,.25,1)'});
+    });
+  }
+
+  function colocarHueco(idx){
+    if(!arrastre) return;
+    const grid=document.getElementById('masGrid');
+    if(!grid) return;
+    const cards=[...grid.querySelectorAll('.product-card')];
+    const ref=cards[Math.max(0,Math.min(idx,cards.length))]||null;
+    if(ref) grid.insertBefore(arrastre.hueco,ref);
+    else grid.appendChild(arrastre.hueco);
+  }
+
+  function crearBarra(){
+    if(barra) return barra;
+    barra=document.createElement('div');
+    barra.className='po-paginas';
+    barra.hidden=true;
+    document.body.appendChild(barra);
+    return barra;
+  }
+  function actualizarBarra(){
+    crearBarra();
+    const{paginas}=paginar();
+    barra.innerHTML=`
+      <button type="button" class="po-pag-btn" data-arr-pag="${pagina-1}" ${pagina<=1?'disabled':''}>‹ Anterior</button>
+      <span class="po-paginas-txt">Página ${pagina} de ${paginas}</span>
+      <button type="button" class="po-pag-btn" data-arr-pag="${pagina+1}" ${pagina>=paginas?'disabled':''}>Siguiente ›</button>`;
+    barra.hidden=false;
+    if(sobrePag!=null) barra.querySelector('[data-arr-pag="'+sobrePag+'"]')?.classList.add('sobre');
+  }
+  function ocultarBarra(){
+    if(barra){ barra.hidden=true; barra.innerHTML=''; }
+    sobrePag=null;
+    clearTimeout(tPag);
+  }
+
+  // Al pasar el puntero por "Anterior/Siguiente" un momento, cambia de página.
+  // Se repite solo si el puntero se queda ahí: así se puede saltar varias.
+  function revisarBarra(x,y){
+    if(!arrastre||!barra||barra.hidden) return;
+    const el=document.elementFromPoint(x,y);
+    const b=el&&el.closest?el.closest('[data-arr-pag]'):null;
+    if(!b||b.disabled){
+      sobrePag=null;
+      clearTimeout(tPag);
+      barra.querySelectorAll('.sobre').forEach(n=>n.classList.remove('sobre'));
+      return;
+    }
+    const objetivo=Number(b.dataset.arrPag);
+    if(objetivo===sobrePag) return;
+    sobrePag=objetivo;
+    barra.querySelectorAll('[data-arr-pag]').forEach(n=>n.classList.toggle('sobre',n===b));
+    clearTimeout(tPag);
+    tPag=setTimeout(()=>{
+      if(!arrastre) return;
+      const antesPag=pagina;
+      irA(objetivo,true);
+      sobrePag=null;
+      if(pagina!==antesPag && ultimoPunto){
+        setTimeout(()=>{ if(arrastre) revisarBarra(ultimoPunto.x,ultimoPunto.y); },90);
+      }
+    },420);
+  }
+
+  function restablecer(card){
+    card.classList.remove('producto-arrastrando');
+    ['position','left','top','width','height','margin','zIndex','pointerEvents','transform','opacity']
+      .forEach(k=>{ card.style[k]=''; });
+  }
+
+  function empezar(e, card, mano){
+    if(arrastre||!enEdicion()) return;
+    const grid=document.getElementById('masGrid');
+    if(!grid) return;
+    const slug=card.dataset.id;
+    const origen=CATALOGO.findIndex(p=>p.slug===slug);
+    if(origen<0) return;
+
+    const r=card.getBoundingClientRect();
+    const hueco=document.createElement('div');
+    hueco.className='po-hueco';
+    hueco.style.width=r.width+'px';
+    hueco.style.height=r.height+'px';
+    card.parentElement.insertBefore(hueco,card);
+
+    card.classList.add('producto-arrastrando');
+    card.style.transform='';
+    card.style.opacity='';
+    card.style.position='fixed';
+    card.style.left=r.left+'px';
+    card.style.top=r.top+'px';
+    card.style.width=r.width+'px';
+    card.style.height=r.height+'px';
+    card.style.margin='0';
+    card.style.zIndex='10001';
+    card.style.pointerEvents='none';
+    document.body.appendChild(card);
+
+    arrastre={ slug, card, hueco, id:e.pointerId, dx:e.clientX-r.left, dy:e.clientY-r.top,
+      x0:e.clientX, y0:e.clientY, movido:false, origen };
+    arrastreSlug=slug;
+    ultimoPunto={x:e.clientX,y:e.clientY};
+    document.body.classList.add('arrastrando-producto');
+    actualizarBarra();
+    document.addEventListener('pointermove',mover,{passive:false});
+    document.addEventListener('pointerup',soltar);
+    document.addEventListener('pointercancel',soltar);
+    document.addEventListener('keydown',tecla);
+    try{ mano.setPointerCapture(e.pointerId); }catch(err){}
+  }
+
+  function mover(e){
+    if(!arrastre||e.pointerId!==arrastre.id) return;
+    if(!arrastre.movido && Math.abs(e.clientY-arrastre.y0)<5 && Math.abs(e.clientX-arrastre.x0)<5) return;
+    arrastre.movido=true;
+    e.preventDefault();
+    arrastre.card.style.left=(e.clientX-arrastre.dx)+'px';
+    arrastre.card.style.top=(e.clientY-arrastre.dy)+'px';
+    ultimoPunto={x:e.clientX,y:e.clientY};
+    revisarBarra(e.clientX,e.clientY);
+
+    const el=document.elementFromPoint(e.clientX,e.clientY);
+    const otra=el&&el.closest?el.closest('#masGrid .product-card'):null;
+    if(!otra) return;
+    const grid=document.getElementById('masGrid');
+    if(!grid||!grid.contains(otra)) return;
+    const r=otra.getBoundingClientRect();
+    const mismaFila=e.clientY>=r.top && e.clientY<=r.bottom;
+    const antes=mismaFila ? e.clientX<r.left+r.width/2 : e.clientY<r.top+r.height/2;
+    const destino=antes?otra:otra.nextSibling;
+    if(destino===arrastre.hueco) return;
+    reacomodar(grid,()=>grid.insertBefore(arrastre.hueco,destino));
+  }
+
+  // Índice final dentro de CATALOGO según dónde quedó el hueco.
+  function destinoDeHueco(hueco, grid, slug){
+    const rest=CATALOGO.filter(p=>p.slug!==slug);
+    const hijos=[...grid.children].filter(n=>n.classList.contains('product-card')||n.classList.contains('po-hueco'));
+    const h=hijos.indexOf(hueco);
+    if(h<0) return CATALOGO.findIndex(p=>p.slug===slug);
+    const cap=(pagina-1)*POR_PAGINA+h;
+    if(cap>=rest.length) return rest.length;
+    const ref=rest[cap];
+    const i=CATALOGO.findIndex(p=>p.slug===ref.slug);
+    return i<0?rest.length:i;
+  }
+
+  function soltar(e){
+    if(!arrastre||(e.pointerId!=null&&e.pointerId!==arrastre.id)) return;
+    const {card,hueco,slug,movido}=arrastre;
+    const grid=document.getElementById('masGrid');
+    document.removeEventListener('pointermove',mover);
+    document.removeEventListener('pointerup',soltar);
+    document.removeEventListener('pointercancel',soltar);
+    document.removeEventListener('keydown',tecla);
+    clearTimeout(tPag);sobrePag=null;ultimoPunto=null;
+    document.body.classList.remove('arrastrando-producto');
+    ocultarBarra();
+
+    const antes=grid?medir(grid):new Map();
+    if(grid) antes.set(slug, card.getBoundingClientRect());
+    const destino=grid?destinoDeHueco(hueco,grid,slug):arrastre.origen;
+
+    restablecer(card);
+    hueco.remove();
+    card.remove();
+    arrastre=null;
+    arrastreSlug=null;
+    bloqueoHasta=Date.now()+400;
+
+    if(!movido){
+      if(grid) pintarPagina(grid);
+      pintarControles();
+      return;
+    }
+
+    const ordenPrevio=new Map(CATALOGO.map((p,i)=>[p.slug,i+1]));
+    const origenAhora=CATALOGO.findIndex(p=>p.slug===slug);
+    if(origenAhora>=0){
+      let d=destino;
+      if(origenAhora<d) d--;
+      d=Math.max(0,Math.min(d,CATALOGO.length-1));
+      const item=CATALOGO.splice(origenAhora,1)[0];
+      CATALOGO.splice(d,0,item);
+    }
+
+    if(grid) pintarPagina(grid,antes);
+    pintarControles();
+    guardarOrden(ordenPrevio);
+  }
+
+  function tecla(e){
+    if(e.key!=='Escape'||!arrastre) return;
+    const {card,hueco}=arrastre;
+    document.removeEventListener('pointermove',mover);
+    document.removeEventListener('pointerup',soltar);
+    document.removeEventListener('pointercancel',soltar);
+    document.removeEventListener('keydown',tecla);
+    clearTimeout(tPag);sobrePag=null;ultimoPunto=null;
+    document.body.classList.remove('arrastrando-producto');
+    ocultarBarra();
+    restablecer(card);
+    hueco.remove();
+    card.remove();
+    arrastre=null;
+    arrastreSlug=null;
+    const grid=document.getElementById('masGrid');
+    if(grid) pintarPagina(grid);
+    pintarControles();
+  }
+
+  // Guarda `position` solo en las filas que cambiaron de lugar.
+  function guardarOrden(previo){
+    const sb=window.sb;
+    if(!sb||!previo||!previo.size) return;
+    const avisar=(txt,malo)=>{
+      try{ if(typeof EdUtil!=='undefined'&&EdUtil.toast) EdUtil.toast(txt,malo); else console.log(txt); }catch(e){}
+    };
+    const cambios=[];
+    CATALOGO.forEach((p,i)=>{
+      // Sin id no hay fila que actualizar (catálogo de demostración).
+      if(p.id!=null && previo.get(p.slug)!==i+1) cambios.push({id:p.id,position:i+1});
+    });
+    if(!cambios.length) return;
+    avisar('Guardando orden…');
+    Promise.all(cambios.map(c=>sb.from('products').update({position:c.position}).eq('id',c.id)))
+      .then(res=>{
+        const malo=res.find(r=>r&&r.error);
+        if(malo) throw malo.error;
+        avisar('Orden de productos guardado');
+      })
+      .catch(err=>avisar('No se pudo guardar el orden: '+((err&&err.message)||err),true));
   }
 
   // Ojo: ni init() ni forceRefresh() vuelven a la página 1. Si el admin está
@@ -216,18 +515,38 @@ const Filas=(()=>{
   function init(){
     const grid=document.getElementById('masGrid');
     if(!grid)return;
+    if(arrastre) tecla({key:'Escape'});
+    if(!enganchado){
+      enganchado=true;
+      // La manito de cada tarjeta arranca el arrastre. Solo dentro de la
+      // grilla paginada y solo con el modo edición prendido.
+      document.addEventListener('pointerdown', e=>{
+        if(!enEdicion()) return;
+        const mano=e.target.closest('[data-mover-producto]');
+        if(!mano) return;
+        const card=mano.closest('.product-card');
+        if(!card||!card.closest('#masGrid')) return;
+        e.preventDefault(); e.stopPropagation();
+        empezar(e,card,mano);
+      }, true);
+    }
     pintarPagina(grid);
     pintarControles();
     if(typeof Edicion!=='undefined')Edicion.remontar();
   }
   function forceRefresh(){
     const grid=document.getElementById('masGrid');
+    if(arrastre) tecla({key:'Escape'});
     if(grid){
       pintarPagina(grid);
     }
     pintarControles();
   }
-  return{init, forceRefresh};
+  return {
+    init, forceRefresh,
+    arrastrando:()=>!!arrastre,
+    acabaDeArrastrar:()=>Date.now()<bloqueoHasta,
+  };
 })();
 
 // Sección de categoría. No es otra ventana ni una franja más de la home: se

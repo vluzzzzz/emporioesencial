@@ -129,6 +129,19 @@ const Edicion = (() => {
   // clic sobre una tarjeta abre el editor y nunca la ficha del producto.
   document.addEventListener('click', e => {
     if (!activa) return;
+    // La manito de la tarjeta no abre la ficha: solo sirve para arrastrar.
+    if (e.target.closest('[data-mover-producto]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    // El clic que queda pegado al soltar un arrastre tampoco debe abrir el
+    // editor; si no, mover un producto termina abriéndolo.
+    if (typeof Filas !== 'undefined' && Filas.acabaDeArrastrar && Filas.acabaDeArrastrar()) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // El ojito de cada tarjeta oculta/muestra sin abrir el editor. Va antes
     // que el clic general de la tarjeta, que si no se lo come.
     const ojo = e.target.closest('[data-ver-producto]');

@@ -191,9 +191,14 @@ function cardHTML(p, opts){
         <svg class="po-ojo-si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.6"/></svg>
         <svg class="po-ojo-no" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 6.1A9.7 9.7 0 0 1 12 5.5c6.4 0 10 6.5 10 6.5a17 17 0 0 1-3.3 4.1M6.2 7.8A17 17 0 0 0 2 12s3.6 6.5 10 6.5c1.4 0 2.6-.3 3.7-.8"/></svg>
       </button>` : '';
+  // La manito solo aparece donde se puede reordenar (la grilla paginada con
+  // Editar prendido). Sirve para levantar la tarjeta y dejarla en otra página.
+  const mano = (editando && opts && opts.mover) ? `<button type="button" class="po-mano" data-mover-producto="${escAttr(p.slug)}" title="Arrastrar para mover" aria-label="Arrastrar para mover">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M14 11V7a1.5 1.5 0 0 1 3 0v6"/><path d="M8 11V9.5a1.5 1.5 0 0 0-3 0V15c0 3.6 2.5 6.5 6 6.5h1c3 0 5.5-2.5 5.5-5.5V11"/></svg>
+      </button>` : '';
   const etiqueta = (editando && oculto) ? '<p class="po-oculto-tag">Producto oculto</p>' : '';
   return `<div class="product-card temu-card${sin ? ' out-of-stock' : ''}${(editando && oculto) ? ' producto-oculto' : ''}" data-id="${escAttr(p.slug)}" data-name="${escAttr(p.name)}" data-price="${p1}" data-raw="${p1}"${extraData(p)} data-img-scale="${p.imgScale ?? 0.75}" data-desc="${escAttr(p.desc)}"${sin ? ' aria-disabled="true"' : ''}>
-      ${ojo}${etiqueta}
+      ${ojo}${mano}${etiqueta}
       <div class="card-img-wrap"><img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><svg class="card-img-placeholder" style="display:none" viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>
       <div class="card-info">
         <p class="card-name">${escTxt(p.name)}</p>
