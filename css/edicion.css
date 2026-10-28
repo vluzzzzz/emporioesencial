@@ -83,10 +83,10 @@ body.arrastrando-producto .product-card:not(.producto-arrastrando){transition:bo
 /* Barra flotante para cambiar de página sin soltar el producto que se
    arrastra. Se queda abajo, centrada, por encima de todo. */
 .po-paginas{
-  position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
-  z-index:10002;display:flex;align-items:center;gap:6px;
-  background:#111;color:#f6f2e8;border-radius:999px;
-  padding:8px 10px;box-shadow:0 18px 44px rgba(0,0,0,.36);
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  z-index:10002;display:flex;flex-direction:column;gap:3px;
+  background:#111;color:#f6f2e8;border-radius:20px;
+  padding:7px 9px 5px;box-shadow:0 18px 44px rgba(0,0,0,.36);
   font-size:12.5px;line-height:1;
   animation:po-paginas-entra .18s ease-out;
 }
@@ -95,17 +95,35 @@ body.arrastrando-producto .product-card:not(.producto-arrastrando){transition:bo
   from{opacity:0;transform:translate(-50%,10px)}
   to{opacity:1;transform:translate(-50%,0)}
 }
-.po-paginas-txt{padding:0 8px;white-space:nowrap;opacity:.8}
+.po-pag-fila{display:flex;align-items:center;gap:4px}
+.po-pag-chips{display:flex;align-items:center;gap:1px}
+/* Los números son el selector: se pasa el mouse y salta a esa página. */
+.po-pag-chip{
+  min-width:28px;height:28px;padding:0 5px;border:0;border-radius:999px;
+  background:transparent;color:inherit;font-family:inherit;
+  font-size:12.5px;font-weight:700;cursor:pointer;
+  transition:background .14s,color .14s,transform .14s;
+}
+.po-pag-chip:hover{background:rgba(255,255,255,.14)}
+.po-pag-chip.actual{background:rgba(233,217,168,.18);color:#e9d9a8}
+.po-pag-chip.sobre{background:#e9d9a8;color:#111;transform:scale(1.06)}
+.po-pag-puntos{opacity:.45;padding:0 3px;font-weight:700}
 .po-pag-btn{
   border:0;border-radius:999px;cursor:pointer;
   background:rgba(255,255,255,.12);color:inherit;
-  font-family:inherit;font-size:12.5px;font-weight:700;
-  padding:9px 14px;white-space:nowrap;
+  font-family:inherit;font-size:15px;font-weight:700;line-height:1;
+  padding:0;white-space:nowrap;
   transition:background .14s,color .14s,transform .14s;
 }
+.po-pag-flecha{width:30px;height:30px;display:grid;place-items:center;font-size:17px}
 .po-pag-btn:hover:not(:disabled){background:rgba(255,255,255,.24)}
-.po-pag-btn:disabled{opacity:.32;cursor:default}
-.po-pag-btn.sobre{background:#e9d9a8;color:#111;transform:scale(1.04)}
+.po-pag-btn:disabled{opacity:.3;cursor:default}
+.po-pag-btn.sobre{background:#e9d9a8;color:#111;transform:scale(1.06)}
+.po-pag-pie{margin:0;padding:1px 2px 0;text-align:center;font-size:10.5px;line-height:1.2;opacity:.55;white-space:nowrap}
+@media (max-width:640px){
+  .po-pag-pie{display:none}
+  .po-paginas{bottom:14px;padding:6px 7px}
+}
 
 /* Botones anclados a una sección (no se los lleva un repintado) */
 .ed-btn{display:inline-flex;align-items:center;gap:8px;background:#111;color:#e9d9a8;border:0;border-radius:999px;font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 20px;cursor:pointer;transition:background .18s,transform .18s}

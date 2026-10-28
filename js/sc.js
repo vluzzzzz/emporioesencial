@@ -251,10 +251,11 @@ const Filas=(()=>{
 
   /* ── Arrastre de productos ──────────────────────────────
      Solo con Editar prendido. La tarjeta se levanta y sigue al puntero; las
-     demás se corren con animación. Abajo aparece una barra con página
-     anterior/siguiente: pasando el puntero por ella un momento, la grilla
-     cambia de página sin soltar el producto, para poder dejarlo en otra.
-     Al soltar, el orden se guarda en `products.position`. */
+     demás se corren con animación. Abajo aparece una barra para cambiar de
+     página sin soltar el producto: se pasa el mouse por un número, se escribe
+     la página o se usa la rueda. Al soltar, el producto se inserta en el
+     hueco (los demás se corren un lugar) y el orden se guarda en
+     `products.position`. */
 
   function medirCards(box){
     const mapa=new Map();
@@ -294,26 +295,62 @@ const Filas=(()=>{
     document.body.appendChild(barra);
     return barra;
   }
+
+  // Números tipeados mientras se arrastra: se muestran y, al parar, saltan
+  // directo a esa página. Así de la 20 a la 5 no hay que esperar nada.
+  let bufferPag='', tBuffer=null;
+  function limpiarBuffer(){
+    bufferPag='';
+    clearTimeout(tBuffer);
+    tBuffer=null;
+  }
+
   function actualizarBarra(){
     crearBarra();
     const{paginas}=paginar();
+    const nums=numerosDePagina(pagina,paginas);
+    let chips='';
+    nums.forEach(n=>{
+      chips+= n==='…'
+        ? '<span class="po-pag-puntos" aria-hidden="true">…</span>'
+        : `<button type="button" class="po-pag-chip${n===pagina?' actual':''}" data-arr-pag="${n}" aria-label="Página ${n}">${n}</button>`;
+    });
+    const pie = bufferPag
+      ? `Ir a página ${bufferPag}… (Enter para saltar)`
+      : `Página ${pagina} de ${paginas} · pasá el mouse por un número, escribila o usá la rueda`;
     barra.innerHTML=`
-      <button type="button" class="po-pag-btn" data-arr-pag="${pagina-1}" ${pagina<=1?'disabled':''}>‹ Anterior</button>
-      <span class="po-paginas-txt">Página ${pagina} de ${paginas}</span>
-      <button type="button" class="po-pag-btn" data-arr-pag="${pagina+1}" ${pagina>=paginas?'disabled':''}>Siguiente ›</button>`;
+      <div class="po-pag-fila">
+        <button type="button" class="po-pag-btn po-pag-flecha" data-arr-pag="${pagina-1}" ${pagina<=1?'disabled':''} aria-label="Página anterior">‹</button>
+        <span class="po-pag-chips">${chips}</span>
+        <button type="button" class="po-pag-btn po-pag-flecha" data-arr-pag="${pagina+1}" ${pagina>=paginas?'disabled':''} aria-label="Página siguiente">›</button>
+      </div>
+      <p class="po-pag-pie">${pie}</p>`;
     barra.hidden=false;
     if(sobrePag!=null) barra.querySelector('[data-arr-pag="'+sobrePag+'"]')?.classList.add('sobre');
   }
   function ocultarBarra(){
     if(barra){ barra.hidden=true; barra.innerHTML=''; }
     sobrePag=null;
+    repitiendo=null;
     clearTimeout(tPag);
+    limpiarBuffer();
   }
 
-  // Al pasar el puntero por "Anterior/Siguiente" un momento, cambia de página.
-  // Se repite solo si el puntero se queda ahí: así se puede saltar varias.
+  // Al pasar el puntero por un número (o por Anterior/Siguiente) un momento,
+  // la grilla salta a esa página sin soltar el producto. Con los números 1 y
+  // el último siempre visibles, ir de la 20 a la 1 es un solo gesto.
+  let repitiendo=null; // { dir, x, y } mientras se mantiene una flecha
+
   function revisarBarra(x,y){
     if(!arrastre||!barra||barra.hidden) return;
+    // Mientras se mantiene una flecha no se vuelve a mirar qué hay debajo: la
+    // barra cambia de ancho al cambiar de página y si no, el puntero podía
+    // caer sobre el número 20 y saltar de golpe. Se corta si el puntero se
+    // mueve de verdad.
+    if(repitiendo){
+      if(Math.abs(x-repitiendo.x)>8||Math.abs(y-repitiendo.y)>8) repitiendo=null;
+      else return;
+    }
     const el=document.elementFromPoint(x,y);
     const b=el&&el.closest?el.closest('[data-arr-pag]'):null;
     if(!b||b.disabled){
@@ -332,10 +369,23 @@ const Filas=(()=>{
       const antesPag=pagina;
       irA(objetivo,true);
       sobrePag=null;
-      if(pagina!==antesPag && ultimoPunto){
-        setTimeout(()=>{ if(arrastre) revisarBarra(ultimoPunto.x,ultimoPunto.y); },90);
+      // Las flechas repiten mientras se las mantenga: se pasa de a una página.
+      if(pagina!==antesPag && b.classList.contains('po-pag-flecha')){
+        repitiendo={ dir: pagina>antesPag?1:-1, x, y };
+        tPag=setTimeout(avanzarRepeticion,140);
       }
-    },420);
+    },250);
+  }
+
+  function avanzarRepeticion(){
+    tPag=null;
+    if(!arrastre||!repitiendo){ repitiendo=null; return; }
+    const antes=pagina;
+    irA(pagina+repitiendo.dir,true);
+    if(pagina===antes){ repitiendo=null; return; }
+    const flecha=barra.querySelector('[data-arr-pag="'+(pagina+repitiendo.dir)+'"]');
+    if(flecha) flecha.classList.add('sobre');
+    tPag=setTimeout(avanzarRepeticion,150);
   }
 
   function restablecer(card){
@@ -382,7 +432,20 @@ const Filas=(()=>{
     document.addEventListener('pointerup',soltar);
     document.addEventListener('pointercancel',soltar);
     document.addEventListener('keydown',tecla);
+    document.addEventListener('wheel',rueda,{passive:false});
     try{ mano.setPointerCapture(e.pointerId); }catch(err){}
+  }
+
+  // Rueda sobre la barra: una página por muesca. Fuera de la barra no se toca,
+  // así se puede seguir bajando por la grilla mientras se arrastra.
+  function rueda(e){
+    if(!arrastre||!barra||barra.hidden) return;
+    const el=ultimoPunto&&document.elementFromPoint(ultimoPunto.x,ultimoPunto.y);
+    if(!el||!el.closest||!el.closest('.po-paginas')) return;
+    e.preventDefault();
+    repitiendo=null;
+    clearTimeout(tPag);
+    irA(pagina+(e.deltaY>0?1:-1),true);
   }
 
   function mover(e){
@@ -429,6 +492,7 @@ const Filas=(()=>{
     document.removeEventListener('pointerup',soltar);
     document.removeEventListener('pointercancel',soltar);
     document.removeEventListener('keydown',tecla);
+    document.removeEventListener('wheel',rueda);
     clearTimeout(tPag);sobrePag=null;ultimoPunto=null;
     document.body.classList.remove('arrastrando-producto');
     ocultarBarra();
@@ -465,13 +529,71 @@ const Filas=(()=>{
     guardarOrden(ordenPrevio);
   }
 
+  // Mientras se arrastra: los números saltan a esa página (Enter los aplica
+  // al instante), Escape cancela y las flechas del teclado pasan de a una.
   function tecla(e){
-    if(e.key!=='Escape'||!arrastre) return;
+    if(!arrastre) return;
+    const tag=(e.target&&e.target.tagName)||'';
+    if(/^(INPUT|TEXTAREA|SELECT)$/.test(tag)) return;
+
+    if(e.key==='Escape'){
+      e.preventDefault();
+      // Si estabas escribiendo una página, primero se borra eso.
+      if(bufferPag){ limpiarBuffer(); actualizarBarra(); return; }
+      cancelarArrastre();
+      return;
+    }
+    if(e.key==='Enter'&&bufferPag){
+      e.preventDefault();
+      saltarBuffer();
+      return;
+    }
+    if(e.key==='Backspace'&&bufferPag){
+      e.preventDefault();
+      clearTimeout(tPag);sobrePag=null;repitiendo=null;
+      bufferPag=bufferPag.slice(0,-1);
+      clearTimeout(tBuffer);
+      if(bufferPag) tBuffer=setTimeout(saltarBuffer,700);
+      actualizarBarra();
+      return;
+    }
+    if(/^[0-9]$/.test(e.key)){
+      e.preventDefault();
+      clearTimeout(tPag);sobrePag=null;repitiendo=null;
+      bufferPag=(bufferPag+e.key).slice(-3);
+      clearTimeout(tBuffer);
+      actualizarBarra();
+      tBuffer=setTimeout(saltarBuffer,700);
+      return;
+    }
+    if(e.key==='ArrowRight'||e.key==='PageDown'){
+      e.preventDefault();
+      repitiendo=null;clearTimeout(tPag);
+      irA(pagina+1,true);
+    } else if(e.key==='ArrowLeft'||e.key==='PageUp'){
+      e.preventDefault();
+      repitiendo=null;clearTimeout(tPag);
+      irA(pagina-1,true);
+    }
+  }
+
+  function saltarBuffer(){
+    const n=Number(bufferPag);
+    limpiarBuffer();
+    if(!arrastre) return;
+    repitiendo=null;clearTimeout(tPag);
+    if(n>=1) irA(n,true);
+    actualizarBarra();
+  }
+
+  function cancelarArrastre(){
+    if(!arrastre) return;
     const {card,hueco}=arrastre;
     document.removeEventListener('pointermove',mover);
     document.removeEventListener('pointerup',soltar);
     document.removeEventListener('pointercancel',soltar);
     document.removeEventListener('keydown',tecla);
+    document.removeEventListener('wheel',rueda);
     clearTimeout(tPag);sobrePag=null;ultimoPunto=null;
     document.body.classList.remove('arrastrando-producto');
     ocultarBarra();
