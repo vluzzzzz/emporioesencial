@@ -1,0 +1,327 @@
+/* ============================================================================
+ *  Modo edición. Se baja recién cuando el admin toca "Editar", así que un
+ *  cliente nunca pide este archivo.
+ *
+ *  Los lápices son ::after, no nodos: las grillas se repintan con innerHTML
+ *  y un pseudo-elemento no se puede borrar así.
+ * ========================================================================== */
+
+body.editando .product-card{cursor:pointer;position:relative}
+body.editando .product-card::after{
+  content:'';position:absolute;top:10px;right:10px;z-index:5;
+  width:34px;height:34px;border-radius:50%;
+  background:#111 center/17px 17px no-repeat;
+  background-image:url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23e9d9a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 20h9'/%3E%3Cpath d='M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z'/%3E%3C/svg%3E");
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  opacity:.85;transition:opacity .16s,transform .16s;
+}
+body.editando .product-card:hover::after{opacity:1;transform:scale(1.08)}
+body.editando .product-card:hover{outline:2px solid #111;outline-offset:3px;border-radius:14px}
+
+/* Producto oculto: sigue en el panel (en gris, avisado) para poder volver a
+   mostrarlo. Nunca se ve así en la web pública. */
+body.editando .product-card.producto-oculto{opacity:.5;filter:grayscale(1)}
+body.editando .product-card.producto-oculto:hover{opacity:.75;filter:grayscale(.4)}
+.po-oculto-tag{
+  position:absolute;left:8px;bottom:8px;z-index:6;margin:0;
+  background:#c0392b;color:#fff;font-size:10.5px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;
+  padding:3px 8px;border-radius:999px;box-shadow:0 4px 12px rgba(0,0,0,.22);
+}
+/* El ojito va arriba a la izquierda: el lápiz ya ocupa la derecha. */
+.po-ojo{
+  position:absolute;top:10px;left:10px;z-index:6;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;cursor:pointer;
+  background:#111;color:#e9d9a8;
+  box-shadow:0 6px 18px rgba(0,0,0,.28);
+  opacity:.85;transition:opacity .16s,transform .16s,background .16s,color .16s;
+}
+.po-ojo:hover{opacity:1;transform:scale(1.08)}
+.po-ojo svg{width:17px;height:17px}
+.po-ojo .po-ojo-no{display:none}
+.po-ojo.no{background:#fff;color:#c0392b;border:1.5px solid rgba(192,57,43,.35)}
+.po-ojo.no .po-ojo-si{display:none}
+.po-ojo.no .po-ojo-no{display:block}
+/* La manito va justo debajo del ojito y solo aparece en la grilla paginada
+   mientras se edita: sirve para levantar la tarjeta y reordenarla. */
+.po-mano{
+  position:absolute;top:52px;left:10px;z-index:6;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;cursor:grab;touch-action:none;
+  background:#fff;color:#111;
+  box-shadow:0 6px 18px rgba(0,0,0,.18);
+  opacity:.85;transition:opacity .16s,transform .16s;
+}
+.po-mano:hover{opacity:1;transform:scale(1.08)}
+.po-mano:active{cursor:grabbing}
+.po-mano svg{width:18px;height:18px}
+
+/* Producto que se arrastra: vuela pegado al puntero, sin contorno negro. */
+.product-card.producto-arrastrando{
+  box-sizing:border-box;
+  border-color:transparent!important;
+  outline:0!important;
+  border-radius:14px;
+  box-shadow:0 26px 60px rgba(0,0,0,.34),0 6px 18px rgba(0,0,0,.18);
+  transform:scale(1.02) rotate(.5deg);
+  transform-origin:center;
+  cursor:grabbing;
+  transition:none;
+  pointer-events:none;
+}
+/* El hueco punteado marca dónde va a caer. */
+.po-hueco{
+  border-radius:14px;
+  border:2px dashed rgba(17,17,17,.3);
+  background:rgba(17,17,17,.04);
+  pointer-events:none;
+}
+body.arrastrando-producto{cursor:grabbing;user-select:none}
+body.arrastrando-producto .product-card:not(.producto-arrastrando){transition:box-shadow .12s,border-color .12s}
+
+/* Barra flotante para cambiar de página sin soltar el producto que se
+   arrastra. Se queda abajo, centrada, por encima de todo. */
+.po-paginas{
+  position:fixed;left:50%;bottom:22px;transform:translateX(-50%);
+  z-index:10002;display:flex;flex-direction:column;gap:3px;
+  background:#111;color:#f6f2e8;border-radius:20px;
+  padding:7px 9px 5px;box-shadow:0 18px 44px rgba(0,0,0,.36);
+  font-size:12.5px;line-height:1;
+  animation:po-paginas-entra .18s ease-out;
+}
+.po-paginas[hidden]{display:none}
+@keyframes po-paginas-entra{
+  from{opacity:0;transform:translate(-50%,10px)}
+  to{opacity:1;transform:translate(-50%,0)}
+}
+.po-pag-fila{display:flex;align-items:center;gap:4px}
+.po-pag-chips{display:flex;align-items:center;gap:1px}
+/* Los números son el selector: se pasa el mouse y salta a esa página. */
+.po-pag-chip{
+  min-width:28px;height:28px;padding:0 5px;border:0;border-radius:999px;
+  background:transparent;color:inherit;font-family:inherit;
+  font-size:12.5px;font-weight:700;cursor:pointer;
+  transition:background .14s,color .14s,transform .14s;
+}
+.po-pag-chip:hover{background:rgba(255,255,255,.14)}
+.po-pag-chip.actual{background:rgba(233,217,168,.18);color:#e9d9a8}
+.po-pag-chip.sobre{background:#e9d9a8;color:#111;transform:scale(1.06)}
+.po-pag-puntos{opacity:.45;padding:0 3px;font-weight:700}
+.po-pag-btn{
+  border:0;border-radius:999px;cursor:pointer;
+  background:rgba(255,255,255,.12);color:inherit;
+  font-family:inherit;font-size:15px;font-weight:700;line-height:1;
+  padding:0;white-space:nowrap;
+  transition:background .14s,color .14s,transform .14s;
+}
+.po-pag-flecha{width:30px;height:30px;display:grid;place-items:center;font-size:17px}
+.po-pag-btn:hover:not(:disabled){background:rgba(255,255,255,.24)}
+.po-pag-btn:disabled{opacity:.3;cursor:default}
+.po-pag-btn.sobre{background:#e9d9a8;color:#111;transform:scale(1.06)}
+.po-pag-pie{margin:0;padding:1px 2px 0;text-align:center;font-size:10.5px;line-height:1.2;opacity:.55;white-space:nowrap}
+@media (max-width:640px){
+  .po-pag-pie{display:none}
+  .po-paginas{bottom:14px;padding:6px 7px}
+}
+
+/* Botones anclados a una sección (no se los lleva un repintado) */
+.ed-btn{display:inline-flex;align-items:center;gap:8px;background:#111;color:#e9d9a8;border:0;border-radius:999px;font-family:inherit;font-size:13.5px;font-weight:700;padding:11px 20px;cursor:pointer;transition:background .18s,transform .18s}
+.ed-btn:hover{background:#000;transform:translateY(-1px)}
+.ed-btn svg{width:16px;height:16px}
+.ed-btn.ghost{background:transparent;color:#111;border:1.5px solid var(--gray-light)}
+.ed-ancla{display:flex;justify-content:center;padding:18px 20px 0}
+
+/* Avisos */
+.ed-toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);z-index:12000;background:#111;color:#e9d9a8;font-size:14px;font-weight:600;padding:13px 22px;border-radius:999px;box-shadow:0 14px 40px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+.ed-toast.ver{opacity:1;transform:translate(-50%,0)}
+.ed-toast.err{background:#c0392b;color:#fff}
+
+/* Confirmación propia, en vez del confirm() del navegador */
+/* El panel usa transform, y eso aísla las capas: sin este z-index tan alto
+   el cuadro de confirmar queda atrapado debajo y no se puede tocar. */
+.ed-conf{position:fixed;inset:0;z-index:2147483000;display:grid;place-items:center;padding:20px;background:rgba(17,17,17,0);transition:background .2s}
+.ed-conf.abierto{background:rgba(17,17,17,.5)}
+.ed-conf-caja{background:#fff;border-radius:18px;padding:26px;max-width:420px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
+.ed-conf-caja p{margin:0 0 20px;font-size:15.5px;line-height:1.5}
+.ed-conf-caja .ev-resumen-pedido{margin-bottom:12px}
+/* El recuadro de aviso no puede quedar pegado a los botones */
+.ed-conf-caja .ev-previo{margin:0 0 22px}
+.ev-conf-venta{margin:0 0 20px!important;font-size:13.5px!important;color:var(--gray-mid)}
+.ev-conf-venta b{color:var(--black)}
+.ed-conf-acc{display:flex;gap:10px;justify-content:flex-end}
+.ed-conf-acc .venta-btn[disabled]{opacity:.5;cursor:not-allowed;font-variant-numeric:tabular-nums}
+
+/* Editor de producto: fotos */
+.ed-fotos{display:flex;flex-wrap:wrap;gap:10px}
+.ed-foto{position:relative;width:76px;height:76px;border:1px solid var(--gray-light);border-radius:10px;overflow:hidden;background:var(--off-white)}
+.ed-foto img{width:100%;height:100%;object-fit:contain}
+.ed-foto button{position:absolute;top:3px;right:3px;width:22px;height:22px;border:0;border-radius:50%;background:rgba(17,17,17,.78);color:#fff;font-size:15px;line-height:1;cursor:pointer}
+.ed-foto.principal{border-color:#111;border-width:2px}
+.ed-foto-tag{position:absolute;left:0;right:0;bottom:0;background:#111;color:#e9d9a8;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:2px}
+.ed-subir{display:inline-flex;align-items:center;justify-content:center;width:76px;height:76px;border:1.5px dashed var(--gray-light);border-radius:10px;cursor:pointer;color:var(--gray-mid);font-size:26px;line-height:1}
+.ed-subir:hover{border-color:#111;color:#111}
+.ed-subir input{display:none}
+
+/* Editor de producto: características */
+.ed-lista{display:flex;flex-direction:column;gap:8px}
+.ed-lista-fila{display:flex;gap:8px}
+.ed-lista-fila input{flex:1;font:inherit;font-size:14.5px;padding:11px 13px;border:1.5px solid var(--gray-light);border-radius:11px}
+.ed-lista-fila button{flex:none;width:40px;border:1.5px solid var(--gray-light);background:#fff;border-radius:11px;font-size:17px;color:var(--gray-mid);cursor:pointer}
+.ed-lista-fila button:hover{border-color:#c0392b;color:#c0392b}
+
+/* Editor de banners y categorías */
+.ed-bloque{border:1px solid var(--gray-light);border-radius:14px;padding:14px;margin-bottom:12px}
+.ed-bloque-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ed-bloque-head b{font-size:14.5px}
+.ed-mini{background:none;border:0;font:inherit;font-size:12.5px;font-weight:600;color:var(--gray-mid);cursor:pointer;padding:4px}
+.ed-mini:hover{color:#c0392b}
+.ed-foto-ancha{height:110px;border-radius:10px;overflow:hidden;background:var(--off-white);margin-bottom:10px}
+.ed-foto-ancha img{width:100%;height:100%;object-fit:cover}
+.ed-subir.ancho{width:100%;height:auto;padding:12px;font-size:13px;gap:8px}
+.ec-intro{margin:0 0 20px;font-size:14px;color:var(--gray-mid);line-height:1.55}
+.ec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+
+.ec-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;overflow:hidden;display:flex;flex-direction:column;position:relative}
+.ec-card.oculta{opacity:.55}
+/* Manito para ordenar: se arrastra la tarjeta desde acá. Va arriba a la
+   izquierda para no chocar con el ojo de la foto ni con el tacho. */
+.ec-mano{
+  position:absolute;top:8px;left:8px;z-index:5;
+  width:34px;height:34px;display:grid;place-items:center;
+  border:0;border-radius:50%;padding:0;
+  background:rgba(17,17,17,.78);color:#e9d9a8;
+  cursor:grab;touch-action:none;
+  box-shadow:0 4px 12px rgba(0,0,0,.2);
+  opacity:.9;transition:opacity .16s,transform .16s;
+}
+.ec-mano:hover{opacity:1;transform:scale(1.08)}
+.ec-mano:active{cursor:grabbing}
+.ec-mano svg{width:17px;height:17px;pointer-events:none}
+.ec-card.arrastrando{
+  box-sizing:border-box;
+  opacity:.96;border-radius:16px;
+  box-shadow:0 24px 50px rgba(0,0,0,.32),0 4px 14px rgba(0,0,0,.18);
+  transform:scale(1.03) rotate(.6deg);
+  transform-origin:center;
+  cursor:grabbing;
+  transition:none;
+}
+/* El hueco punteado marca dónde va a caer la tarjeta que se arrastra. */
+.ec-hueco{
+  border-radius:16px;
+  border:2px dashed rgba(17,17,17,.35);
+  background:rgba(17,17,17,.045);
+  pointer-events:none;
+}
+body.ec-arrastrando{cursor:grabbing;user-select:none}
+body.ec-arrastrando .ec-card:not(.arrastrando){transition:border-color .12s}
+body.ec-arrastrando .ec-mano{cursor:grabbing}
+.ec-card:not(.arrastrando):hover{border-color:rgba(17,17,17,.25)}
+/* La vista previa es un círculo igual que en el menú: antes se mostraba en
+   4:3 y al guardar la foto salía recortada distinto de lo que se veía aquí. */
+.ec-foto{position:relative;aspect-ratio:4/3;background:var(--off-white);display:grid;place-items:center;overflow:hidden}
+.ec-foto img{width:118px;height:118px;border-radius:50%;object-fit:cover;background:#f2eddf}
+.ec-foto.vacia img{display:none}
+.ec-sinfoto{display:grid;place-items:center;width:118px;height:118px;border-radius:50%;border:1.5px dashed var(--gray-light);font-size:12.5px;color:var(--gray-mid);text-align:center}
+.ec-subir{position:absolute;right:8px;bottom:8px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(17,17,17,.82);color:#e9d9a8;cursor:pointer;transition:background .16s}
+.ec-subir:hover{background:#111}
+.ec-subir svg{width:17px;height:17px}
+.ec-quitafoto{position:absolute;right:8px;top:8px;width:28px;height:28px;border:0;border-radius:50%;background:rgba(17,17,17,.7);color:#fff;font-size:17px;line-height:1;cursor:pointer}
+.ec-quitafoto:hover{background:#c0392b}
+
+.ec-nombre{margin:12px 14px 0;font:inherit;font-size:15px;font-weight:600;padding:9px 11px;border:1.5px solid transparent;border-radius:10px;background:var(--off-white);width:calc(100% - 28px);box-sizing:border-box}
+.ec-nombre:focus{outline:none;border-color:#111;background:#fff}
+.ec-dato{margin:7px 14px 0;font-size:12.5px;color:var(--gray-mid)}
+
+.ec-acc{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:12px 14px 14px;margin-top:auto}
+.ec-ojo{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--gray-mid);padding:6px 10px;border:1.5px solid var(--gray-light);border-radius:999px;cursor:pointer}
+.ec-ojo:hover{border-color:var(--gray-mid)}
+.ec-ojo input{display:none}
+.ec-ojo svg{width:15px;height:15px;flex:none}
+.ec-ojo .ec-ojo-no{display:none}
+.ec-ojo:has(input:not(:checked)){color:var(--gray-mid)}
+.ec-ojo:has(input:not(:checked)) .ec-ojo-si{display:none}
+.ec-ojo:has(input:not(:checked)) .ec-ojo-no{display:block}
+.ec-ojo:has(input:checked){background:#111;border-color:#111;color:#e9d9a8}
+
+.ec-entrar{display:inline-flex;align-items:center;gap:5px;font:inherit;font-size:12px;font-weight:600;color:var(--black);background:none;border:1.5px solid var(--gray-light);border-radius:999px;padding:6px 10px;cursor:pointer}
+.ec-entrar:hover{border-color:#111}
+.ec-entrar svg{width:13px;height:13px}
+.ec-borrar{margin-left:auto;width:32px;height:32px;display:grid;place-items:center;border:0;background:none;color:var(--gray-mid);border-radius:9px;cursor:pointer}
+.ec-borrar:hover{background:rgba(192,57,43,.1);color:#c0392b}
+.ec-borrar svg{width:16px;height:16px}
+
+.ec-nueva{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:220px;border:2px dashed var(--gray-light);border-radius:16px;background:none;font:inherit;font-size:14px;font-weight:600;color:var(--gray-mid);cursor:pointer}
+.ec-nueva:hover{border-color:#111;color:#111}
+.ec-nueva svg{width:26px;height:26px}
+
+.ed-aviso{margin-right:auto;font-size:13px;color:var(--gray-mid)}
+.ed-aviso.err{color:#c0392b}
+
+@media(max-width:700px){
+  .ec-grid{grid-template-columns:repeat(2,1fr);gap:12px}
+  .ec-acc{gap:5px;padding:10px}
+  .ec-ojo span{display:none}
+  .ec-ojo{padding:6px 8px}
+  .ec-entrar{font-size:11.5px;padding:6px 8px}
+  .ec-nueva{min-height:170px}
+}
+@media(max-width:420px){
+  .ec-grid{grid-template-columns:1fr}
+}
+
+/* En el telefono las filas de categorias se cortaban por la derecha */
+@media(max-width:700px){
+  .ed-cat{flex-wrap:wrap;gap:8px}
+  .ed-cat>input[type=text]{flex:1 1 60%}
+  .ed-cat .ed-dest{margin-left:36px}
+  .ed-subs{padding-left:16px}
+  .ed-sub{flex-wrap:wrap;gap:8px}
+  .ed-sub input{flex:1 1 100%}
+  .ed-lista-fila{flex-wrap:wrap}
+  .ed-lista-fila>input{flex:1 1 100%}
+  .ed-lista-fila>.ed-btn{flex:1 1 auto}
+  .ed-bloque .ed-subir.ancho{box-sizing:border-box}
+}
+
+/* Editor de banners: las dos fotos de cada banner, lado a lado */
+.eb-card{background:#fff;border:1px solid var(--gray-light);border-radius:16px;padding:16px;margin-bottom:14px}
+.eb-card.oculta{opacity:.55}
+.eb-cab{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.eb-cab b{font-size:15px;margin-right:auto}
+.eb-huecos{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.eb-hueco-cab{display:flex;align-items:baseline;gap:8px;margin-bottom:7px}
+.eb-hueco-cab b{font-size:13px;font-weight:600}
+.eb-hueco-cab small{font-size:11.5px;color:var(--gray-mid)}
+.eb-hueco.falta .eb-hueco-cab b{color:#c0392b}
+.eb-foto{position:relative;aspect-ratio:16/5;background:var(--off-white);border-radius:12px;overflow:hidden;display:grid;place-items:center}
+.eb-foto.celu{aspect-ratio:1/1}
+.eb-foto img{width:100%;height:100%;object-fit:cover}
+.eb-hueco.falta .eb-foto{border:1.5px dashed rgba(192,57,43,.45)}
+.eb-sinfoto{font-size:12.5px;color:var(--gray-mid)}
+.eb-subir{position:absolute;right:8px;bottom:8px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:rgba(17,17,17,.82);color:#e9d9a8;cursor:pointer;transition:background .16s}
+.eb-subir:hover{background:#111}
+.eb-subir svg{width:17px;height:17px}
+@media(max-width:700px){
+  .eb-huecos{grid-template-columns:1fr}
+  .eb-foto.celu{aspect-ratio:4/3}
+}
+
+/* Sin banners visibles la sección se oculta, pero el admin necesita seguir
+   viendo el botón para volver a prenderlos. */
+body.editando .bnr-section[hidden]{display:block!important}
+body.editando .bnr-section[hidden] .bnr-swiper,
+body.editando .bnr-section[hidden] .bnr-arr,
+body.editando .bnr-section[hidden] .bnr-pagination{display:none}
+body.editando .bnr-section[hidden] .ed-ancla::before{
+  content:'La portada está sin banner';
+  display:block;width:100%;text-align:center;
+  font-size:13.5px;color:var(--gray-mid);margin-bottom:12px;
+}
+body.editando .bnr-section[hidden] .ed-ancla{flex-wrap:wrap;padding-top:26px}
+
+/* Aviso bajo el campo de stock: dice qué va a pasar con ese número */
+.ep-stock-ayuda{display:block;margin-top:7px;font-size:12.5px;color:var(--gray-mid);font-weight:400}
+.ep-stock-ayuda.sin{color:#c0392b}
+.ep-stock-ayuda.poco{color:#b8860b}
