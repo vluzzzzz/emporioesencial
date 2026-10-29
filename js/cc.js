@@ -31,10 +31,6 @@ const Cart=(()=>{
     DOM.cartItems.querySelectorAll('.qty-btn').forEach(btn=>btn.addEventListener('click',()=>changeQty(btn.dataset.id,Number(btn.dataset.delta))));
     const fi=DOM.cartItems.querySelector('.cart-item');if(fi)gsap.fromTo(fi,{opacity:0,x:24},{opacity:1,x:0,duration:0.4,ease:'power3.out'});
   }
-  function openMercadoPago(){
-    if(!state.cart.length)return;
-    Checkout.open();
-  }
   function openWhatsApp(){
     if(!state.cart.length)return;
     const f=n=>'$'+n.toLocaleString('es-CL');
@@ -47,7 +43,6 @@ const Cart=(()=>{
     document.body.appendChild(DOM.cartDrawer);document.body.appendChild(DOM.cartOverlay);
     DOM.cartTrigger.addEventListener('click',open);DOM.closeCart.addEventListener('click',close);DOM.cartOverlay.addEventListener('click',close);
     document.getElementById('checkoutBtn')?.addEventListener('click',openWhatsApp);
-    document.getElementById('mpBtn')?.addEventListener('click',openMercadoPago);
   }
   return{init,addItem,open,close};
 })();
