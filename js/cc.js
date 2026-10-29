@@ -191,29 +191,10 @@ const Checkout=(()=>{
     document.documentElement.style.overflow='';
   }
 
-  async function pay(){
+  function pay(){
     if(!isValid()||!state.cart.length)return;
-    payBtn.disabled=true;
-    payBtn.classList.add('loading');
-    payBtn.textContent='Procesando...';
-    try{
-      const customer={
-        name:getRaw('chkName'),email:getEmail(),phone:getPhone(),
-        rut:getRaw('chkRut'),city:getRaw('chkCity'),address:getRaw('chkAddress'),
-      };
-      const items=state.cart.map(({product,qty})=>({name:product.name+(product.colorName?` (${product.colorName})`:''),qty,price:getUnitPrice(product.key,qty)}));
-      const res=await fetch('/api/create-preference',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({items,customer}),
-      });
-      const data=await res.json();
-      if(data.init_point)window.location.href=data.init_point;
-      else throw new Error(data.error||'Error al crear preferencia');
-    }catch{
-      payBtn.textContent='Error, intenta de nuevo';
-      payBtn.disabled=false;
-      payBtn.classList.remove('loading');
-    }
+    close();
+    openWhatsApp();
   }
 
   function init(){
