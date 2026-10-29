@@ -52,8 +52,9 @@ const EdVendedores = (() => {
     };
   }
 
-  // La base descuenta el stock sola al aceptar un pedido. Aquí se vuelve a leer
-  // ese producto para que la tienda abierta muestre el número nuevo.
+  // La base mueve el stock sola: lo descuenta al registrar la venta y lo
+  // devuelve si se deniega. Aquí se vuelve a leer el producto para que la
+  // tienda abierta muestre el número nuevo.
   async function refrescarStock(slug){
     if (!slug || typeof aplicarProducto !== 'function') return;
     try {

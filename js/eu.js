@@ -88,6 +88,8 @@ const EdUtil = (() => {
 
   function mensajeError(err){
     const m = String(err && err.message || err);
+    // La base ya lo dice claro cuando no alcanza el stock.
+    if (/stock suficiente/i.test(m)) return m;
     if (m === 'SIN_PERMISO' || /row-level security/i.test(m))
       return 'Tu cuenta no tiene permiso para guardar esto.';
     if (/JWT|not authenticated|session/i.test(m))

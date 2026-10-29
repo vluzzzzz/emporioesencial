@@ -300,4 +300,8 @@ select
 --   · El moderador entra con el botón VENTA LOCAL de la barra.
 --   · Arma el pedido con el catálogo, elige el vendedor y guarda.
 --   · La comisión queda acreditada en el acto.
+--
+--  OJO: este archivo deja el stock con el sistema viejo (descuenta solo al
+--  aceptar). Si lo corrés de nuevo, después corré `stock-inmediato.sql` para
+--  que el stock baje apenas se registra la venta.
 -- ============================================================================

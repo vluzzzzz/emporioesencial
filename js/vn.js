@@ -338,6 +338,8 @@ const Sesion = (() => {
     await cargarComunas();
     const prod = productos().find(p => p.slug === slug);
     if (!prod) return;
+    // Cuántas unidades hay a la venta. null = el producto no lleva inventario.
+    const stock = prod.stock == null || prod.stock === '' ? null : Math.max(0, Number(prod.stock));
 
     const cuerpo = `
       <form id="ventaForm">
@@ -351,7 +353,13 @@ const Sesion = (() => {
 
         <div class="venta-g2">
           <label class="venta-f"><span>Cantidad</span>
-            <input type="number" name="cantidad" min="1" step="1" value="1" required>
+            <input type="number" name="cantidad" min="1" step="1" value="1"${stock == null ? '' : ` max="${stock}"`} required>
+            <small class="venta-stock${stock === 0 ? ' sin' : (stock != null && stock <= 5 ? ' poco' : '')}" id="ventaStock">${
+              stock == null ? 'Sin control de stock.'
+              : stock === 0 ? 'Agotado: no quedan unidades.'
+              : stock === 1 ? 'Queda 1 unidad.'
+              : `Quedan ${stock} unidades.`
+            }</small>
           </label>
           <div class="venta-f"><span>Precio por unidad</span>
             <p class="venta-fijo">
@@ -409,6 +417,38 @@ const Sesion = (() => {
 
     const { ov, cerrar } = panel('Agregar pedido', 'Registro de venta', cuerpo, pie);
     const f = ov.querySelector('#ventaForm');
+    const btn = ov.querySelector('.venta-btn');
+    const msg = ov.querySelector('#ventaMsg');
+    const pista = ov.querySelector('#ventaStock');
+
+    // Mismo criterio que la caja: no se puede vender más de lo que hay. Se
+    // revisa mientras escribe y otra vez al tocar Registrar venta.
+    function revisar(){
+      const n = +f.cantidad.value || 0;
+      let aviso = '', mal = false;
+      if (stock == null) {
+        pista.textContent = 'Sin control de stock.';
+        pista.className = 'venta-stock';
+      } else if (stock <= 0) {
+        pista.textContent = 'Agotado: no quedan unidades.';
+        pista.className = 'venta-stock sin';
+        aviso = 'Este producto está agotado. No se puede registrar la venta.';
+        mal = true;
+      } else {
+        pista.textContent = stock === 1 ? 'Queda 1 unidad.' : 'Quedan ' + stock + ' unidades.';
+        pista.className = 'venta-stock' + (stock <= 5 ? ' poco' : '');
+        if (n > stock) {
+          aviso = stock === 1
+            ? 'No hay stock suficiente: queda 1 unidad.'
+            : 'No hay stock suficiente: quedan ' + stock + ' unidades.';
+          mal = true;
+        }
+      }
+      msg.className = 'venta-msg' + (mal ? ' err' : '');
+      msg.textContent = aviso;
+      btn.disabled = mal;
+      return !mal;
+    }
 
     const total = () => {
       const n = +f.cantidad.value || 0, p = +f.precio.value || 0, d = +f.despacho.value || 0;
@@ -421,13 +461,17 @@ const Sesion = (() => {
       total();
     });
 
-    f.cantidad.addEventListener('input', total);
+    f.cantidad.addEventListener('input', () => { total(); revisar(); });
     total();
+    revisar();
 
-    f.addEventListener('submit', e => { e.preventDefault(); guardar(ov, f, prod, cerrar); });
+    f.addEventListener('submit', e => {
+      e.preventDefault();
+      if (revisar()) guardar(ov, f, prod, cerrar, revisar);
+    });
   }
 
-  async function guardar(ov, f, prod, cerrar){
+  async function guardar(ov, f, prod, cerrar, revisar){
     const btn = ov.querySelector('.venta-btn');
     const msg = ov.querySelector('#ventaMsg');
     const cantidad = +f.cantidad.value || 1;
@@ -440,6 +484,22 @@ const Sesion = (() => {
       msg.textContent = 'Elige la comuna de despacho.';
       return;
     }
+    if (revisar && !revisar()) return;
+
+    // El stock pudo cambiar desde que se abrió el formulario (otra venta en
+    // paralelo). Se relee antes de guardar para avisar con el número real.
+    try {
+      const { data: fresco } = await sb.from('products')
+        .select('stock_qty').eq('slug', prod.slug).maybeSingle();
+      if (fresco && fresco.stock_qty != null && cantidad > fresco.stock_qty) {
+        msg.className = 'venta-msg err';
+        msg.textContent = fresco.stock_qty === 1
+          ? 'No hay stock suficiente: queda 1 unidad.'
+          : 'No hay stock suficiente: quedan ' + fresco.stock_qty + ' unidades.';
+        return;
+      }
+    } catch (_) {}
+
     btn.disabled = true; btn.textContent = 'Guardando…';
 
     const { data: creada, error } = await sb.from('ventas').insert({
@@ -463,12 +523,31 @@ const Sesion = (() => {
     if (error) {
       btn.disabled = false; btn.textContent = 'Registrar venta';
       msg.className = 'venta-msg err';
-      msg.textContent = 'No se pudo registrar: ' + error.message;
+      const detalle = String(error.message || '');
+      // Si lo frenó la base por falta de stock, el mensaje ya viene claro.
+      msg.textContent = /stock suficiente/i.test(detalle)
+        ? detalle
+        : 'No se pudo registrar: ' + detalle;
       return;
     }
     btn.textContent = 'Venta registrada';
     if (creada && creada.id) avisarPorCorreo(creada.id);
+    await refrescarProducto(prod.slug);
     setTimeout(cerrar, 700);
+  }
+
+  // Después de una venta, la tarjeta y la ficha tienen que mostrar el stock
+  // nuevo sin recargar la página.
+  async function refrescarProducto(slug){
+    try {
+      const { data } = await sb.from('products')
+        .select('*, price_tiers(qty,price,active)').eq('slug', slug).maybeSingle();
+      if (!data) return;
+      if (typeof aplicarProducto === 'function') aplicarProducto(data);
+      if (typeof Filas !== 'undefined') Filas.init();
+      if (typeof CatPage !== 'undefined' && CatPage.estaAbierta()) CatPage.abrir(CatPage.catActual());
+      if (typeof Trust !== 'undefined') Trust.decorarTarjetas();
+    } catch (_) {}
   }
 
   // El aviso al dueño va aparte y sin esperarlo: la venta ya quedó guardada,
