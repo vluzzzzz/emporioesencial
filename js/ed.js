@@ -129,6 +129,12 @@ const Edicion = (() => {
   // clic sobre una tarjeta abre el editor y nunca la ficha del producto.
   document.addEventListener('click', e => {
     if (!activa) return;
+    // El botón de la tarjeta arma un pedido, no abre el editor.
+    if (e.target.closest('[data-pedido]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     // La manito de la tarjeta no abre la ficha: solo sirve para arrastrar.
     if (e.target.closest('[data-mover-producto]')) {
       e.preventDefault();

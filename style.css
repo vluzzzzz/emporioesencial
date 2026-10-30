@@ -2679,10 +2679,10 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* El vendedor agrega el producto al pedido desde la misma tarjeta. Solo lo ve
    él: al resto de la web no le aparece. */
 .card-pedido{display:none}
-body.soy-vendedor .card-pedido{display:inline-flex;align-items:center;margin-left:auto;padding:4px 7px;border:1.5px solid #111;border-radius:999px;background:#111;color:#e9d9a8;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background .18s,border-color .18s}
-body.soy-vendedor .card-pedido:hover{background:#000;border-color:#000}
-body.soy-vendedor .card-pedido:active{transform:scale(.97)}
-body.soy-vendedor .temu-card .card-foot{flex-wrap:wrap;align-items:center;gap:6px}
+body.puede-vender .card-pedido{display:inline-flex;align-items:center;margin-left:auto;padding:4px 7px;border:1.5px solid #111;border-radius:999px;background:#111;color:#e9d9a8;font-family:inherit;font-size:9px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background .18s,border-color .18s}
+body.puede-vender .card-pedido:hover{background:#000;border-color:#000}
+body.puede-vender .card-pedido:active{transform:scale(.97)}
+body.puede-vender .temu-card .card-foot{flex-wrap:wrap;align-items:center;gap:6px}
 
 .venta-ov{position:fixed;inset:0;z-index:10000;background:rgba(17,17,17,0);transition:background .3s var(--ease-smooth)}
 .venta-ov.abierto{background:rgba(17,17,17,.45)}

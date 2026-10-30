@@ -85,13 +85,15 @@ const Sesion = (() => {
     });
   }
 
-  // pm.js la llama cada vez que se abre una ficha de producto.
+  // Quién puede registrar un pedido: la base deja a administradores y
+  // vendedores. El moderador no entra, porque su trabajo es la caja.
+  const puedeVender = () => !!perfil && (perfil.rol === 'admin' || perfil.rol === 'vendedor');
 
   /* ── Barra de arriba ──────────────────────────────────── */
   function pintarNav(){
-    // El botón de la tarjeta se muestra solo a los vendedores; la clase la
-    // lleva el body para que siga puesto cuando la grilla se repinta.
-    if (perfil.rol === 'vendedor') document.body.classList.add('soy-vendedor');
+    // El botón de la tarjeta se muestra a quien puede registrar ventas; la
+    // clase la lleva el body para que siga puesto cuando la grilla se repinta.
+    if (puedeVender()) document.body.classList.add('puede-vender');
 
     const izq = $('.nav-left');
     // El moderador no registra ventas: su botón es la caja, y lo monta ec.js.
@@ -160,15 +162,16 @@ const Sesion = (() => {
   }
 
   // El vendedor agrega el producto al pedido desde la tarjeta misma. Se
-  // escucha en captura para que el clic no abra además la ficha.
+  // escucha en captura para que el clic no abra además la ficha (ni el editor,
+  // si el administrador tiene el modo edición prendido).
   function montarBotonPedido(){
     if (montado) return;
     montado = true;
     document.addEventListener('click', e => {
       const b = e.target.closest('[data-pedido]');
-      if (!b || !perfil || perfil.rol !== 'vendedor') return;
+      if (!b || !puedeVender()) return;
       e.preventDefault();
-      e.stopPropagation();
+      e.stopImmediatePropagation();
       abrirFormulario(b.dataset.pedido);
     }, true);
   }
