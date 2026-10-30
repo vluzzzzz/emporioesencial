@@ -3351,6 +3351,11 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
 .el-grilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px;max-height:62vh;overflow-y:auto;padding-right:4px}
 @media(max-width:560px){.el-grilla{grid-template-columns:1fr;max-height:none}}
 
+/* En el panel de venta el catálogo de "agregar producto" va en dos columnas
+   con buscador, para sumar el segundo (o más) producto del pedido sin
+   recargar todo el catálogo. */
+.el-columnas .el-grilla{grid-template-columns:repeat(2,1fr)}
+
 .el-prod{position:relative;display:flex;align-items:center;gap:11px;text-align:left;font:inherit;padding:9px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s,background .16s}
 .el-prod:hover:not(.agotado){border-color:#111;background:var(--off-white)}
 .el-prod img{width:46px;height:46px;object-fit:contain;border-radius:9px;background:var(--off-white);flex:none}
