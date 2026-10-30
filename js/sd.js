@@ -208,7 +208,7 @@ function cardHTML(p, opts){
             ${hayDcto ? `<span class="dcto"><s class="dcto-antes">${fmt(p1)}</s><span class="dcto-chip">-${Math.round((1 - p3 / p1) * 100)}%</span></span>` : ''}`}
           </div>
           ${sin ? '' : `<button type="button" class="card-pedido" data-pedido="${escAttr(p.slug)}" aria-label="Agregar producto: ${escAttr(p.name)}" title="Agregar producto">
-            <svg class="card-pedido-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 3h2l2.4 12.2a2 2 0 0 0 2 .8h8.6a2 2 0 0 0 2-1.6L21 8a2 2 0 0 0-2-3H6.4a2 2 0 0 0-2 1.8L3 3z"/><circle cx="9" cy="20" r="1.2"/><circle cx="17" cy="20" r="1.2"/></svg>
+            <svg class="card-pedido-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="21" r="1.4"/><circle cx="20" cy="21" r="1.4"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
           </button>`}
         </div>
       </div>
