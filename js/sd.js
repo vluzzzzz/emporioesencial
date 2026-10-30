@@ -207,6 +207,9 @@ function cardHTML(p, opts){
             ${sin ? oos : `<p class="card-price">${fmt(precioBase)}</p>
             ${hayDcto ? `<span class="dcto"><s class="dcto-antes">${fmt(p1)}</s><span class="dcto-chip">-${Math.round((1 - p3 / p1) * 100)}%</span></span>` : ''}`}
           </div>
+          ${sin ? '' : `<button type="button" class="card-pedido" data-pedido="${escAttr(p.slug)}" aria-label="Agregar producto: ${escAttr(p.name)}" title="Agregar producto">
+            <span>Agregar producto</span>
+          </button>`}
         </div>
       </div>
     </div>`;

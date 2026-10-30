@@ -40,7 +40,7 @@ const Sesion = (() => {
     perfil = data && data.activo ? data : null;
     if (!perfil) { montarBotonLogin(); return; }
     pintarNav();
-    montarBotonFicha();
+    montarBotonPedido();
     if (typeof Edicion !== 'undefined') Edicion.init(perfil);
   }
 
@@ -86,15 +86,13 @@ const Sesion = (() => {
   }
 
   // pm.js la llama cada vez que se abre una ficha de producto.
-  function ficha(slug){
-    const b = $('#ppageVendido');
-    if (!b) return;
-    b.hidden = !perfil;
-    b.dataset.slug = slug;
-  }
 
   /* ── Barra de arriba ──────────────────────────────────── */
   function pintarNav(){
+    // El botón de la tarjeta se muestra solo a los vendedores; la clase la
+    // lleva el body para que siga puesto cuando la grilla se repinta.
+    if (perfil.rol === 'vendedor') document.body.classList.add('soy-vendedor');
+
     const izq = $('.nav-left');
     // El moderador no registra ventas: su botón es la caja, y lo monta ec.js.
     if (izq && perfil.rol !== 'moderador') {
@@ -161,11 +159,18 @@ const Sesion = (() => {
     });
   }
 
-  function montarBotonFicha(){
+  // El vendedor agrega el producto al pedido desde la tarjeta misma. Se
+  // escucha en captura para que el clic no abra además la ficha.
+  function montarBotonPedido(){
     if (montado) return;
     montado = true;
-    const b = $('#ppageVendido');
-    if (b) b.addEventListener('click', () => abrirFormulario(b.dataset.slug));
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-pedido]');
+      if (!b || !perfil || perfil.rol !== 'vendedor') return;
+      e.preventDefault();
+      e.stopPropagation();
+      abrirFormulario(b.dataset.pedido);
+    }, true);
   }
 
   async function cargarComunas(){
@@ -807,7 +812,7 @@ const Sesion = (() => {
     ]);
     const pagos = cobros || [];
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
-    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Toca Nueva venta en la barra o abre un producto y toca Agregar pedido.</p>'; return; }
+    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Toca Nueva venta en la barra o Agregar producto en una tarjeta.</p>'; return; }
 
     // Un pedido con varios productos son varias filas con el mismo ticket:
     // aquí se vuelven a juntar para mostrarlo como la venta que fue.
@@ -1113,7 +1118,7 @@ const Sesion = (() => {
   }
 
   return {
-    init, ficha,
+    init,
     // El chasis de paneles y el desplegable propio los reusan los módulos de
     // edición: una sola implementación, cero CSS repetido.
     panel, desplegable, conectarDesplegables,
