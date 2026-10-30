@@ -94,7 +94,7 @@ const enEdicion = () => {
 
 // Lo que ve la web: todo menos los ocultos. En el panel de edición sí van,
 // porque si no el admin no tendría cómo volver a activarlos.
-const productosVisibles = () => CATALOGO.filter(p => !p.oculto || enEdicion());
+const productosVisibles = () => CATALOGO.filter(p => !p.oculto && (enEdicion() || p.inStock));
 
 const porCategoria = cat  => productosVisibles().filter(p => Cats.incluye(cat, p.cat));
 
@@ -268,7 +268,7 @@ function aplicarProducto(p){
     imgScale: p.image_scale ?? 0.75,
     compare: p.compare_at_price,
     stock: p.stock_qty,
-    inStock: p.in_stock !== false,
+    inStock: p.stock_qty == null ? (p.in_stock !== false) : (p.stock_qty > 0),
     // Oculto no es lo mismo que agotado: sigue en la base y en el panel, pero
     // no se muestra en la web pública.
     oculto: p.oculto === true,
@@ -307,7 +307,7 @@ async function loadCatalog(){
     // HERO (carrusel principal). Un producto oculto no sale en el carrusel.
     PRODUCTS.length = 0;
     Object.keys(HERO_STOCK).forEach(k => delete HERO_STOCK[k]);
-    products.filter(p => p.is_hero && p.oculto !== true)
+    products.filter(p => p.is_hero && p.oculto !== true && (enEdicion() || p.inStock))
       .sort((a,b)=>(a.hero_order||0)-(b.hero_order||0))
       .forEach((p, idx) => {
         const p1 = tierOne(p.slug);
@@ -318,7 +318,7 @@ async function loadCatalog(){
           bgLabel: p.hero_bg_label || (p.name || '').toUpperCase(),
           scale: p.hero_scale ?? 1, offsetX: p.hero_offset_x ?? 0, offsetY: p.hero_offset_y ?? 0,
         });
-        HERO_STOCK[heroName] = p.in_stock !== false;
+        HERO_STOCK[heroName] = (p.stock_qty == null ? (p.in_stock !== false) : (p.stock_qty > 0));
       });
 
     document.body.classList.add('sheet-ready');
