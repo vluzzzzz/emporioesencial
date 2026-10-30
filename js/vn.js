@@ -120,6 +120,7 @@ const Sesion = (() => {
           </svg>
           <span>Nueva venta</span>`;
         nv.addEventListener('click', () => abrirFormulario());
+        if (leerBorrador()) nv.classList.add('con-borrador');
         izq.insertBefore(nv, b);
       }
     }
@@ -347,6 +348,50 @@ const Sesion = (() => {
     return { ov, cerrar };
   }
 
+  /* ── Borrador de la venta ─────────────────────────────── */
+  // Si se cierra la pantalla o se apaga el PC a mitad del pedido, al volver
+  // aparece todo como estaba. Vive en este navegador y va por vendedor, así
+  // que dos cuentas en la misma máquina no se pisan el borrador.
+  const DIAS_BORRADOR = 7;
+  const claveBorrador = () => perfil ? 'esencial:borrador:' + perfil.id : '';
+
+  function leerBorrador(){
+    const k = claveBorrador();
+    if (!k) return null;
+    try {
+      const d = JSON.parse(localStorage.getItem(k) || 'null');
+      if (!d || !Array.isArray(d.lineas)) return null;
+      if (Date.now() - (d.guardado || 0) > DIAS_BORRADOR * 864e5) {
+        localStorage.removeItem(k);
+        return null;
+      }
+      return d;
+    } catch (_) { return null; }
+  }
+
+  function marcarBorrador(hay){
+    document.querySelectorAll('.nav-ventas-btn').forEach(b => {
+      if (b.textContent.includes('Nueva venta')) b.classList.toggle('con-borrador', hay);
+    });
+  }
+
+  function guardarBorrador(d){
+    const k = claveBorrador();
+    if (!k) return;
+    try {
+      d.guardado = Date.now();
+      localStorage.setItem(k, JSON.stringify(d));
+      marcarBorrador(true);
+    } catch (_) {}
+  }
+
+  function borrarBorrador(){
+    const k = claveBorrador();
+    if (!k) return;
+    try { localStorage.removeItem(k); } catch (_) {}
+    marcarBorrador(false);
+  }
+
   /* ── Venta ────────────────────────────────────────────── */
   // El vendedor arma el pedido igual que la caja: busca en el catálogo, suma
   // productos y recién al final carga el despacho y los datos del cliente.
@@ -415,6 +460,7 @@ const Sesion = (() => {
 
           <div class="el-pie" id="vPie"></div>
           <p class="venta-msg" id="vMsg"></p>
+          <p class="venta-borrador">El pedido se guarda solo: si cierras la pantalla, lo retomás al volver.</p>
         </section>
       </div>`;
 
@@ -424,6 +470,39 @@ const Sesion = (() => {
     const lineasEl = box.querySelector('#vLineas');
     const buscador = box.querySelector('#vBuscar');
     const msg = box.querySelector('#vMsg');
+
+    function datosBorrador(){
+      return {
+        lineas: ticket.map(l => ({ slug: l.slug, qty: l.qty })),
+        comuna: box.querySelector('[name=comuna]').value,
+        pago: box.querySelector('[name=pago]').value,
+        cliente: box.querySelector('#vCliente').value,
+        telefono: box.querySelector('#vTelefono').value,
+        email: box.querySelector('#vEmail').value,
+        direccion: box.querySelector('#vDireccion').value,
+        notas: box.querySelector('#vNotas').value,
+      };
+    }
+
+    function autoguardar(){
+      const d = datosBorrador();
+      const nada = !d.lineas.length && !d.cliente && !d.telefono && !d.direccion && !d.comuna;
+      if (nada) { borrarBorrador(); return; }
+      guardarBorrador(d);
+    }
+
+    // Deja el desplegable propio mostrando el valor, sin pasar por el clic.
+    function ponerSeleccion(nombre, valor){
+      const sel = box.querySelector('.vsel[data-sel=' + nombre + ']');
+      if (!sel || !valor) return;
+      const li = [...sel.querySelectorAll('li[data-val]')].find(x => x.dataset.val === valor);
+      if (!li) return;
+      sel.querySelector('input').value = valor;
+      const txt = sel.querySelector('.vsel-txt');
+      txt.textContent = li.querySelector('span').textContent;
+      txt.classList.remove('vacio');
+      sel.querySelectorAll('li').forEach(x => x.classList.toggle('elegida', x === li));
+    }
 
     function pintarGrilla(){
       const q = normal(busqueda.trim());
@@ -477,6 +556,7 @@ const Sesion = (() => {
       pintarGrilla();
       pintarLineas();
       pintarPie();
+      autoguardar();
     }
 
     function pintarLineas(){
@@ -542,11 +622,15 @@ const Sesion = (() => {
     }
 
     buscador.addEventListener('input', e => { busqueda = e.target.value; pintarGrilla(); });
+    // Cada tecla en los datos del cliente queda guardada en el borrador.
+    box.addEventListener('input', autoguardar);
+    box.addEventListener('change', autoguardar);
     conectarDesplegables(box, (campo, valor, extra) => {
       if (campo !== 'comuna') return;
       box.querySelector('[name=despacho]').value = extra || 0;
       box.querySelector('#vDespacho').childNodes[0].nodeValue = fmt(extra || 0) + ' ';
       pintarPie();
+      autoguardar();
     });
 
     box.addEventListener('click', e => {
@@ -554,12 +638,47 @@ const Sesion = (() => {
       if (b) guardar(box, ticket, cerrar, avisar);
     });
 
-    // Si el panel se abrió desde una ficha, ese producto ya viene en el pedido.
+    // Si quedó un pedido a medias, se retoma tal cual estaba.
+    const previo = leerBorrador();
+    if (previo) {
+      ticket = previo.lineas.map(l => {
+        const p = productos().find(x => x.slug === l.slug);
+        if (!p) return null;
+        const tope = topeDe(p);
+        if (!tope) return null;
+        return {
+          slug: p.slug, nombre: p.name, image: p.image, precio: precioDe(p.slug),
+          qty: Math.max(1, Math.min(+l.qty || 1, tope)), tope,
+        };
+      }).filter(Boolean);
+
+      const poner = (id, texto) => {
+        const el = box.querySelector('#' + id);
+        if (el) el.value = texto || '';
+      };
+      poner('vCliente', previo.cliente);
+      poner('vTelefono', previo.telefono);
+      poner('vEmail', previo.email);
+      poner('vDireccion', previo.direccion);
+      poner('vNotas', previo.notas);
+      ponerSeleccion('pago', previo.pago);
+      ponerSeleccion('comuna', previo.comuna);
+
+      const c = comunas.find(x => x.nombre === previo.comuna);
+      if (c) {
+        box.querySelector('[name=despacho]').value = c.costo || 0;
+        box.querySelector('#vDespacho').childNodes[0].nodeValue = fmt(c.costo || 0) + ' ';
+      }
+    }
+
+    // Si el panel se abrió desde una ficha, ese producto también va.
     const inicial = productos().find(p => p.slug === slug);
-    if (inicial && topeDe(inicial) > 0) {
+    if (inicial && topeDe(inicial) > 0 && !ticket.some(l => l.slug === inicial.slug)) {
       ticket.push({ slug: inicial.slug, nombre: inicial.name, image: inicial.image, precio: precioDe(inicial.slug), qty: 1, tope: topeDe(inicial) });
     }
+
     repintar();
+    if (previo) avisar('Recuperamos el pedido que habías dejado a medias.');
   }
 
   async function guardar(box, ticket, cerrar, avisar){
@@ -626,6 +745,7 @@ const Sesion = (() => {
     }
 
     btn.textContent = 'Venta registrada';
+    borrarBorrador();
     if (creadas && creadas[0]) avisarPorCorreo(creadas[0].id);
     await Promise.all(slugs.map(refrescarProducto));
     setTimeout(cerrar, 700);
