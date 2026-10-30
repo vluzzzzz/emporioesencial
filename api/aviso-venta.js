@@ -52,6 +52,16 @@ function cuerpoHtml(v, vendedor) {
 
   const titulo = t => `<tr><td colspan="2" style="padding:14px 14px 7px;border-bottom:${BORDE};font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#6b6b72">${esc(t)}</td></tr>`;
 
+  // Un pedido puede llevar varios productos: la guía tiene que nombrarlos a
+  // todos, no solo al primero.
+  const lineas = Array.isArray(v.lineas) && v.lineas.length
+    ? v.lineas
+    : [{ producto_nombre: v.producto_nombre, cantidad: v.cantidad }];
+  const unidades = lineas.reduce((a, l) => a + (l.cantidad || 1), 0);
+  const detalle = lineas.length === 1
+    ? esc(v.producto_nombre) + (v.cantidad > 1 ? ' &times; ' + v.cantidad : '')
+    : lineas.map(l => esc(l.producto_nombre) + (l.cantidad > 1 ? ' &times; ' + l.cantidad : '')).join(' &middot; ');
+
   return `<!DOCTYPE html>
 <html lang="es"><head><meta charset="utf-8"></head><body style="margin:0;padding:20px 12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#111">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
@@ -63,8 +73,8 @@ function cuerpoHtml(v, vendedor) {
       </td></tr>
 
       <tr><td colspan="2" style="padding:16px 18px 13px;border-bottom:${BORDE}">
-        <div style="font-size:17px;font-weight:700;line-height:1.3">${esc(v.producto_nombre)}${v.cantidad > 1 ? ' &times; ' + v.cantidad : ''}</div>
-        <div style="margin-top:3px;font-size:12.5px;color:#6b6b72">${v.cantidad || 1} unidad${(v.cantidad || 1) === 1 ? '' : 'es'}</div>
+        <div style="font-size:17px;font-weight:700;line-height:1.3">${detalle}</div>
+        <div style="margin-top:3px;font-size:12.5px;color:#6b6b72">${unidades} unidad${unidades === 1 ? '' : 'es'}</div>
       </td></tr>
 
       ${titulo('Entregar a')}
@@ -118,6 +128,15 @@ module.exports = async (req, res) => {
     const filas = await sbRest('ventas', { method: 'GET', query: `?id=eq.${encodeURIComponent(id)}&select=*` });
     const v = Array.isArray(filas) && filas[0];
     if (!v) return res.status(404).json({ error: 'No existe ese pedido' });
+
+    // Si el pedido lleva varios productos, se traen todos para la guía.
+    if (v.ticket_id) {
+      const suyas = await sbRest('ventas', {
+        method: 'GET',
+        query: `?ticket_id=eq.${encodeURIComponent(v.ticket_id)}&select=producto_nombre,cantidad&order=created_at`,
+      });
+      if (Array.isArray(suyas) && suyas.length > 1) v.lineas = suyas;
+    }
 
     // Solo avisa de la venta propia, o de cualquiera si es administrador.
     if (v.vendedor_id !== quien.id) {

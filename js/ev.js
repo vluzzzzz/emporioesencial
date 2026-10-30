@@ -718,12 +718,16 @@ const EdVendedores = (() => {
       }
       btn.disabled = true; btn.textContent = 'Guardando…';
       try {
+        // Un pedido con varios productos son varias filas: el estado se mueve
+        // en todas o el vendedor quedaría con media comisión aprobada.
+        const ids = hermanas(v).map(l => l.id);
         const { error } = await sb.from('ventas')
           .update({ estado: como, motivo, resuelto_en: new Date().toISOString() })
-          .eq('id', v.id);
+          .in('id', ids);
         if (error) throw error;
-        v.estado = como; v.motivo = motivo;
-        await refrescarStock(v.producto_slug);
+        hermanas(v).forEach(l => { l.estado = como; l.motivo = motivo; });
+        (v.lineas || [v]).forEach(l => { l.estado = como; l.motivo = motivo; });
+        await Promise.all([...new Set(ids.map(id => (ventas.find(x => x.id === id) || {}).producto_slug).filter(Boolean))].map(refrescarStock));
         cerrar();
         pintarVentas(box);
         toast(acepta ? 'Comisión aceptada' : 'Pedido denegado');

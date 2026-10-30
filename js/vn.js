@@ -108,6 +108,20 @@ const Sesion = (() => {
         <span>Ventas</span>`;
       b.addEventListener('click', abrirMisVentas);
       izq.appendChild(b);
+
+      // El vendedor también puede armar el pedido sin abrir una ficha.
+      if (perfil.rol === 'vendedor') {
+        const nv = document.createElement('button');
+        nv.type = 'button';
+        nv.className = 'nav-ventas-btn';
+        nv.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          <span>Nueva venta</span>`;
+        nv.addEventListener('click', () => abrirFormulario());
+        izq.insertBefore(nv, b);
+      }
     }
 
     const login = $('.nav-login');
@@ -333,206 +347,287 @@ const Sesion = (() => {
     return { ov, cerrar };
   }
 
-  /* ── Formulario de venta ──────────────────────────────── */
+  /* ── Venta ────────────────────────────────────────────── */
+  // El vendedor arma el pedido igual que la caja: busca en el catálogo, suma
+  // productos y recién al final carga el despacho y los datos del cliente.
+  // Si viene de la ficha de un producto, ese ya viene puesto.
   async function abrirFormulario(slug){
+    if (!perfil) return;
     await cargarComunas();
-    const prod = productos().find(p => p.slug === slug);
-    if (!prod) return;
-    // Cuántas unidades hay a la venta. null = el producto no lleva inventario.
-    const stock = prod.stock == null || prod.stock === '' ? null : Math.max(0, Number(prod.stock));
+
+    let ticket = [], busqueda = '';
+    const topeDe = p => (p.stock == null || p.stock === '' ? Infinity : Math.max(0, +p.stock));
+    const normal = t => String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const precioDeLinea = l => l.precio * l.qty;
 
     const cuerpo = `
-      <form id="ventaForm">
-        <div class="venta-prod">
-          <img src="${esc(prod.image)}" alt="">
-          <div>
-            <b>${esc(prod.name)}</b>
-            <small>${fmt(precioDe(slug))} por unidad</small>
+      <div class="el-columnas">
+        <section class="el-catalogo">
+          <header class="el-cat-top">
+            <h3>Catálogo</h3>
+            <label class="ev-buscador el-buscador">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+              <input type="search" id="vBuscar" placeholder="Buscar producto" autocomplete="off">
+            </label>
+          </header>
+          <div class="el-grilla" id="vGrilla"></div>
+        </section>
+
+        <section class="el-ticket">
+          <h3>El pedido</h3>
+          <div id="vLineas"></div>
+
+          <p class="venta-sec">Despacho</p>
+          <div class="venta-g2">
+            <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
+              ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
+            </div>
+            <div class="venta-f"><span>Costo de despacho</span>
+              <p class="venta-fijo" id="vDespacho">
+                Elige la comuna
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+              </p>
+              <input type="hidden" name="despacho" value="0">
+            </div>
           </div>
-        </div>
 
-        <div class="venta-g2">
-          <label class="venta-f"><span>Cantidad</span>
-            <input type="number" name="cantidad" min="1" step="1" value="1"${stock == null ? '' : ` max="${stock}"`} required>
-            <small class="venta-stock${stock === 0 ? ' sin' : (stock != null && stock <= 5 ? ' poco' : '')}" id="ventaStock">${
-              stock == null ? 'Sin control de stock.'
-              : stock === 0 ? 'Agotado: no quedan unidades.'
-              : stock === 1 ? 'Queda 1 unidad.'
-              : `Quedan ${stock} unidades.`
-            }</small>
-          </label>
-          <div class="venta-f"><span>Precio por unidad</span>
-            <p class="venta-fijo">
-              ${fmt(precioDe(slug))}
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            </p>
-            <input type="hidden" name="precio" value="${precioDe(slug)}">
+          <p class="venta-sec">Datos del cliente</p>
+          <div class="venta-g2">
+            <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
+              <input type="text" id="vCliente" placeholder="Ej: María Pérez">
+            </label>
+            <label class="venta-f"><span>Teléfono</span>
+              ${campoTel('id="vTelefono"')}
+            </label>
+            <label class="venta-f"><span>Correo (opcional)</span>
+              <input type="email" id="vEmail" placeholder="cliente@correo.cl">
+            </label>
+            <div class="venta-f venta-ancho"><span>Método de pago</span>
+              ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método', 'Transferencia')}
+            </div>
+            <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
+              <input type="text" id="vDireccion" placeholder="Calle, número, depto">
+            </label>
+            <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
+              <textarea id="vNotas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
+            </label>
           </div>
-        </div>
 
-        <p class="venta-sec">Despacho</p>
-        <div class="venta-g2">
-          <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
-            ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
-          </div>
-          <div class="venta-f"><span>Costo de despacho</span>
-            <p class="venta-fijo" id="ventaDespacho">
-              Elige la comuna
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-            </p>
-            <input type="hidden" name="despacho" value="0">
-          </div>
-        </div>
+          <div class="el-pie" id="vPie"></div>
+          <p class="venta-msg" id="vMsg"></p>
+        </section>
+      </div>`;
 
-        <p class="venta-sec">Datos del cliente</p>
-        <div class="venta-g2">
-          <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
-            <input type="text" name="cliente" required placeholder="Ej: María Pérez">
-          </label>
-          <label class="venta-f"><span>Teléfono</span>
-            ${campoTel('name="telefono" required')}
-          </label>
-          <label class="venta-f"><span>Correo (opcional)</span>
-            <input type="email" name="email" placeholder="cliente@correo.cl">
-          </label>
-          <div class="venta-f venta-ancho"><span>Método de pago</span>
-            ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método')}
-          </div>
-          <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
-            <input type="text" name="direccion" required placeholder="Calle, número, depto">
-          </label>
-          <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
-            <textarea name="notas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
-          </label>
-        </div>
-      </form>`;
+    const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo, '', true);
+    const box = ov.querySelector('.venta-body');
+    const grilla = box.querySelector('#vGrilla');
+    const lineasEl = box.querySelector('#vLineas');
+    const buscador = box.querySelector('#vBuscar');
+    const msg = box.querySelector('#vMsg');
 
-    const pie = `
-      <div class="venta-total">
-        <span>Total de la venta</span>
-        <b id="ventaTotal">$0</b>
-      </div>
-      <button type="submit" form="ventaForm" class="venta-btn">Registrar venta</button>
-      <p class="venta-msg" id="ventaMsg"></p>`;
+    function pintarGrilla(){
+      const q = normal(busqueda.trim());
+      const vistos = productos().filter(p => !q ||
+        [p.name, p.slug, p.desc].some(c => normal(c).includes(q)));
 
-    const { ov, cerrar } = panel('Agregar pedido', 'Registro de venta', cuerpo, pie);
-    const f = ov.querySelector('#ventaForm');
-    const btn = ov.querySelector('.venta-btn');
-    const msg = ov.querySelector('#ventaMsg');
-    const pista = ov.querySelector('#ventaStock');
-
-    // Mismo criterio que la caja: no se puede vender más de lo que hay. Se
-    // revisa mientras escribe y otra vez al tocar Registrar venta.
-    function revisar(){
-      const n = +f.cantidad.value || 0;
-      let aviso = '', mal = false;
-      if (stock == null) {
-        pista.textContent = 'Sin control de stock.';
-        pista.className = 'venta-stock';
-      } else if (stock <= 0) {
-        pista.textContent = 'Agotado: no quedan unidades.';
-        pista.className = 'venta-stock sin';
-        aviso = 'Este producto está agotado. No se puede registrar la venta.';
-        mal = true;
-      } else {
-        pista.textContent = stock === 1 ? 'Queda 1 unidad.' : 'Quedan ' + stock + ' unidades.';
-        pista.className = 'venta-stock' + (stock <= 5 ? ' poco' : '');
-        if (n > stock) {
-          aviso = stock === 1
-            ? 'No hay stock suficiente: queda 1 unidad.'
-            : 'No hay stock suficiente: quedan ' + stock + ' unidades.';
-          mal = true;
-        }
+      if (!vistos.length) {
+        grilla.innerHTML = `<div class="ev-det-vacio">${svgIco(ICO_CAJA)}<p>Ningún producto coincide con esa búsqueda.</p></div>`;
+        return;
       }
-      msg.className = 'venta-msg' + (mal ? ' err' : '');
-      msg.textContent = aviso;
-      btn.disabled = mal;
-      return !mal;
+
+      grilla.innerHTML = vistos.map(p => {
+        const tope = topeDe(p);
+        const agotado = p.inStock === false || tope === 0;
+        const puestas = (ticket.find(l => l.slug === p.slug) || {}).qty || 0;
+        return `
+          <button type="button" class="el-prod${agotado ? ' agotado' : ''}" data-add="${esc(p.slug)}"${agotado ? ' disabled' : ''}>
+            <img src="${esc(p.image)}" alt="" onerror="this.style.visibility='hidden'">
+            <span class="el-prod-txt">
+              <b>${esc(p.name)}</b>
+              <small>${fmt(precioDe(p.slug))}${p.stock != null && p.stock !== '' ? ' · ' + tope + ' en stock' : ''}</small>
+            </span>
+            ${puestas ? `<span class="el-prod-n">${puestas}</span>` : ''}
+            ${agotado ? '<span class="el-prod-ago">Agotado</span>' : ''}
+          </button>`;
+      }).join('');
+
+      grilla.querySelectorAll('[data-add]').forEach(b =>
+        b.addEventListener('click', () => sumar(b.dataset.add)));
     }
 
-    const total = () => {
-      const n = +f.cantidad.value || 0, p = +f.precio.value || 0, d = +f.despacho.value || 0;
-      ov.querySelector('#ventaTotal').textContent = fmt(n * p + d);
-    };
-    conectarDesplegables(ov, (campo, valor, extra) => {
+    function sumar(slug){
+      const p = productos().find(x => x.slug === slug);
+      if (!p) return;
+      const tope = topeDe(p);
+      if (tope === 0) { avisar('Este producto está agotado.', true); return; }
+      const linea = ticket.find(l => l.slug === slug);
+      if (linea) {
+        if (linea.qty >= linea.tope) {
+          avisar('No queda más stock de ' + p.name + '.', true);
+          return;
+        }
+        linea.qty++;
+      } else {
+        ticket.push({ slug: p.slug, nombre: p.name, image: p.image, precio: precioDe(p.slug), qty: 1, tope });
+      }
+      repintar();
+    }
+
+    function repintar(){
+      pintarGrilla();
+      pintarLineas();
+      pintarPie();
+    }
+
+    function pintarLineas(){
+      if (!ticket.length) {
+        lineasEl.innerHTML = `<div class="ev-det-vacio el-vacio">${svgIco(ICO_CAJA)}<p>Toca los productos del catálogo para armar el pedido.</p></div>`;
+        return;
+      }
+
+      lineasEl.innerHTML = `<div class="el-lineas">${ticket.map((l, i) => `
+        <div class="el-linea" data-i="${i}">
+          <img src="${esc(l.image)}" alt="" onerror="this.style.visibility='hidden'">
+          <div class="el-linea-txt">
+            <b>${esc(l.nombre)}</b>
+            <small>${fmt(l.precio)} por unidad</small>
+          </div>
+          <div class="el-cant">
+            <button type="button" data-paso="-1" aria-label="Quitar una">−</button>
+            <b>${l.qty}</b>
+            <button type="button" data-paso="1" aria-label="Sumar una">+</button>
+          </div>
+          <span class="el-linea-sub">${fmt(precioDeLinea(l))}</span>
+          <button type="button" class="el-linea-x" data-quitar aria-label="Sacar del pedido">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>`).join('')}</div>`;
+
+      lineasEl.querySelectorAll('[data-paso]').forEach(b => b.addEventListener('click', () => {
+        const l = ticket[+b.closest('.el-linea').dataset.i];
+        const paso = +b.dataset.paso;
+        if (paso > 0 && l.qty >= l.tope) {
+          avisar('No queda más stock de ' + l.nombre + '.', true);
+          return;
+        }
+        l.qty += paso;
+        if (l.qty < 1) ticket.splice(ticket.indexOf(l), 1);
+        repintar();
+      }));
+
+      lineasEl.querySelectorAll('[data-quitar]').forEach(b => b.addEventListener('click', () => {
+        ticket.splice(+b.closest('.el-linea').dataset.i, 1);
+        repintar();
+      }));
+    }
+
+    function pintarPie(){
+      const despacho = +box.querySelector('[name=despacho]').value || 0;
+      const unidades = ticket.reduce((a, l) => a + l.qty, 0);
+      const productosTotal = ticket.reduce((a, l) => a + precioDeLinea(l), 0);
+      const listo = ticket.length > 0 && !!box.querySelector('[name=comuna]').value;
+
+      box.querySelector('#vPie').innerHTML = `
+        <div class="el-cuentas">
+          <div><span>Unidades</span><b>${unidades}</b></div>
+          <div><span>Productos</span><b>${fmt(productosTotal)}</b></div>
+          <div class="el-cobrar"><span>Total con despacho</span><b>${fmt(productosTotal + despacho)}</b></div>
+        </div>
+        <button type="button" class="venta-btn" id="vGuardar"${listo ? '' : ' disabled'}>Registrar venta</button>`;
+    }
+
+    function avisar(texto, error){
+      msg.className = 'venta-msg' + (error ? ' err' : '');
+      msg.textContent = texto;
+    }
+
+    buscador.addEventListener('input', e => { busqueda = e.target.value; pintarGrilla(); });
+    conectarDesplegables(box, (campo, valor, extra) => {
       if (campo !== 'comuna') return;
-      f.despacho.value = extra || 0;
-      ov.querySelector('#ventaDespacho').childNodes[0].nodeValue = fmt(extra || 0) + ' ';
-      total();
+      box.querySelector('[name=despacho]').value = extra || 0;
+      box.querySelector('#vDespacho').childNodes[0].nodeValue = fmt(extra || 0) + ' ';
+      pintarPie();
     });
 
-    f.cantidad.addEventListener('input', () => { total(); revisar(); });
-    total();
-    revisar();
-
-    f.addEventListener('submit', e => {
-      e.preventDefault();
-      if (revisar()) guardar(ov, f, prod, cerrar, revisar);
+    box.addEventListener('click', e => {
+      const b = e.target.closest('#vGuardar');
+      if (b) guardar(box, ticket, cerrar, avisar);
     });
+
+    // Si el panel se abrió desde una ficha, ese producto ya viene en el pedido.
+    const inicial = productos().find(p => p.slug === slug);
+    if (inicial && topeDe(inicial) > 0) {
+      ticket.push({ slug: inicial.slug, nombre: inicial.name, image: inicial.image, precio: precioDe(inicial.slug), qty: 1, tope: topeDe(inicial) });
+    }
+    repintar();
   }
 
-  async function guardar(ov, f, prod, cerrar, revisar){
-    const btn = ov.querySelector('.venta-btn');
-    const msg = ov.querySelector('#ventaMsg');
-    const cantidad = +f.cantidad.value || 1;
-    const precio = +f.precio.value || 0;
-    const despacho = +f.despacho.value || 0;
+  async function guardar(box, ticket, cerrar, avisar){
+    const btn = box.querySelector('#vGuardar');
+    const val = id => (box.querySelector('#' + id)?.value || '').trim();
+    const comuna = box.querySelector('[name=comuna]').value;
+    const despacho = +box.querySelector('[name=despacho]').value || 0;
+    const pago = box.querySelector('[name=pago]').value || 'Transferencia';
 
-    msg.textContent = ''; msg.className = 'venta-msg';
-    if (!f.comuna.value) {
-      msg.className = 'venta-msg err';
-      msg.textContent = 'Elige la comuna de despacho.';
-      return;
-    }
-    if (revisar && !revisar()) return;
+    if (!ticket.length) return avisar('Agrega al menos un producto.', true);
+    if (!comuna) return avisar('Elige la comuna de despacho.', true);
+    if (!val('vCliente')) return avisar('Escribe el nombre del cliente.', true);
+    if (!val('vTelefono')) return avisar('Escribe el teléfono del cliente.', true);
+    if (!val('vDireccion')) return avisar('Escribe la dirección de entrega.', true);
+    avisar('');
 
-    // El stock pudo cambiar desde que se abrió el formulario (otra venta en
-    // paralelo). Se relee antes de guardar para avisar con el número real.
+    // El stock pudo cambiar desde que se abrió el panel: se relee antes de
+    // guardar para avisar con el número real.
+    const slugs = ticket.map(l => l.slug);
     try {
-      const { data: fresco } = await sb.from('products')
-        .select('stock_qty').eq('slug', prod.slug).maybeSingle();
-      if (fresco && fresco.stock_qty != null && cantidad > fresco.stock_qty) {
-        msg.className = 'venta-msg err';
-        msg.textContent = fresco.stock_qty === 1
-          ? 'No hay stock suficiente: queda 1 unidad.'
-          : 'No hay stock suficiente: quedan ' + fresco.stock_qty + ' unidades.';
-        return;
+      const { data } = await sb.from('products').select('slug,stock_qty').in('slug', slugs);
+      const reales = new Map((data || []).map(p => [p.slug, p.stock_qty]));
+      for (const l of ticket) {
+        const real = reales.get(l.slug);
+        if (real != null && l.qty > real) {
+          return avisar('No hay stock suficiente de ' + l.nombre + ': ' +
+            (real === 1 ? 'queda 1 unidad.' : 'quedan ' + real + ' unidades.'), true);
+        }
       }
     } catch (_) {}
 
     btn.disabled = true; btn.textContent = 'Guardando…';
 
-    const { data: creada, error } = await sb.from('ventas').insert({
+    const ticketId = crypto.randomUUID();
+    const cliente = val('vCliente'), telefono = telGuardar(val('vTelefono'));
+    const filas = ticket.map((l, i) => ({
+      ticket_id: ticketId,
       vendedor_id: perfil.id,
       vendedor_nombre: perfil.nombre || perfil.email,
-      producto_slug: prod.slug,
-      producto_nombre: prod.name,
-      cantidad, precio_unitario: precio,
       tipo: 'delivery',
-      comuna: f.comuna.value,
-      costo_despacho: despacho,
-      total: cantidad * precio + despacho,
-      cliente_nombre: f.cliente.value.trim(),
-      cliente_telefono: telGuardar(f.telefono.value),
-      cliente_email: f.email.value.trim(),
-      cliente_direccion: f.direccion.value.trim(),
-      metodo_pago: f.pago.value,
-      notas: f.notas.value.trim(),
-    }).select('id').single();
+      producto_slug: l.slug,
+      producto_nombre: l.nombre,
+      cantidad: l.qty,
+      precio_unitario: l.precio,
+      // El despacho se cobra una sola vez, en la primera línea del pedido.
+      comuna: i === 0 ? comuna : '',
+      costo_despacho: i === 0 ? despacho : 0,
+      total: l.precio * l.qty + (i === 0 ? despacho : 0),
+      cliente_nombre: cliente,
+      cliente_telefono: telefono,
+      cliente_email: val('vEmail'),
+      cliente_direccion: val('vDireccion'),
+      metodo_pago: pago,
+      notas: val('vNotas'),
+    }));
+
+    const { data: creadas, error } = await sb.from('ventas').insert(filas).select('id');
 
     if (error) {
       btn.disabled = false; btn.textContent = 'Registrar venta';
-      msg.className = 'venta-msg err';
       const detalle = String(error.message || '');
       // Si lo frenó la base por falta de stock, el mensaje ya viene claro.
-      msg.textContent = /stock suficiente/i.test(detalle)
-        ? detalle
-        : 'No se pudo registrar: ' + detalle;
-      return;
+      return avisar(/stock suficiente/i.test(detalle) ? detalle : 'No se pudo registrar: ' + detalle, true);
     }
+
     btn.textContent = 'Venta registrada';
-    if (creada && creada.id) avisarPorCorreo(creada.id);
-    await refrescarProducto(prod.slug);
+    if (creadas && creadas[0]) avisarPorCorreo(creadas[0].id);
+    await Promise.all(slugs.map(refrescarProducto));
     setTimeout(cerrar, 700);
   }
 
@@ -594,7 +689,27 @@ const Sesion = (() => {
     ]);
     const pagos = cobros || [];
     if (error) { box.innerHTML = '<p class="venta-vacio">No se pudo cargar: ' + esc(error.message) + '</p>'; return; }
-    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Abre un producto y toca Agregar pedido.</p>'; return; }
+    if (!data.length) { box.innerHTML = '<p class="venta-vacio">Todavía no registraste ninguna venta. Toca Nueva venta en la barra o abre un producto y toca Agregar pedido.</p>'; return; }
+
+    // Un pedido con varios productos son varias filas con el mismo ticket:
+    // aquí se vuelven a juntar para mostrarlo como la venta que fue.
+    function agruparTickets(lista){
+      const mapa = new Map(), salida = [];
+      lista.forEach(v => {
+        if (!v.ticket_id) { salida.push(v); return; }
+        const ya = mapa.get(v.ticket_id);
+        if (!ya) {
+          mapa.set(v.ticket_id, { ...v, lineas: [v] });
+          salida.push(mapa.get(v.ticket_id));
+          return;
+        }
+        ya.lineas.push(v);
+        ya.total += v.total || 0;
+        ya.cantidad += v.cantidad || 0;
+        ya.comision = (ya.comision || 0) + (v.comision || 0);
+      });
+      return salida;
+    }
 
     let mesVisto = claveMes(new Date(data[0].created_at));
     let diaVisto = null;
@@ -608,8 +723,8 @@ const Sesion = (() => {
     }
 
     function pintarMes(){
-      const lista = data.filter(v => claveMes(new Date(v.created_at)) === mesVisto
-        && (!tipoVisto || (tipoVisto === 'local') === esLocal(v)));
+      const lista = agruparTickets(data.filter(v => claveMes(new Date(v.created_at)) === mesVisto
+        && (!tipoVisto || (tipoVisto === 'local') === esLocal(v))));
       const ok = lista.filter(v => estadoDe(v) === 'aceptado');
       const pendientes = lista.filter(v => estadoDe(v) === 'pendiente').length;
       const unidades = ok.reduce((a, v) => a + (v.cantidad || 1), 0);
@@ -796,6 +911,10 @@ const Sesion = (() => {
     function tarjetaMia(v){
       const estado = estadoDe(v);
       const local = esLocal(v);
+      const lineas = v.lineas || [v];
+      const nombres = lineas.map(l => esc(l.producto_nombre) + (l.cantidad > 1 ? ' × ' + l.cantidad : '')).join(' · ');
+      const productosTotal = lineas.reduce((a, l) => a + (l.precio_unitario || 0) * (l.cantidad || 1), 0);
+      const envio = lineas.reduce((a, l) => a + (l.costo_despacho || 0), 0);
       const sello = estado === 'pendiente' ? 'Esperando aprobación'
                   : estado === 'aceptado'  ? 'Aceptada' : 'Denegada';
       const quien = local
@@ -806,7 +925,7 @@ const Sesion = (() => {
           <div class="ev-venta-top">
             <img src="${esc(fotoDe(v.producto_slug))}" alt="" onerror="this.style.visibility='hidden'">
             <div class="ev-venta-datos">
-              <b>${esc(v.producto_nombre)}${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</b>
+              <b>${nombres}</b>
               ${quien}
               ${marcaTipo(v)}
               <small>${esc(v.metodo_pago)} · ${new Date(v.created_at).toLocaleTimeString('es-CL', { hour:'2-digit', minute:'2-digit' })}</small>
@@ -815,8 +934,8 @@ const Sesion = (() => {
           </div>
 
           <div class="ev-cifras tres">
-            <div><span>Producto${v.cantidad > 1 ? ' × ' + v.cantidad : ''}</span><b>${fmt((v.precio_unitario || 0) * (v.cantidad || 1))}</b></div>
-            <div><span>${local ? 'Retiro' : 'Despacho'}</span><b>${local ? 'Sin costo' : fmt(v.costo_despacho)}</b></div>
+            <div><span>${lineas.length > 1 ? 'Productos' : 'Producto' + (v.cantidad > 1 ? ' × ' + v.cantidad : '')}</span><b>${fmt(productosTotal)}</b></div>
+            <div><span>${local ? 'Retiro' : 'Despacho'}</span><b>${local ? 'Sin costo' : fmt(envio)}</b></div>
             <div class="pagar"><span>Tu comisión</span><b>${estado === 'aceptado' ? fmt(comisionDe(v)) : '—'}</b></div>
           </div>
 
