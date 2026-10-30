@@ -10,7 +10,7 @@ button{background:none;border:none;cursor:pointer;font:inherit}
 
   --vt-dur: 0.30s;
 }
-html{scroll-behavior:smooth}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-behavior:smooth}
 body{margin:0;background:var(--off-white);font-family:var(--font-body);color:var(--black);overflow-x:hidden;height:auto;scrollbar-gutter:stable}
 body:not(.sheet-ready) .price,
 body:not(.sheet-ready) .card-price,
@@ -2679,10 +2679,12 @@ svg{ -webkit-user-select:none; user-select:none; }
 /* El vendedor agrega el producto al pedido desde la misma tarjeta. Solo lo ve
    él: al resto de la web no le aparece. */
 .card-pedido{display:none}
-body.puede-vender .card-pedido{display:inline-flex;align-items:center;justify-content:center;align-self:stretch;margin-left:auto;padding:1px 8px;border:1.5px solid #111;border-radius:6px;background:#fff;color:#111;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
+body.puede-vender .temu-card .card-foot{flex-wrap:nowrap;align-items:stretch;gap:8px;padding-top:0}
+body.puede-vender .temu-card .card-precio-col{display:flex;align-items:stretch}
+body.puede-vender .temu-card .card-price{display:flex;align-items:center;line-height:1;margin:0}
+body.puede-vender .card-pedido{display:inline-flex;align-items:center;justify-content:center;align-self:stretch;margin-left:auto;padding:0 8px;line-height:1;border:1.5px solid #111;border-radius:6px;background:#fff;color:#111;font-family:inherit;font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;cursor:pointer;transition:background .18s,color .18s,border-color .18s}
 body.puede-vender .card-pedido:hover{background:#111;color:#e9d9a8;border-color:#111}
 body.puede-vender .card-pedido:active{transform:scale(.97)}
-body.puede-vender .temu-card .card-foot{flex-wrap:wrap;align-items:center;gap:6px}
 
 .venta-ov{position:fixed;inset:0;z-index:10000;background:rgba(17,17,17,0);transition:background .3s var(--ease-smooth)}
 .venta-ov.abierto{background:rgba(17,17,17,.45)}
@@ -2712,6 +2714,8 @@ body.puede-vender .temu-card .card-foot{flex-wrap:wrap;align-items:center;gap:6p
 .venta-f>span{font-size:12.5px;font-weight:600;color:var(--gray-mid)}
 .venta-f>span .req{margin-left:6px;font-size:10px;font-style:normal;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#c0392b}
 .venta-f input,.venta-f textarea{font:inherit;font-size:14.5px;padding:12px 14px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);width:100%;box-sizing:border-box}
+/* iOS no engancha el zoom automático de foco en campos chicos: con 16px no. */
+@media(max-width:860px){.venta-f input,.venta-f textarea{font-size:16px}}
 
 /* El +56 va pegado al campo, no se escribe */
 .tel-campo{display:flex;align-items:stretch;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;overflow:hidden}
