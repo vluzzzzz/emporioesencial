@@ -2750,9 +2750,6 @@ svg{ -webkit-user-select:none; user-select:none; }
 .venta-stock.poco{color:#b8860b}
 .venta-stock.sin{color:#c0392b}
 
-/* Aviso de que el pedido se guarda solo */
-.venta-borrador{margin:8px 0 0;font-size:11.5px;line-height:1.4;color:var(--gray-mid)}
-
 .venta-vacio{margin:0;color:var(--gray-mid);font-size:14px;line-height:1.6}
 
 /* Historial a pantalla completa */

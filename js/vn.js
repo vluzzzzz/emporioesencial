@@ -460,7 +460,6 @@ const Sesion = (() => {
 
           <div class="el-pie" id="vPie"></div>
           <p class="venta-msg" id="vMsg"></p>
-          <p class="venta-borrador">El pedido se guarda solo: si cierras la pantalla, lo retomás al volver.</p>
         </section>
       </div>`;
 
@@ -678,7 +677,6 @@ const Sesion = (() => {
     }
 
     repintar();
-    if (previo) avisar('Recuperamos el pedido que habías dejado a medias.');
   }
 
   async function guardar(box, ticket, cerrar, avisar){
