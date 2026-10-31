@@ -472,7 +472,7 @@ const Sesion = (() => {
       <div class="el-pie" id="vPie"></div>
       <p class="venta-msg" id="vMsg"></p>`;
 
-    const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo, '', true);
+    const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo);
     const box = ov.querySelector('.venta-body');
     const grilla = box.querySelector('#vGrilla');
     const lineasEl = box.querySelector('#vLineas');
