@@ -2682,8 +2682,8 @@ svg{ -webkit-user-select:none; user-select:none; }
 body.puede-vender .temu-card .card-foot{flex-wrap:nowrap;align-items:center;gap:8px;padding-top:0}
 body.puede-vender .temu-card .card-precio-col{display:flex;align-items:center}
 body.puede-vender .temu-card .card-price{display:flex;align-items:center;line-height:1;margin:0}
-body.puede-vender .card-pedido{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;width:22px;height:22px;padding:0;border:1.5px solid #111;border-radius:6px;background:#fff;color:#111;cursor:pointer;transition:background .18s,color .18s,border-color .18s;overflow:visible}
-body.puede-vender .card-pedido-ico{display:block;width:18px;height:18px;flex:none;color:#111}
+body.puede-vender .card-pedido{display:inline-flex;align-items:center;justify-content:center;margin-left:auto;width:27px;height:27px;padding:0;border:2px solid #111;border-radius:7px;background:#fff;color:#111;cursor:pointer;transition:background .18s,color .18s,border-color .18s;overflow:visible}
+body.puede-vender .card-pedido-ico{display:block;width:19px;height:19px;flex:none;color:#111}
 body.puede-vender .card-pedido:hover{background:#111;color:#e9d9a8;border-color:#111}
 body.puede-vender .card-pedido:hover .card-pedido-ico{color:#e9d9a8}
 body.puede-vender .card-pedido:active{transform:scale(.97)}
