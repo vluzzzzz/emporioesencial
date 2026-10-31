@@ -330,7 +330,7 @@ const EdVendedores = (() => {
       <div class="ev-filtro">
         <span>Mes</span>
         ${Sesion.desplegable('mes', MESES.map((n, k) => ({
-          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
+          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n.charAt(0).toUpperCase() + n.slice(1),
         })), 'Elige el mes', mesVisto, false, ICO.calendario)}
       </div>
       <div class="ev-filtro">
@@ -1345,7 +1345,7 @@ const EdVendedores = (() => {
       <div class="ev-filtro">
         <span>Mes</span>
         ${Sesion.desplegable('mesPagos', MESES.map((n, k) => ({
-          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
+          valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n.charAt(0).toUpperCase() + n.slice(1),
         })), 'Elige el mes', mesPagos, false, ICO.calendario)}
       </div>
       <label class="ev-buscador ev-busca-pagos">

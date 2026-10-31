@@ -1091,7 +1091,7 @@ const Sesion = (() => {
             <div class="ev-filtro">
               <span>Mes</span>
               ${desplegable('mes', MESES.map((n, k) => ({
-                valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n,
+                valor: anio + '-' + String(k + 1).padStart(2, '0'), texto: n.charAt(0).toUpperCase() + n.slice(1),
               })), 'Elige el mes', mesVisto, false, ICO_CAL)}
             </div>
             <div class="ev-filtro">
