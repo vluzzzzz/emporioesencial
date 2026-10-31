@@ -414,62 +414,63 @@ const Sesion = (() => {
     const precioDeLinea = l => l.precio * l.qty;
 
     const cuerpo = `
-      <div class="el-columnas">
-        <section class="el-catalogo">
-          <header class="el-cat-top">
-            <h3>Catálogo</h3>
-            <label class="ev-buscador el-buscador">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-              <input type="search" id="vBuscar" placeholder="Buscar producto" autocomplete="off">
-            </label>
-          </header>
-          <div class="el-grilla" id="vGrilla"></div>
-        </section>
+      <p class="venta-sec">Pedido</p>
+      <div id="vLineas"></div>
 
-        <section class="el-ticket">
-          <h3>El pedido</h3>
-          <div id="vLineas"></div>
+      <button type="button" class="venta-addp" id="vAbrirCatalogo" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <span>Agregar producto</span>
+      </button>
 
-          <p class="venta-sec">Despacho</p>
-          <div class="venta-g2">
-            <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
-              ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
-            </div>
-            <div class="venta-f"><span>Costo de despacho</span>
-              <p class="venta-fijo" id="vDespacho">
-                Elige la comuna
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-              </p>
-              <input type="hidden" name="despacho" value="0">
-            </div>
-          </div>
+      <div class="venta-catalogo" id="vCatalogo" hidden>
+        <header class="el-cat-top">
+          <h3>Catálogo</h3>
+          <label class="ev-buscador el-buscador">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+            <input type="search" id="vBuscar" placeholder="Buscar producto" autocomplete="off">
+          </label>
+        </header>
+        <div class="el-grilla" id="vGrilla"></div>
+      </div>
 
-          <p class="venta-sec">Datos del cliente</p>
-          <div class="venta-g2">
-            <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
-              <input type="text" id="vCliente" placeholder="Ej: María Pérez">
-            </label>
-            <label class="venta-f"><span>Teléfono</span>
-              ${campoTel('id="vTelefono"')}
-            </label>
-            <label class="venta-f"><span>Correo (opcional)</span>
-              <input type="email" id="vEmail" placeholder="cliente@correo.cl">
-            </label>
-            <div class="venta-f venta-ancho"><span>Método de pago</span>
-              ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método', 'Transferencia')}
-            </div>
-            <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
-              <input type="text" id="vDireccion" placeholder="Calle, número, depto">
-            </label>
-            <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
-              <textarea id="vNotas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
-            </label>
-          </div>
+      <p class="venta-sec">Despacho</p>
+      <div class="venta-g2">
+        <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
+          ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
+        </div>
+        <div class="venta-f"><span>Costo de despacho</span>
+          <p class="venta-fijo" id="vDespacho">
+            Elige la comuna
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+          </p>
+          <input type="hidden" name="despacho" value="0">
+        </div>
+      </div>
 
-          <div class="el-pie" id="vPie"></div>
-          <p class="venta-msg" id="vMsg"></p>
-        </section>
-      </div>`;
+      <p class="venta-sec">Datos del cliente</p>
+      <div class="venta-g2">
+        <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
+          <input type="text" id="vCliente" placeholder="Ej: María Pérez">
+        </label>
+        <label class="venta-f"><span>Teléfono</span>
+          ${campoTel('id="vTelefono"')}
+        </label>
+        <label class="venta-f"><span>Correo (opcional)</span>
+          <input type="email" id="vEmail" placeholder="cliente@correo.cl">
+        </label>
+        <div class="venta-f venta-ancho"><span>Método de pago</span>
+          ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método', 'Transferencia')}
+        </div>
+        <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
+          <input type="text" id="vDireccion" placeholder="Calle, número, depto">
+        </label>
+        <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
+          <textarea id="vNotas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
+        </label>
+      </div>
+
+      <div class="el-pie" id="vPie"></div>
+      <p class="venta-msg" id="vMsg"></p>`;
 
     const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo, '', true);
     const box = ov.querySelector('.venta-body');
@@ -477,6 +478,20 @@ const Sesion = (() => {
     const lineasEl = box.querySelector('#vLineas');
     const buscador = box.querySelector('#vBuscar');
     const msg = box.querySelector('#vMsg');
+    const catalogo = box.querySelector('#vCatalogo');
+    const btnAgregar = box.querySelector('#vAbrirCatalogo');
+
+    // El catálogo arranca cerrado: el panel muestra solo el producto elegido.
+    // Recién al tocar «Agregar producto» se despliega la lista completa.
+    function mostrarCatalogo(hay){
+      catalogo.hidden = !hay;
+      btnAgregar.setAttribute('aria-expanded', hay ? 'true' : 'false');
+      if (hay) {
+        catalogo.scrollIntoView({ block:'nearest' });
+        setTimeout(() => buscador.focus({ preventScroll:true }), 60);
+      }
+    }
+    btnAgregar.addEventListener('click', () => mostrarCatalogo(catalogo.hidden));
 
     function datosBorrador(){
       return {
@@ -557,6 +572,7 @@ const Sesion = (() => {
         ticket.push({ slug: p.slug, nombre: p.name, image: p.image, precio: precioDe(p.slug), qty: 1, tope });
       }
       repintar();
+      mostrarCatalogo(false);
     }
 
     function repintar(){
@@ -567,8 +583,9 @@ const Sesion = (() => {
     }
 
     function pintarLineas(){
+      btnAgregar.querySelector('span').textContent = ticket.length ? 'Agregar otro producto' : 'Agregar producto';
       if (!ticket.length) {
-        lineasEl.innerHTML = `<div class="ev-det-vacio el-vacio">${svgIco(ICO_CAJA)}<p>Toca los productos del catálogo para armar el pedido.</p></div>`;
+        lineasEl.innerHTML = `<div class="ev-det-vacio el-vacio">${svgIco(ICO_CAJA)}<p>Agrega el producto que se llevó el cliente.</p></div>`;
         return;
       }
 
