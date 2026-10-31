@@ -236,8 +236,7 @@ function slideHTML(p,i){
 }
 
 // Las fotos del repositorio pasaron a WebP. Si la base todavía guarda la ruta
-// vieja, se corrige al vuelo para que no se vea una imagen rota mientras no se
-// corra supabase/imagenes-webp.sql.
+// vieja, se corrige al vuelo para que no se vea una imagen rota.
 const aWebp = u => String(u || '').replace(/^(images\/emporio-images\/[0-9.]+)\.(jpeg|jpg|png)$/i, '$1.webp');
 
 // Vuelca UNA fila de products a todo lo que la web tiene en memoria. La usa

@@ -97,7 +97,7 @@ const EdVendedores = (() => {
     const falta = /does not exist|schema cache/i.test(String(error.message || error));
     console.warn('No se pudo leer ' + nombre + ':', error);
     toast(falta
-      ? 'Falta correr supabase/pagos-vendedor.sql: no existe la tabla ' + nombre
+      ? 'Falta crear la tabla ' + nombre + ' en Supabase'
       : 'No se pudo leer ' + nombre + ': ' + mensajeError(error), true);
   }
 
@@ -186,7 +186,7 @@ const EdVendedores = (() => {
 
   /* ── Comisión del vendedor ────────────────────────────── */
   // Lo que se le paga por unidad, según cuánto cuesta el producto. La misma
-  // escala está en supabase/pedidos-comisiones.sql, que es la que manda.
+  // escala la usa la base al guardar la venta, así que esa es la que manda.
   const TRAMOS = [
     { hasta: 10500, paga: 1300 },
     { hasta: 22500, paga: 1800 },

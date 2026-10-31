@@ -37,8 +37,8 @@ const EdLocal = (() => {
   };
   const svg = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
-  // La misma escala que usan el panel del vendedor y la base. La que manda
-  // sigue siendo supabase/pedidos-comisiones.sql.
+  // La misma escala que usan el panel del vendedor y la base. En la base la
+  // comisión la calcula una función, así que esa es la que manda.
   const comisionUnidad = precio => {
     const p = Number(precio) || 0;
     if (p <= 0) return 0;

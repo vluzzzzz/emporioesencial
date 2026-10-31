@@ -141,7 +141,7 @@ module.exports = async (req, res) => {
           const tabla = (txt.match(/table "([^"]+)"/g) || []).pop() || '';
           return res.status(409).json({
             error: 'Todavía queda algo apuntando a esta cuenta' + (tabla ? ' en ' + tabla.replace(/table |"/g, '') : '') +
-              '. Corre supabase/borrar-persona.sql en Supabase y prueba de nuevo.',
+              '. Bórralo desde Supabase y prueba de nuevo.',
           });
         }
         return res.status(r.status).json({ error: txt });
