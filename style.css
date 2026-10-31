@@ -2892,13 +2892,20 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
   .nav-cats-chev{display:none}
 }
 
-/* En el celular la barra no entra con Ventas, Vendedores y Editar: esos
-   botones pasan al menú de la cuenta y arriba quedan solo el menú, el logo
-   y la cuenta, sin filas de más ni el logo pisado. */
-.nav-cuenta-menu .nav-cuenta-solomovil{display:none}
+/* En el celular la barra lleva menú, Ventas, Vendedores, Editar, logo y
+   cuenta. En vez de esconder botones, se achican para que entren todos en
+   una sola fila, sin pisar el logo ni saltar a una segunda línea. */
 @media(max-width:860px){
-  .nav-ventas-btn,.nav-vendedores-btn,.ed-toggle{display:none!important}
-  .nav-cuenta-menu .nav-cuenta-solomovil{display:block}
+  .nav-left{gap:6px}
+  .nav-cats-btn,.nav-ventas-btn,.nav-vendedores-btn,.nav-local-btn,.ed-toggle,
+  .nav-login{padding:8px!important;margin:0!important;border-radius:50%!important}
+  .nav-cats-btn svg,.nav-ventas-btn svg,.nav-vendedores-btn svg,
+  .nav-local-btn svg,.ed-toggle svg,.nav-login svg{width:17px;height:17px}
+  .nav-right{gap:6px}
+  .nav-cuenta-btn{padding:4px!important}
+  .nav-cuenta-ini{width:29px;height:29px;font-size:13px}
+  .nav-logo{min-width:0}
+  .nav-logo-img{height:32px!important}
 }
 
 /* Equipo: una tarjeta por persona, solo el nombre y el lapiz */
@@ -3377,15 +3384,21 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
   .venta-cols.cat-abierto .el-catalogo{display:block}
   .venta-cols .el-catalogo .el-cat-top{flex-wrap:nowrap}
   .venta-cat-x{display:grid}
-  .venta-cols .el-catalogo .el-grilla{grid-template-columns:repeat(2,1fr);gap:7px;max-height:none;padding-right:0}
+  .venta-cols .el-catalogo .el-grilla{grid-template-columns:repeat(2,1fr);max-height:none;padding-right:0}
+  .venta-cols .el-catalogo .el-buscador{min-width:0;flex:1 1 auto}
+  .venta-full .venta-body{padding:18px 14px 40px}
+}
+
+/* En el teléfono la tarjeta del catálogo se achica: foto arriba y el nombre
+   en dos líneas, para que las dos columnas entren sin desbordar. */
+@media(max-width:560px){
+  .venta-cols .el-catalogo .el-grilla{gap:7px}
   .venta-cols .el-catalogo .el-prod{flex-direction:column;align-items:stretch;gap:6px;padding:7px;border-radius:10px}
   .venta-cols .el-catalogo .el-prod img{width:100%;height:76px;border-radius:8px}
   .venta-cols .el-catalogo .el-prod-txt b{font-size:11.5px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .venta-cols .el-catalogo .el-prod-txt small{font-size:10.5px;margin-top:2px}
   .venta-cols .el-catalogo .el-prod-n{position:absolute;top:6px;right:6px;min-width:20px;height:20px;font-size:11px}
-  .venta-cols .el-catalogo .el-prod-ago{top:auto;bottom:6px;right:6px;font-size:9px;background:#fff;border-radius:6px;padding:1px 4px}
-  .venta-cols .el-catalogo .el-buscador{min-width:0;flex:1 1 auto}
-  .venta-full .venta-body{padding:18px 14px 40px}
+  .venta-cols .el-catalogo .el-prod-ago{font-size:9px;padding:1px 5px}
 }
 
 .el-prod{position:relative;display:flex;align-items:center;gap:11px;text-align:left;font:inherit;padding:9px;border:1.5px solid var(--gray-light);border-radius:12px;background:#fff;color:var(--black);cursor:pointer;transition:border-color .16s,background .16s}
@@ -3396,12 +3409,12 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
 .el-prod-txt small{display:block;margin-top:3px;font-size:12px;color:var(--gray-mid)}
 .el-prod-n{display:grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:999px;background:#111;color:#e9d9a8;font-size:12px;font-weight:700;flex:none}
 .el-prod.agotado{opacity:.5;cursor:not-allowed}
-.el-prod-ago{position:absolute;top:7px;right:7px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#c0392b}
+.el-prod-ago{display:inline-block;margin-top:4px;padding:1px 6px;border-radius:6px;background:rgba(192,57,43,.1);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-style:normal;color:#c0392b}
 
 /* ── El pedido que se está armando ─────────────────────────────────────── */
 .el-vacio{padding:26px 16px}
 .el-lineas{display:grid;gap:8px}
-.el-linea{display:grid;grid-template-columns:auto 1fr auto auto auto;grid-template-areas:"img txt cant sub x";align-items:center;gap:10px;padding:9px;border:1px solid var(--gray-light);border-radius:12px}
+.el-linea{display:grid;grid-template-columns:auto 1fr auto auto auto;grid-template-areas:"img txt cant sub x";align-items:center;gap:12px;padding:11px 12px;border:1px solid var(--gray-light);border-radius:12px}
 .el-linea>img{grid-area:img;width:46px;height:46px;object-fit:contain;border-radius:9px;background:var(--off-white)}
 .el-linea-txt{grid-area:txt;min-width:0}
 .el-linea .el-cant{grid-area:cant}
@@ -3419,7 +3432,7 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
   .el-linea-sub{grid-area:sub;justify-self:end;align-self:center}
   .el-linea-x{grid-area:x}
 }
-.el-linea-txt b{display:block;font-size:13.5px;line-height:1.3;font-weight:600}
+.el-linea-txt b{display:block;font-size:14px;line-height:1.25;font-weight:600}
 .el-linea-txt small{display:block;margin-top:2px;font-size:12px;color:var(--gray-mid)}
 .el-linea-sub{font-size:14px;font-weight:700;white-space:nowrap}
 .el-linea-x{display:grid;place-items:center;width:26px;height:26px;border:0;border-radius:8px;background:none;color:var(--gray-mid);cursor:pointer}

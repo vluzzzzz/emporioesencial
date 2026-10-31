@@ -48,22 +48,6 @@ const Edicion = (() => {
     const der = document.querySelector('.nav-right');
     if (der) der.insertBefore(boton, der.querySelector('.nav-cuenta') || null);
 
-    // En el celular la barra no entra con tantos botones: «Editar» vive en el
-    // menú de la cuenta, que es lo único que se ve arriba.
-    const menuCuenta = document.querySelector('#navCuentaMenu');
-    if (menuCuenta) {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'nav-cuenta-solomovil';
-      item.textContent = 'Editar catálogo';
-      item.addEventListener('click', () => {
-        menuCuenta.hidden = true;
-        document.querySelector('#navCuentaBtn')?.setAttribute('aria-expanded', 'false');
-        alternar(!activa);
-      });
-      menuCuenta.insertBefore(item, menuCuenta.querySelector('[data-acc=salir]'));
-    }
-
     // El panel de vendedores no depende del interruptor: el admin lo ve
     // siempre, con los lápices apagados.
     cargarCss();

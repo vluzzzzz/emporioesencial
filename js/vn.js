@@ -140,7 +140,6 @@ const Sesion = (() => {
       </button>
       <div class="nav-cuenta-menu" id="navCuentaMenu" hidden>
         ${perfil.rol === 'moderador' ? '' : '<button type="button" data-acc="ventas">Mis ventas</button>'}
-        ${perfil.rol === 'vendedor' ? '<button type="button" class="nav-cuenta-solomovil" data-acc="nueva">Nueva venta</button>' : ''}
         <button type="button" data-acc="salir">Cerrar sesión</button>
       </div>`;
     login.replaceWith(cuenta);
@@ -159,7 +158,6 @@ const Sesion = (() => {
       const acc = e.target.closest('[data-acc]')?.dataset.acc;
       if (acc === 'salir') { await sb.auth.signOut(); location.reload(); }
       if (acc === 'ventas') { menu.hidden = true; abrirMisVentas(); }
-      if (acc === 'nueva') { menu.hidden = true; btn.setAttribute('aria-expanded','false'); abrirFormulario(); }
     });
   }
 
@@ -560,10 +558,10 @@ const Sesion = (() => {
             <img src="${esc(p.image)}" alt="" onerror="this.style.visibility='hidden'">
             <span class="el-prod-txt">
               <b>${esc(p.name)}</b>
-              <small>${fmt(precioDe(p.slug))}${p.stock != null && p.stock !== '' ? ' · ' + tope + ' en stock' : ''}</small>
+              <small>${fmt(precioDe(p.slug))}${agotado ? ' · Sin stock' : (p.stock != null && p.stock !== '' ? ' · ' + tope + ' en stock' : '')}</small>
+              ${agotado ? '<em class="el-prod-ago">Agotado</em>' : ''}
             </span>
             ${puestas ? `<span class="el-prod-n">${puestas}</span>` : ''}
-            ${agotado ? '<span class="el-prod-ago">Agotado</span>' : ''}
           </button>`;
       }).join('');
 
@@ -614,8 +612,7 @@ const Sesion = (() => {
             <b>${esc(l.nombre)}</b>
             <small>${fmt(l.precio)} por unidad${finito ? ' · Stock: ' + l.tope : ''}</small>
             ${lleno ? '<em class="el-linea-ojo">Ya está todo el stock en el pedido</em>' : ''}
-          </div>
-          <div class="el-cant">
+          </div>          <div class="el-cant">
             <button type="button" data-paso="-1" aria-label="Quitar una">−</button>
             <b>${l.qty}</b>
             <button type="button" data-paso="1" aria-label="Sumar una"${lleno ? ' disabled' : ''}>+</button>

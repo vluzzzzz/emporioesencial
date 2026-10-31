@@ -32,22 +32,6 @@ const EdVendedores = (() => {
     b.addEventListener('click', () => abrir());
     izq.appendChild(b);
 
-    // En el celular se entra desde el menú de la cuenta, no desde la barra.
-    const menuCuenta = document.querySelector('#navCuentaMenu');
-    if (menuCuenta && !menuCuenta.querySelector('[data-acc=vendedores]')) {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'nav-cuenta-solomovil';
-      item.dataset.acc = 'vendedores';
-      item.textContent = 'Vendedores';
-      item.addEventListener('click', () => {
-        menuCuenta.hidden = true;
-        document.querySelector('#navCuentaBtn')?.setAttribute('aria-expanded', 'false');
-        abrir();
-      });
-      menuCuenta.insertBefore(item, menuCuenta.querySelector('[data-acc=salir]'));
-    }
-
     // El botón "Revisar pedido" del correo trae ?pedido=... en la dirección.
     const pedido = new URLSearchParams(location.search).get('pedido');
     if (pedido) {
