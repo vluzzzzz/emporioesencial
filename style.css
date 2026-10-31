@@ -3354,6 +3354,43 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
 .ev-nueva-local svg{width:16px;height:16px}
 
 /* ── El panel: catálogo a la izquierda, el pedido a la derecha ──────────── */
+/* ── Pedido denegado: aviso flotante y lista en Mis ventas ─────────────── */
+.den-aviso{position:fixed;left:14px;bottom:14px;z-index:9990;width:min(360px,calc(100vw - 92px));background:#fff;color:#111;border:1px solid rgba(192,57,43,.35);border-left:4px solid #c0392b;border-radius:14px;box-shadow:0 18px 44px rgba(0,0,0,.22);padding:14px 16px}
+.den-aviso-top{display:flex;align-items:flex-start;gap:10px}
+.den-aviso-ico{display:grid;place-items:center;width:30px;height:30px;flex:none;border-radius:50%;background:rgba(192,57,43,.12);color:#c0392b}
+.den-aviso-ico svg{width:17px;height:17px}
+.den-aviso-top b{display:block;font-size:14px;font-weight:700}
+.den-aviso-top small{display:block;margin-top:2px;font-size:12px;color:var(--gray-mid)}
+.den-aviso-x{margin-left:auto;width:26px;height:26px;flex:none;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--gray-mid);cursor:pointer}
+.den-aviso-x:hover{background:var(--off-white);color:#111}
+.den-aviso-x svg{width:14px;height:14px}
+.den-aviso-pedido{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--off-white)}
+.den-aviso-pedido b{display:block;font-size:13px;line-height:1.3}
+.den-aviso-pedido small{display:block;margin-top:3px;font-size:11.5px;color:var(--gray-mid)}
+.den-aviso-pedido p{margin:8px 0 0;font-size:12.5px;line-height:1.4;color:#c0392b;font-weight:600}
+.den-aviso-pie{margin-top:10px}
+.den-aviso-ver{width:100%;padding:10px 14px;border:2px solid #111;border-radius:10px;background:#111;color:#e9d9a8;font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.den-aviso-ver:hover{background:#000}
+@media(max-width:560px){.den-aviso{left:10px;right:10px;width:auto;bottom:10px}}
+
+.nav-ventas-btn[data-den]{position:relative}
+.nav-ventas-btn[data-den]::before{content:attr(data-den);position:absolute;bottom:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#c0392b;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px #111}
+
+.mv-den{margin-bottom:18px;border:1px solid rgba(192,57,43,.3);border-radius:16px;background:#fff;padding:16px}
+.mv-den-cab{display:flex;align-items:center;gap:9px}
+.mv-den-ico{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#c0392b;color:#fff;font-weight:800;font-size:13px}
+.mv-den-cab h3{margin:0;font-size:16px;font-weight:700}
+.mv-den-n{margin-left:auto;font-size:12px;font-weight:700;color:#c0392b;background:rgba(192,57,43,.1);border-radius:999px;padding:3px 9px}
+.mv-den-intro{margin:8px 0 12px;font-size:12.5px;color:var(--gray-mid)}
+.mv-den-item{border:1px solid var(--gray-light);border-radius:12px;padding:11px 13px}
+.mv-den-item+.mv-den-item{margin-top:9px}
+.mv-den-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.mv-den-top b{font-size:13.5px;line-height:1.3}
+.mv-den-top span{flex:none;font-size:11.5px;color:var(--gray-mid)}
+.mv-den-item small{display:block;margin-top:3px;font-size:12px;color:var(--gray-mid)}
+.mv-den-motivo{margin:9px 0 0;padding:9px 11px;border-radius:9px;background:#fdf3f2;font-size:12.5px;line-height:1.4;color:#8d2b21}
+.mv-den-motivo b{color:#c0392b}
+
 .el-columnas{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;max-width:1460px;margin:0 auto;align-items:start}
 @media(max-width:980px){.el-columnas{grid-template-columns:1fr}}
 

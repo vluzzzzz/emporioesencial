@@ -42,6 +42,7 @@ const Sesion = (() => {
     pintarNav();
     montarBotonPedido();
     if (typeof Edicion !== 'undefined') Edicion.init(perfil);
+    avisarDenegados();
   }
 
   function montarBotonLogin(){
@@ -101,6 +102,7 @@ const Sesion = (() => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'nav-ventas-btn';
+      b.dataset.nav = 'ventas';
       b.innerHTML = `
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M3 6h18l-1.7 9.4a2 2 0 0 1-2 1.6H6.7a2 2 0 0 1-2-1.6z"/><path d="M8 21h.01M16 21h.01"/>
@@ -824,6 +826,118 @@ const Sesion = (() => {
     }
   }
 
+  /* ── Pedidos denegados ────────────────────────────────── */
+  // Cuando la administración deniega un pedido, el vendedor tiene que
+  // enterarse: qué pedido fue, cuánto valía y por qué se denegó. Se avisa una
+  // sola vez por pedido y queda guardado en este navegador.
+  const claveDeneg = () => 'esencial:denegados:' + (perfil ? perfil.id : '');
+
+  function leidosDenegados(){
+    try { return JSON.parse(localStorage.getItem(claveDeneg()) || '[]'); } catch (_) { return []; }
+  }
+
+  function marcarDenegadosLeidos(ids){
+    try {
+      const juntos = [...new Set(leidosDenegados().concat(ids || []))].slice(-200);
+      localStorage.setItem(claveDeneg(), JSON.stringify(juntos));
+    } catch (_) {}
+    document.querySelectorAll('.nav-ventas-btn[data-den]').forEach(b => b.removeAttribute('data-den'));
+    const cartel = document.querySelector('.den-aviso');
+    if (cartel) cartel.remove();
+  }
+
+  // Un pedido con varios productos son varias filas con el mismo ticket.
+  function agruparDenegados(filas){
+    const mapa = new Map(), salida = [];
+    filas.forEach(f => {
+      const clave = f.ticket_id || f.id;
+      const ya = mapa.get(clave);
+      if (ya) { ya.lineas.push(f); ya.total += f.total || 0; }
+      else {
+        const t = Object.assign({ clave }, f, { lineas: [f] });
+        mapa.set(clave, t);
+        salida.push(t);
+      }
+    });
+    return salida;
+  }
+
+  const fechaCorta = d => new Date(d).toLocaleDateString('es-CL', { day:'numeric', month:'short' });
+
+  function nombresDe(t){
+    const lineas = t.lineas || [t];
+    return lineas.map(l => esc(l.producto_nombre) + (l.cantidad > 1 ? ' × ' + l.cantidad : '')).join(' · ');
+  }
+
+  async function avisarDenegados(){
+    if (!perfil || !puedeVender()) return;
+    let filas = [];
+    try {
+      const { data } = await sb.from('ventas')
+        .select('id,ticket_id,estado,motivo,producto_nombre,cantidad,total,created_at,cliente_nombre')
+        .eq('vendedor_id', perfil.id).eq('estado', 'denegado')
+        .order('created_at', { ascending:false }).limit(40);
+      filas = data || [];
+    } catch (_) { return; }
+    if (!filas.length) return;
+
+    const todos = agruparDenegados(filas);
+    const vistos = new Set(leidosDenegados());
+    const nuevos = todos.filter(t => !vistos.has(t.clave));
+
+    // El contador queda en el botón de Ventas aunque ya lo haya visto: es
+    // información del mes, no una alarma.
+    const btn = document.querySelector('.nav-ventas-btn[data-nav=ventas]');
+    if (btn) btn.setAttribute('data-den', String(todos.length));
+
+    if (!nuevos.length) return;
+    mostrarCartelDenegado(nuevos);
+  }
+
+  function mostrarCartelDenegado(nuevos){
+    if (document.querySelector('.den-aviso')) return;
+    const varios = nuevos.length > 1;
+    const primero = nuevos[0];
+    const caja = document.createElement('div');
+    caja.className = 'den-aviso';
+    caja.innerHTML = `
+      <div class="den-aviso-top">
+        <span class="den-aviso-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8v5"/><path d="M12 16.5h.01"/><path d="M10.3 3.9 2.4 17.4A2 2 0 0 0 4.1 20.4h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+        </span>
+        <div>
+          <b>${varios ? 'Tenés ' + nuevos.length + ' pedidos denegados' : 'Tu pedido fue denegado'}</b>
+          <small>${varios ? 'La administración rechazó estos pedidos.' : 'La administración rechazó este pedido.'}</small>
+        </div>
+        <button type="button" class="den-aviso-x" aria-label="Cerrar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+      <div class="den-aviso-cuerpo">
+        <div class="den-aviso-pedido">
+          <b>${nombresDe(primero)}</b>
+          <small>${esc(primero.cliente_nombre || 'Sin cliente')} · ${fmt(primero.total || 0)} · ${fechaCorta(primero.created_at)}</small>
+          ${primero.motivo ? `<p>${esc(primero.motivo)}</p>` : ''}
+        </div>
+      </div>
+      <div class="den-aviso-pie">
+        <button type="button" class="den-aviso-ver">Ver ${varios ? 'los ' + nuevos.length : 'el pedido'}</button>
+      </div>`;
+
+    // Si está abierto el cartel del modo prueba, el aviso sube para no taparlo.
+    const prueba = document.querySelector('.pv-cartel');
+    if (prueba) caja.style.bottom = Math.round(prueba.getBoundingClientRect().height + 24) + 'px';
+    document.body.appendChild(caja);
+
+    const cerrar = () => marcarDenegadosLeidos(nuevos.map(t => t.clave));
+    caja.querySelector('.den-aviso-x').addEventListener('click', () => { cerrar(); caja.remove(); });
+    caja.querySelector('.den-aviso-ver').addEventListener('click', () => {
+      cerrar();
+      caja.remove();
+      abrirMisVentas();
+    });
+  }
+
   /* ── Mis ventas ───────────────────────────────────────── */
   // Mismo calendario que ve el administrador, pero solo con lo suyo y sin la
   // ganancia del negocio: el vendedor ve lo que vendió y lo que le toca.
@@ -877,6 +991,41 @@ const Sesion = (() => {
     let mesVisto = claveMes(new Date(data[0].created_at));
     let diaVisto = null;
     let tipoVisto = '';
+
+    // Un pedido denegado puede ser de cualquier mes: se muestran todos arriba
+    // del calendario, y solo si existen.
+    const denegados = agruparTickets(data.filter(v => estadoDe(v) === 'denegado'));
+    if (denegados.length) {
+      marcarDenegadosLeidos(denegados.map(v => v.ticket_id || v.id));
+    }
+
+    function bloqueDenegados(){
+      if (!denegados.length) return '';
+      const items = denegados.map(t => {
+        const lineas = t.lineas || [t];
+        const nombres = lineas.map(l => esc(l.producto_nombre) + (l.cantidad > 1 ? ' × ' + l.cantidad : '')).join(' · ');
+        const total = lineas.reduce((a, l) => a + (l.total || 0), 0);
+        return `
+          <article class="mv-den-item">
+            <div class="mv-den-top">
+              <b>${nombres}</b>
+              <span>${new Date(t.created_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' })}</span>
+            </div>
+            <small>${esc(t.cliente_nombre || 'Sin cliente')} · ${fmt(total)}</small>
+            <p class="mv-den-motivo"><b>Se denegó por:</b> ${esc(t.motivo || 'La administración no dejó una nota.')}</p>
+          </article>`;
+      }).join('');
+      return `
+        <section class="mv-den">
+          <header class="mv-den-cab">
+            <span class="mv-den-ico">!</span>
+            <h3>Pedidos denegados</h3>
+            <span class="mv-den-n">${denegados.length}</span>
+          </header>
+          <p class="mv-den-intro">Estos pedidos no se pagan porque fueron denegados. La nota es lo que dejó la administración.</p>
+          ${items}
+        </section>`;
+    }
     pintarMes();
 
     function correrMes(pasos){
@@ -936,6 +1085,7 @@ const Sesion = (() => {
       for (let i = 1; i <= sobran; i++) celdas.push('<div class="ev-dia fuera"><span class="ev-dia-n">' + i + '</span></div>');
 
       box.innerHTML = `
+        ${bloqueDenegados()}
         <div class="ev-tabs">
           <div class="ev-filtros">
             <div class="ev-filtro">
