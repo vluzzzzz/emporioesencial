@@ -140,6 +140,7 @@ const Sesion = (() => {
       </button>
       <div class="nav-cuenta-menu" id="navCuentaMenu" hidden>
         ${perfil.rol === 'moderador' ? '' : '<button type="button" data-acc="ventas">Mis ventas</button>'}
+        ${perfil.rol === 'vendedor' ? '<button type="button" class="nav-cuenta-solomovil" data-acc="nueva">Nueva venta</button>' : ''}
         <button type="button" data-acc="salir">Cerrar sesión</button>
       </div>`;
     login.replaceWith(cuenta);
@@ -158,6 +159,7 @@ const Sesion = (() => {
       const acc = e.target.closest('[data-acc]')?.dataset.acc;
       if (acc === 'salir') { await sb.auth.signOut(); location.reload(); }
       if (acc === 'ventas') { menu.hidden = true; abrirMisVentas(); }
+      if (acc === 'nueva') { menu.hidden = true; btn.setAttribute('aria-expanded','false'); abrirFormulario(); }
     });
   }
 
@@ -414,84 +416,97 @@ const Sesion = (() => {
     const precioDeLinea = l => l.precio * l.qty;
 
     const cuerpo = `
-      <p class="venta-sec">Pedido</p>
-      <div id="vLineas"></div>
+      <div class="el-columnas venta-cols">
+        <section class="el-catalogo" id="vCatBox">
+          <header class="el-cat-top">
+            <h3>Catálogo</h3>
+            <button type="button" class="venta-cat-x" id="vCerrarCat" aria-label="Cerrar catálogo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+            </button>
+            <label class="ev-buscador el-buscador">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+              <input type="search" id="vBuscar" placeholder="Buscar producto" autocomplete="off">
+            </label>
+          </header>
+          <div class="el-grilla" id="vGrilla"></div>
+        </section>
 
-      <button type="button" class="venta-addp" id="vAbrirCatalogo" aria-expanded="false">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-        <span>Agregar producto</span>
-      </button>
+        <section class="el-ticket">
+          <h3>El pedido</h3>
+          <div id="vLineas"></div>
 
-      <div class="venta-catalogo" id="vCatalogo" hidden>
-        <header class="el-cat-top">
-          <h3>Catálogo</h3>
-          <label class="ev-buscador el-buscador">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
-            <input type="search" id="vBuscar" placeholder="Buscar producto" autocomplete="off">
-          </label>
-        </header>
-        <div class="el-grilla" id="vGrilla"></div>
-      </div>
+          <button type="button" class="venta-addp" id="vAbrirCatalogo" aria-expanded="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+            <span>Agregar producto</span>
+          </button>
 
-      <p class="venta-sec">Despacho</p>
-      <div class="venta-g2">
-        <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
-          ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
-        </div>
-        <div class="venta-f"><span>Costo de despacho</span>
-          <p class="venta-fijo" id="vDespacho">
-            Elige la comuna
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
-          </p>
-          <input type="hidden" name="despacho" value="0">
-        </div>
-      </div>
+          <p class="venta-sec">Despacho</p>
+          <div class="venta-g2">
+            <div class="venta-f venta-ancho"><span>Comuna · Región de Valparaíso</span>
+              ${desplegable('comuna', comunas.map(c => ({ valor:c.nombre, texto:c.nombre, extra:c.costo, nota:fmt(c.costo) })), 'Elige la comuna')}
+            </div>
+            <div class="venta-f"><span>Costo de despacho</span>
+              <p class="venta-fijo" id="vDespacho">
+                Elige la comuna
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10.5" width="16" height="10" rx="2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/></svg>
+              </p>
+              <input type="hidden" name="despacho" value="0">
+            </div>
+          </div>
 
-      <p class="venta-sec">Datos del cliente</p>
-      <div class="venta-g2">
-        <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
-          <input type="text" id="vCliente" placeholder="Ej: María Pérez">
-        </label>
-        <label class="venta-f"><span>Teléfono</span>
-          ${campoTel('id="vTelefono"')}
-        </label>
-        <label class="venta-f"><span>Correo (opcional)</span>
-          <input type="email" id="vEmail" placeholder="cliente@correo.cl">
-        </label>
-        <div class="venta-f venta-ancho"><span>Método de pago</span>
-          ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método', 'Transferencia')}
-        </div>
-        <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
-          <input type="text" id="vDireccion" placeholder="Calle, número, depto">
-        </label>
-        <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
-          <textarea id="vNotas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
-        </label>
-      </div>
+          <p class="venta-sec">Datos del cliente</p>
+          <div class="venta-g2">
+            <label class="venta-f venta-ancho"><span>Nombre y apellido</span>
+              <input type="text" id="vCliente" placeholder="Ej: María Pérez">
+            </label>
+            <label class="venta-f"><span>Teléfono</span>
+              ${campoTel('id="vTelefono"')}
+            </label>
+            <label class="venta-f"><span>Correo (opcional)</span>
+              <input type="email" id="vEmail" placeholder="cliente@correo.cl">
+            </label>
+            <div class="venta-f venta-ancho"><span>Método de pago</span>
+              ${desplegable('pago', ['Transferencia','Efectivo'].map(v => ({ valor:v, texto:v })), 'Elige el método', 'Transferencia')}
+            </div>
+            <label class="venta-f venta-ancho"><span>Dirección de entrega</span>
+              <input type="text" id="vDireccion" placeholder="Calle, número, depto">
+            </label>
+            <label class="venta-f venta-ancho"><span>Observaciones (opcional)</span>
+              <textarea id="vNotas" rows="2" placeholder="Horario de entrega, referencias…"></textarea>
+            </label>
+          </div>
 
-      <div class="el-pie" id="vPie"></div>
-      <p class="venta-msg" id="vMsg"></p>`;
+          <div class="el-pie" id="vPie"></div>
+          <p class="venta-msg" id="vMsg"></p>
+        </section>
+      </div>`;
 
-    const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo);
+    const { ov, cerrar } = panel('Nueva venta', 'Registro de venta', cuerpo, '', true);
     const box = ov.querySelector('.venta-body');
+    const cols = box.querySelector('.venta-cols');
     const grilla = box.querySelector('#vGrilla');
     const lineasEl = box.querySelector('#vLineas');
     const buscador = box.querySelector('#vBuscar');
     const msg = box.querySelector('#vMsg');
-    const catalogo = box.querySelector('#vCatalogo');
     const btnAgregar = box.querySelector('#vAbrirCatalogo');
+    const btnCerrarCat = box.querySelector('#vCerrarCat');
 
-    // El catálogo arranca cerrado: el panel muestra solo el producto elegido.
-    // Recién al tocar «Agregar producto» se despliega la lista completa.
+    // En la PC el catálogo queda siempre a la izquierda (como en la caja del
+    // moderador). En el celular el panel muestra solo el pedido y el catálogo
+    // se despliega con el botón, para no tener que scrollear una lista enorme.
+    const pantallaAngosta = () => window.matchMedia('(max-width:980px)').matches;
+
     function mostrarCatalogo(hay){
-      catalogo.hidden = !hay;
+      if (!pantallaAngosta()) return;
+      cols.classList.toggle('cat-abierto', hay);
       btnAgregar.setAttribute('aria-expanded', hay ? 'true' : 'false');
       if (hay) {
-        catalogo.scrollIntoView({ block:'nearest' });
+        cols.scrollIntoView({ block:'start' });
         setTimeout(() => buscador.focus({ preventScroll:true }), 60);
       }
     }
-    btnAgregar.addEventListener('click', () => mostrarCatalogo(catalogo.hidden));
+    btnAgregar.addEventListener('click', () => mostrarCatalogo(!cols.classList.contains('cat-abierto')));
+    btnCerrarCat.addEventListener('click', () => mostrarCatalogo(false));
 
     function datosBorrador(){
       return {
@@ -589,23 +604,28 @@ const Sesion = (() => {
         return;
       }
 
-      lineasEl.innerHTML = `<div class="el-lineas">${ticket.map((l, i) => `
-        <div class="el-linea" data-i="${i}">
+      lineasEl.innerHTML = `<div class="el-lineas">${ticket.map((l, i) => {
+        const finito = Number.isFinite(l.tope);
+        const lleno = finito && l.qty >= l.tope;
+        return `
+        <div class="el-linea${lleno ? ' lleno' : ''}" data-i="${i}">
           <img src="${esc(l.image)}" alt="" onerror="this.style.visibility='hidden'">
           <div class="el-linea-txt">
             <b>${esc(l.nombre)}</b>
-            <small>${fmt(l.precio)} por unidad</small>
+            <small>${fmt(l.precio)} por unidad${finito ? ' · Stock: ' + l.tope : ''}</small>
+            ${lleno ? '<em class="el-linea-ojo">Ya está todo el stock en el pedido</em>' : ''}
           </div>
           <div class="el-cant">
             <button type="button" data-paso="-1" aria-label="Quitar una">−</button>
             <b>${l.qty}</b>
-            <button type="button" data-paso="1" aria-label="Sumar una">+</button>
+            <button type="button" data-paso="1" aria-label="Sumar una"${lleno ? ' disabled' : ''}>+</button>
           </div>
           <span class="el-linea-sub">${fmt(precioDeLinea(l))}</span>
           <button type="button" class="el-linea-x" data-quitar aria-label="Sacar del pedido">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
           </button>
-        </div>`).join('')}</div>`;
+        </div>`;
+      }).join('')}</div>`;
 
       lineasEl.querySelectorAll('[data-paso]').forEach(b => b.addEventListener('click', () => {
         const l = ticket[+b.closest('.el-linea').dataset.i];
@@ -643,6 +663,9 @@ const Sesion = (() => {
     function avisar(texto, error){
       msg.className = 'venta-msg' + (error ? ' err' : '');
       msg.textContent = texto;
+      // El aviso de stock tiene que quedar a la vista: en el celular el botón
+      // de guardar está abajo y el mensaje quedaba fuera de pantalla.
+      if (error) msg.scrollIntoView({ block:'center', behavior:'smooth' });
     }
 
     buscador.addEventListener('input', e => { busqueda = e.target.value; pintarGrilla(); });
