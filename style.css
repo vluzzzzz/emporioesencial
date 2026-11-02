@@ -2540,11 +2540,18 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-thumbs:empty{display:none!important}
 .ppage-thumbs{
   order:2;position:static!important;transform:none!important;
-  display:flex!important;flex-direction:row!important;gap:10px!important;
-  flex:0 0 auto;justify-content:center!important
+  display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;
+  flex:0 0 auto;justify-content:flex-start!important;
+  width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;
+  padding:4px 2px 8px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.28) transparent
 }
+.ppage-thumbs::-webkit-scrollbar{height:6px}
+.ppage-thumbs::-webkit-scrollbar-track{background:transparent}
+.ppage-thumbs::-webkit-scrollbar-thumb{background:rgba(0,0,0,.22);border-radius:999px}
+.ppage-thumbs::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.35)}
 .ppage-thumb{
-  width:84px!important;height:84px!important;flex:0 0 84px;
+  width:84px!important;height:84px!important;flex:0 0 84px;scroll-snap-align:start;
   background:#f4f4f6!important;border:1.5px solid rgba(0,0,0,.10)!important;
   box-shadow:none!important;border-radius:10px!important;opacity:1!important;
   transition:border-color .18s,transform .18s
@@ -2569,7 +2576,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-name{font-size:clamp(24px,2.2vw,32px)!important;line-height:1.18!important;margin:0!important}
 .ppage-meta{margin-top:0!important}
 .ppage-meta:empty{display:none!important}
-@media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{position:static!important;transform:none!important;flex-direction:row!important;gap:8px!important}.ppage-thumb{width:58px!important;height:58px!important;flex:0 0 58px}}
+@media(max-width:560px){.nav-logo-img{height:40px!important}.ppage-thumbs{position:static!important;transform:none!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:8px!important}.ppage-thumb{width:58px!important;height:58px!important;flex:0 0 58px}}
 
 .ppage-trust{margin:0!important;padding:0!important;border-top:none!important}
 .ppage-trust:empty{display:none!important}
@@ -2602,7 +2609,7 @@ svg{ -webkit-user-select:none; user-select:none; }
   .ppage-img-panel{height:auto!important;min-height:0!important;padding:58px 16px 16px!important;justify-content:flex-start!important}
   .ppage-img-wrap{aspect-ratio:4/3!important;height:auto!important;flex:0 1 auto!important;max-height:46dvh!important}
   .ppage-thumb{width:62px!important;height:62px!important;flex:0 0 62px}
-  .ppage-thumbs{flex-wrap:wrap!important}
+  .ppage-thumbs{flex-wrap:nowrap!important;justify-content:flex-start!important}
   .ppage-info{
     border-left:none!important;border-top:1px solid #eeeef1!important;
     padding:24px 20px 36px!important;height:auto!important;min-height:0!important;

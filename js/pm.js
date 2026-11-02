@@ -530,9 +530,15 @@ const ProductModal=(()=>{
 
     const panel=document.getElementById('ppageImgPanel');
     if(panel){
-      let tx=0,ty=0;
-      panel.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;ty=e.touches[0].clientY;},{passive:true});
+      let tx=null,ty=0;
+      // Si el dedo arranca sobre la tira de miniaturas, el gesto es para
+      // desplazarla a ella, no para cambiar la foto grande.
+      panel.addEventListener('touchstart',e=>{
+        if(e.target.closest('.ppage-thumbs')){tx=null;return;}
+        tx=e.touches[0].clientX;ty=e.touches[0].clientY;
+      },{passive:true});
       panel.addEventListener('touchend',e=>{
+        if(tx===null)return;
         const dx=tx-e.changedTouches[0].clientX;
         const dy=ty-e.changedTouches[0].clientY;
         if(Math.abs(dx)>40&&Math.abs(dx)>Math.abs(dy))
