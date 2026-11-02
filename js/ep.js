@@ -29,20 +29,6 @@ const EdProducto = (() => {
         </button>`;
       sec.appendChild(caja);
     }
-    // El lápiz de la ficha se monta una sola vez: populate() escribe dentro de
-    // los nodos pero nunca reemplaza sus contenedores.
-    const info = document.getElementById('ppageInfo');
-    if (info && !info.querySelector('[data-editar="ficha"]')) {
-      const b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'ed-btn';
-      b.dataset.editar = 'ficha';
-      b.style.marginTop = '16px';
-      b.innerHTML = `
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
-        Editar este producto`;
-      info.appendChild(b);
-    }
   }
 
   /* ── Panel de edición ─────────────────────────────────── */

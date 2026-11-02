@@ -185,10 +185,6 @@ const Edicion = (() => {
       EdProducto.ocultar(el.dataset.verProducto, el.dataset.oculto !== '1');
       return;
     }
-    if (que === 'ficha' && typeof EdProducto !== 'undefined') {
-      EdProducto.abrir(document.getElementById('ppage')?.dataset.slug);
-      return;
-    }
     if (que === 'banner' && typeof EdSitio !== 'undefined') { EdSitio.abrirBanners(); return; }
     if (que === 'categorias' && typeof EdSitio !== 'undefined') { EdSitio.abrirCategorias(); return; }
     console.warn('Edición sin módulo para:', que);
