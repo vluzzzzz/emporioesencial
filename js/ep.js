@@ -155,8 +155,11 @@ const EdProducto = (() => {
   function pintarFotos(ov, estado){
     const box = ov.querySelector('#edFotos');
     box.innerHTML = estado.fotos.map((src, i) => `
-      <div class="ed-foto${i === 0 ? ' principal' : ''}">
+      <div class="ed-foto${i === 0 ? ' principal' : ''}" data-i="${i}">
         <img src="${escH(src)}" alt="" onerror="this.style.visibility='hidden'">
+        <span class="ed-foto-mano" data-mano title="Arrastrar para cambiar el orden" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 11V6.5a1.5 1.5 0 0 1 3 0V11"/><path d="M11 11V5.5a1.5 1.5 0 0 1 3 0V11"/><path d="M14 11V7a1.5 1.5 0 0 1 3 0v6"/><path d="M8 11V9.5a1.5 1.5 0 0 0-3 0V15c0 3.6 2.5 6.5 6 6.5h1c3 0 5.5-2.5 5.5-5.5V11"/></svg>
+        </span>
         <button type="button" data-i="${i}" aria-label="Quitar foto">&times;</button>
         ${i === 0 ? '<span class="ed-foto-tag">Principal</span>' : ''}
       </div>`).join('') + `
@@ -167,6 +170,14 @@ const EdProducto = (() => {
     box.querySelectorAll('button[data-i]').forEach(b => b.addEventListener('click', () => {
       estado.fotos.splice(+b.dataset.i, 1);
       pintarFotos(ov, estado);
+    }));
+    // La manito levanta la foto y la suelta en otra posición: la primera de la
+    // lista es la que se muestra como principal en la tienda.
+    box.querySelectorAll('[data-mano]').forEach(mano => mano.addEventListener('pointerdown', e => {
+      if (e.button != null && e.button !== 0) return;
+      e.preventDefault();
+      e.stopPropagation();
+      arrastrarFoto(e, mano.closest('.ed-foto'), ov, estado);
     }));
     box.querySelector('.ed-subir input').addEventListener('change', async e => {
       const files = [...e.target.files];
@@ -179,6 +190,37 @@ const EdProducto = (() => {
       } catch (err) { toast(mensajeError(err), true); }
       e.target.value = '';
     });
+  }
+
+  function arrastrarFoto(e, el, ov, estado){
+    if (!el) return;
+    const box = ov.querySelector('#edFotos');
+    let desde = +el.dataset.i;
+    const marcar = () => box.querySelectorAll('.ed-foto').forEach(f =>
+      f.classList.toggle('arrastrando', +f.dataset.i === desde));
+    marcar();
+    document.body.classList.add('foto-arrastrando');
+
+    const mover = ev => {
+      const bajo = document.elementFromPoint(ev.clientX, ev.clientY);
+      const destinoEl = bajo && bajo.closest('.ed-foto');
+      if (!destinoEl || !box.contains(destinoEl)) return;
+      const destino = +destinoEl.dataset.i;
+      if (isNaN(destino) || destino === desde) return;
+      const [foto] = estado.fotos.splice(desde, 1);
+      estado.fotos.splice(destino, 0, foto);
+      desde = destino;
+      pintarFotos(ov, estado);
+      marcar();
+    };
+    const soltar = () => {
+      document.removeEventListener('pointermove', mover);
+      document.body.classList.remove('foto-arrastrando');
+      box.querySelectorAll('.ed-foto').forEach(f => f.classList.remove('arrastrando'));
+    };
+    document.addEventListener('pointermove', mover);
+    document.addEventListener('pointerup', soltar, { once: true });
+    document.addEventListener('pointercancel', soltar, { once: true });
   }
 
   function pintarCaracts(ov, estado){
