@@ -3376,6 +3376,12 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
 .nav-ventas-btn[data-den]{position:relative}
 .nav-ventas-btn[data-den]::before{content:attr(data-den);position:absolute;bottom:-4px;right:-4px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;background:#c0392b;color:#fff;font-size:10px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px #111}
 
+.mv-den-barra{margin-bottom:14px}
+.mv-den-btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border:1px solid rgba(192,57,43,.45);border-radius:999px;background:#fff;font:inherit;font-size:12px;font-weight:800;letter-spacing:.06em;color:#c0392b;cursor:pointer}
+.mv-den-btn:hover{background:#fdf3f2}
+.mv-den-btn .mv-den-ico{width:20px;height:20px;font-size:11px}
+.mv-den-btn b{min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#c0392b;color:#fff;font-size:11px;display:grid;place-items:center}
+
 .mv-den{margin-bottom:18px;border:1px solid rgba(192,57,43,.3);border-radius:16px;background:#fff;padding:16px}
 .mv-den-cab{display:flex;align-items:center;gap:9px}
 .mv-den-ico{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#c0392b;color:#fff;font-weight:800;font-size:13px}

@@ -921,7 +921,7 @@ const Sesion = (() => {
         </div>
       </div>
       <div class="den-aviso-pie">
-        <button type="button" class="den-aviso-ver">Ver ${varios ? 'los ' + nuevos.length : 'el pedido'}</button>
+        <button type="button" class="den-aviso-ver">DENEGADOS${varios ? ' · ' + nuevos.length : ''}</button>
       </div>`;
 
     // Si está abierto el cartel del modo prueba, el aviso sube para no taparlo.
@@ -934,8 +934,61 @@ const Sesion = (() => {
     caja.querySelector('.den-aviso-ver').addEventListener('click', () => {
       cerrar();
       caja.remove();
-      abrirMisVentas();
+      abrirDenegados();
     });
+  }
+
+  // La lista completa vive en su propia ventana a pantalla completa (igual que
+  // Mis ventas): así un mes con muchos pedidos denegados no tapa el historial.
+  async function abrirDenegados(){
+    const { ov } = panel('Denegados', 'Pedidos rechazados', '<p class="venta-vacio">Cargando…</p>', '', true);
+    const box = ov.querySelector('.venta-body');
+    let filas = [];
+    try {
+      const { data, error } = await sb.from('ventas')
+        .select('id,ticket_id,estado,motivo,producto_nombre,cantidad,total,created_at,cliente_nombre,cliente_telefono,comuna,tipo')
+        .eq('vendedor_id', perfil.id).eq('estado', 'denegado')
+        .order('created_at', { ascending: false }).limit(300);
+      if (error) throw error;
+      filas = data || [];
+    } catch (_) {
+      box.innerHTML = '<p class="venta-vacio">No se pudieron cargar los pedidos denegados. Prueba de nuevo en un rato.</p>';
+      return;
+    }
+    const todos = agruparDenegados(filas);
+    marcarDenegadosLeidos(todos.map(t => t.clave));
+    if (!todos.length) {
+      box.innerHTML = '<p class="venta-vacio">No tenés pedidos denegados.</p>';
+      return;
+    }
+
+    const items = todos.map(t => {
+      const lineas = t.lineas || [t];
+      const nombres = nombresDe(t);
+      const extra = [t.cliente_nombre || 'Sin cliente'];
+      if (t.cliente_telefono) extra.push(t.cliente_telefono);
+      if (t.comuna) extra.push(t.comuna);
+      return `
+        <article class="mv-den-item">
+          <div class="mv-den-top">
+            <b>${nombres}</b>
+            <span>${new Date(t.created_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' })}</span>
+          </div>
+          <small>${extra.map(esc).join(' · ')} · ${fmt(t.total || 0)}</small>
+          <p class="mv-den-motivo"><b>Se denegó por:</b> ${esc(t.motivo || 'La administración no dejó una nota.')}</p>
+        </article>`;
+    }).join('');
+
+    box.innerHTML = `
+      <section class="mv-den">
+        <header class="mv-den-cab">
+          <span class="mv-den-ico">!</span>
+          <h3>Pedidos denegados</h3>
+          <span class="mv-den-n">${todos.length}</span>
+        </header>
+        <p class="mv-den-intro">Estos pedidos no se pagan porque fueron denegados. La nota es lo que dejó la administración.</p>
+        ${items}
+      </section>`;
   }
 
   /* ── Mis ventas ───────────────────────────────────────── */
@@ -992,39 +1045,11 @@ const Sesion = (() => {
     let diaVisto = null;
     let tipoVisto = '';
 
-    // Un pedido denegado puede ser de cualquier mes: se muestran todos arriba
-    // del calendario, y solo si existen.
+    // Un pedido denegado puede ser de cualquier mes: el vendedor los ve en su
+    // propia ventana desde el botón de arriba, no amontonados en el historial.
     const denegados = agruparTickets(data.filter(v => estadoDe(v) === 'denegado'));
     if (denegados.length) {
       marcarDenegadosLeidos(denegados.map(v => v.ticket_id || v.id));
-    }
-
-    function bloqueDenegados(){
-      if (!denegados.length) return '';
-      const items = denegados.map(t => {
-        const lineas = t.lineas || [t];
-        const nombres = lineas.map(l => esc(l.producto_nombre) + (l.cantidad > 1 ? ' × ' + l.cantidad : '')).join(' · ');
-        const total = lineas.reduce((a, l) => a + (l.total || 0), 0);
-        return `
-          <article class="mv-den-item">
-            <div class="mv-den-top">
-              <b>${nombres}</b>
-              <span>${new Date(t.created_at).toLocaleDateString('es-CL', { day:'numeric', month:'short', year:'numeric' })}</span>
-            </div>
-            <small>${esc(t.cliente_nombre || 'Sin cliente')} · ${fmt(total)}</small>
-            <p class="mv-den-motivo"><b>Se denegó por:</b> ${esc(t.motivo || 'La administración no dejó una nota.')}</p>
-          </article>`;
-      }).join('');
-      return `
-        <section class="mv-den">
-          <header class="mv-den-cab">
-            <span class="mv-den-ico">!</span>
-            <h3>Pedidos denegados</h3>
-            <span class="mv-den-n">${denegados.length}</span>
-          </header>
-          <p class="mv-den-intro">Estos pedidos no se pagan porque fueron denegados. La nota es lo que dejó la administración.</p>
-          ${items}
-        </section>`;
     }
     pintarMes();
 
@@ -1085,7 +1110,14 @@ const Sesion = (() => {
       for (let i = 1; i <= sobran; i++) celdas.push('<div class="ev-dia fuera"><span class="ev-dia-n">' + i + '</span></div>');
 
       box.innerHTML = `
-        ${bloqueDenegados()}
+        ${denegados.length ? `
+          <div class="mv-den-barra">
+            <button type="button" class="mv-den-btn" id="mvDenBtn">
+              <span class="mv-den-ico">!</span>
+              <span>DENEGADOS</span>
+              <b>${denegados.length}</b>
+            </button>
+          </div>` : ''}
         <div class="ev-tabs">
           <div class="ev-filtros">
             <div class="ev-filtro">
@@ -1171,6 +1203,7 @@ const Sesion = (() => {
         if (campo === 'mes') { mesVisto = valor; diaVisto = null; pintarMes(); }
         if (campo === 'tipo') { tipoVisto = valor; diaVisto = null; pintarMes(); }
       });
+      box.querySelector('#mvDenBtn')?.addEventListener('click', abrirDenegados);
       box.querySelector('#mvAntes').addEventListener('click', () => { correrMes(-1); pintarMes(); });
       box.querySelector('#mvDespues').addEventListener('click', () => { correrMes(1); pintarMes(); });
       box.querySelector('#mvHoy').addEventListener('click', () => {
