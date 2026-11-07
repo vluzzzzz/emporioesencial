@@ -55,7 +55,7 @@ const EdProducto = (() => {
             ${Sesion.desplegable('cat', catsConLaSuya(p.cat), 'Elige la categoría', p.cat, true)}
           </div>
           <label class="venta-f venta-ancho"><span>Descripción</span>
-            <textarea name="desc" rows="7">${escH(p.desc)}</textarea>
+            <textarea name="desc" rows="3">${escH(p.desc)}</textarea>
           </label>
         </div>
 
@@ -86,17 +86,21 @@ const EdProducto = (() => {
     const { ov, cerrar } = Sesion.panel(p.name, 'Editar producto', cuerpo, pie);
     const f = ov.querySelector('#edForm');
 
-    // La descripción puede ser larga: el campo crece solo y evita que el texto
-    // quede apretado o cortado dentro de una cajita chica.
+    // En PC el campo de descripción abre grande para escribir cómodo y sigue
+    // creciendo mientras se escribe. En celular queda como antes, compacto.
     const campoDesc = f.desc;
-    const ajustarDesc = () => {
-      campoDesc.style.height = 'auto';
-      const alto = Math.max(160, Math.min(campoDesc.scrollHeight + 4, 420));
-      campoDesc.style.height = alto + 'px';
-      campoDesc.style.overflowY = campoDesc.scrollHeight > 420 ? 'auto' : 'hidden';
-    };
-    campoDesc.addEventListener('input', ajustarDesc);
-    ajustarDesc();
+    if (window.matchMedia('(min-width:901px)').matches) {
+      const ajustarDesc = () => {
+        campoDesc.style.height = 'auto';
+        const tope = Math.max(300, Math.round(window.innerHeight * 0.55));
+        const alto = Math.max(300, Math.min(campoDesc.scrollHeight + 4, tope));
+        campoDesc.style.height = alto + 'px';
+        campoDesc.style.overflowY = campoDesc.scrollHeight > tope ? 'auto' : 'hidden';
+      };
+      campoDesc.addEventListener('input', ajustarDesc);
+      campoDesc.addEventListener('focus', ajustarDesc);
+      ajustarDesc();
+    }
 
     const estado = { fotos: fotos.slice(), caracts: caracts.slice(), cat: p.cat };
     Sesion.conectarDesplegables(ov, (campo, valor) => { if (campo === 'cat') estado.cat = valor; });

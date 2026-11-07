@@ -270,8 +270,8 @@ const ProductModal=(()=>{
 
   // ── Descripción larga ──────────────────────────────────────
   // Se muestran unas pocas líneas y el resto se tapa con un degradé. El botón
-  // aparece solo si el texto no entra. En el celular despliega ahí mismo; en
-  // pantalla grande abre la descripción completa con más espacio.
+  // aparece solo si el texto no entra y lo despliega ahí mismo, con una
+  // animación suave hacia abajo, tanto en PC como en celular.
   function prepararDescripcion(texto){
     const desc=document.getElementById('ppageDesc');
     const wrap=document.getElementById('ppageDescWrap');
@@ -295,39 +295,6 @@ const ProductModal=(()=>{
       mas.hidden=!sobra;
     };
     requestAnimationFrame(medir);
-  }
-
-  function abrirDescripcionCompleta(){
-    if(!currentProduct)return;
-    const texto=document.getElementById('ppageDesc')?.textContent||'';
-    const ov=document.createElement('div');
-    ov.className='ppage-desc-ov';
-    ov.innerHTML=`
-      <section class="ppage-desc-full" role="dialog" aria-modal="true" aria-label="Descripción del producto">
-        <header class="ppage-desc-full-cab">
-          <div>
-            <p class="ppage-desc-full-kicker">Descripción</p>
-            <h3></h3>
-          </div>
-          <button type="button" class="ppage-desc-full-x" aria-label="Cerrar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-          </button>
-        </header>
-        <div class="ppage-desc-full-txt"></div>
-      </section>`;
-    ov.querySelector('.ppage-desc-full-cab h3').textContent=currentProduct.name;
-    ov.querySelector('.ppage-desc-full-txt').textContent=texto;
-    document.body.appendChild(ov);
-    requestAnimationFrame(()=>ov.classList.add('abierto'));
-    const cerrar=()=>{
-      ov.classList.remove('abierto');
-      document.removeEventListener('keydown',tecla);
-      setTimeout(()=>ov.remove(),180);
-    };
-    const tecla=e=>{if(e.key==='Escape')cerrar();};
-    document.addEventListener('keydown',tecla);
-    ov.querySelector('.ppage-desc-full-x').addEventListener('click',cerrar);
-    ov.addEventListener('click',e=>{if(e.target===ov)cerrar();});
   }
 
 
@@ -587,13 +554,12 @@ const ProductModal=(()=>{
       abrirSlug(b.dataset.producto);
     });
 
-    // Descripción: en el celular se despliega en la ficha; en PC se abre
-    // completa en una ventana con todo el espacio.
+    // Descripción: se despliega en la ficha, desde las cuatro líneas, con una
+    // animación suave hacia abajo. Es igual en PC y en celular.
     document.getElementById('ppageDescMas')?.addEventListener('click',()=>{
       const wrap=document.getElementById('ppageDescWrap');
       const mas=document.getElementById('ppageDescMas');
       if(!wrap||!mas)return;
-      if(window.matchMedia('(min-width:901px)').matches){abrirDescripcionCompleta();return;}
       // El alto real puede haber cambiado si la pantalla giró o cambió de
       // tamaño; se mide de nuevo justo antes de animar.
       const desc=document.getElementById('ppageDesc');
