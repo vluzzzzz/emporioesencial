@@ -278,16 +278,19 @@ const ProductModal=(()=>{
     const mas=document.getElementById('ppageDescMas');
     if(!desc||!wrap||!mas)return;
     desc.textContent=texto||'';
-    wrap.classList.remove('abierta','recortada');
+    wrap.classList.remove('abierta','recortada','animando');
+    wrap.style.removeProperty('--desc-alto');
     mas.hidden=true;
     mas.textContent='Ver más';
     // Se mide el texto completo y, si pasa de cuatro líneas, se recorta. Si la
     // ficha todavía está oculta, se espera a que tome tamaño para medir bien.
     let intentos=0;
     const medir=()=>{
-      if(!desc.clientHeight&&intentos++<20){requestAnimationFrame(medir);return;}
+      if(!desc.clientHeight&&intentos++<40){requestAnimationFrame(medir);return;}
       const lh=parseFloat(getComputedStyle(desc).lineHeight)||24;
-      const sobra=!!desc.textContent.trim()&&desc.scrollHeight>lh*4+6;
+      const alto=desc.scrollHeight;
+      const sobra=!!desc.textContent.trim()&&alto>lh*4+6;
+      wrap.style.setProperty('--desc-alto',alto+2+'px');
       wrap.classList.toggle('recortada',sobra);
       mas.hidden=!sobra;
     };
@@ -591,8 +594,12 @@ const ProductModal=(()=>{
       const mas=document.getElementById('ppageDescMas');
       if(!wrap||!mas)return;
       if(window.matchMedia('(min-width:901px)').matches){abrirDescripcionCompleta();return;}
+      // El alto real puede haber cambiado si la pantalla giró o cambió de
+      // tamaño; se mide de nuevo justo antes de animar.
+      const desc=document.getElementById('ppageDesc');
+      if(desc)wrap.style.setProperty('--desc-alto',desc.scrollHeight+2+'px');
+      wrap.classList.add('animando');
       const abierta=wrap.classList.toggle('abierta');
-      wrap.classList.toggle('recortada',!abierta);
       mas.textContent=abierta?'Ver menos':'Ver más';
     });
 
