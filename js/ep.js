@@ -55,7 +55,7 @@ const EdProducto = (() => {
             ${Sesion.desplegable('cat', catsConLaSuya(p.cat), 'Elige la categoría', p.cat, true)}
           </div>
           <label class="venta-f venta-ancho"><span>Descripción</span>
-            <textarea name="desc" rows="3">${escH(p.desc)}</textarea>
+            <textarea name="desc" rows="7">${escH(p.desc)}</textarea>
           </label>
         </div>
 
@@ -85,6 +85,18 @@ const EdProducto = (() => {
 
     const { ov, cerrar } = Sesion.panel(p.name, 'Editar producto', cuerpo, pie);
     const f = ov.querySelector('#edForm');
+
+    // La descripción puede ser larga: el campo crece solo y evita que el texto
+    // quede apretado o cortado dentro de una cajita chica.
+    const campoDesc = f.desc;
+    const ajustarDesc = () => {
+      campoDesc.style.height = 'auto';
+      const alto = Math.max(160, Math.min(campoDesc.scrollHeight + 4, 420));
+      campoDesc.style.height = alto + 'px';
+      campoDesc.style.overflowY = campoDesc.scrollHeight > 420 ? 'auto' : 'hidden';
+    };
+    campoDesc.addEventListener('input', ajustarDesc);
+    ajustarDesc();
 
     const estado = { fotos: fotos.slice(), caracts: caracts.slice(), cat: p.cat };
     Sesion.conectarDesplegables(ov, (campo, valor) => { if (campo === 'cat') estado.cat = valor; });

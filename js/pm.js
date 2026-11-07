@@ -252,7 +252,7 @@ const ProductModal=(()=>{
     document.getElementById('ppageImg').alt=currentProduct.name;
     document.getElementById('ppageName').textContent=currentProduct.name;
     renderBreadcrumb(p);
-    document.getElementById('ppageDesc').textContent=p.desc||'';
+    prepararDescripcion(p.desc||'');
     document.getElementById('ppageQtyNum').textContent='1';
     document.getElementById('ppageTiersList').style.height='0';
     renderTiers();updateTotal();renderFeatures(key);
@@ -267,6 +267,66 @@ const ProductModal=(()=>{
     document.getElementById('ppageColorsRow')?.classList.remove('shake');
     if(!colorVars(key)&&imgList.length>1){isTemp=true;renderTempThumbs();}
   }
+
+  // ── Descripción larga ──────────────────────────────────────
+  // Se muestran unas pocas líneas y el resto se tapa con un degradé. El botón
+  // aparece solo si el texto no entra. En el celular despliega ahí mismo; en
+  // pantalla grande abre la descripción completa con más espacio.
+  function prepararDescripcion(texto){
+    const desc=document.getElementById('ppageDesc');
+    const wrap=document.getElementById('ppageDescWrap');
+    const mas=document.getElementById('ppageDescMas');
+    if(!desc||!wrap||!mas)return;
+    desc.textContent=texto||'';
+    wrap.classList.remove('abierta','recortada');
+    mas.hidden=true;
+    mas.textContent='Ver más';
+    // Se mide el texto completo y, si pasa de cuatro líneas, se recorta. Si la
+    // ficha todavía está oculta, se espera a que tome tamaño para medir bien.
+    let intentos=0;
+    const medir=()=>{
+      if(!desc.clientHeight&&intentos++<20){requestAnimationFrame(medir);return;}
+      const lh=parseFloat(getComputedStyle(desc).lineHeight)||24;
+      const sobra=!!desc.textContent.trim()&&desc.scrollHeight>lh*4+6;
+      wrap.classList.toggle('recortada',sobra);
+      mas.hidden=!sobra;
+    };
+    requestAnimationFrame(medir);
+  }
+
+  function abrirDescripcionCompleta(){
+    if(!currentProduct)return;
+    const texto=document.getElementById('ppageDesc')?.textContent||'';
+    const ov=document.createElement('div');
+    ov.className='ppage-desc-ov';
+    ov.innerHTML=`
+      <section class="ppage-desc-full" role="dialog" aria-modal="true" aria-label="Descripción del producto">
+        <header class="ppage-desc-full-cab">
+          <div>
+            <p class="ppage-desc-full-kicker">Descripción</p>
+            <h3></h3>
+          </div>
+          <button type="button" class="ppage-desc-full-x" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </header>
+        <div class="ppage-desc-full-txt"></div>
+      </section>`;
+    ov.querySelector('.ppage-desc-full-cab h3').textContent=currentProduct.name;
+    ov.querySelector('.ppage-desc-full-txt').textContent=texto;
+    document.body.appendChild(ov);
+    requestAnimationFrame(()=>ov.classList.add('abierto'));
+    const cerrar=()=>{
+      ov.classList.remove('abierto');
+      document.removeEventListener('keydown',tecla);
+      setTimeout(()=>ov.remove(),180);
+    };
+    const tecla=e=>{if(e.key==='Escape')cerrar();};
+    document.addEventListener('keydown',tecla);
+    ov.querySelector('.ppage-desc-full-x').addEventListener('click',cerrar);
+    ov.addEventListener('click',e=>{if(e.target===ov)cerrar();});
+  }
+
 
   // El pie se copia al abrir la primera ficha, no al arrancar, porque
   // js/tr.js pinta los medios de pago después y un clon temprano saldría
@@ -522,6 +582,18 @@ const ProductModal=(()=>{
       if(!b)return;
       e.preventDefault();
       abrirSlug(b.dataset.producto);
+    });
+
+    // Descripción: en el celular se despliega en la ficha; en PC se abre
+    // completa en una ventana con todo el espacio.
+    document.getElementById('ppageDescMas')?.addEventListener('click',()=>{
+      const wrap=document.getElementById('ppageDescWrap');
+      const mas=document.getElementById('ppageDescMas');
+      if(!wrap||!mas)return;
+      if(window.matchMedia('(min-width:901px)').matches){abrirDescripcionCompleta();return;}
+      const abierta=wrap.classList.toggle('abierta');
+      wrap.classList.toggle('recortada',!abierta);
+      mas.textContent=abierta?'Ver menos':'Ver más';
     });
 
     document.addEventListener('keydown',e=>{if(e.key==='Escape')close();});

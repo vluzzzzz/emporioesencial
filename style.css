@@ -2582,7 +2582,51 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-trust:empty{display:none!important}
 
 .ppage-viewers{margin:12px 0 0!important}
-.ppage-desc{margin:12px 0 0!important;font-size:14.5px!important;line-height:1.65!important;max-width:none!important}
+.ppage-desc-wrap{position:relative;margin:12px 0 0}
+.ppage-desc{margin:0!important;font-size:14.5px!important;line-height:1.65!important;max-width:none!important}
+.ppage-desc-wrap.recortada .ppage-desc{
+  display:-webkit-box!important;-webkit-box-orient:vertical;-webkit-line-clamp:4!important;
+  overflow:hidden!important;max-height:calc(1.65em * 4)
+}
+.ppage-desc-wrap.recortada::after{
+  content:'';position:absolute;left:0;right:0;bottom:0;height:62px;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,#fff 84%)
+}
+.ppage-desc-mas{
+  display:inline-flex;align-items:center;margin:7px 0 0;padding:0;border:0;background:none;
+  font:inherit;font-size:13px;font-weight:700;color:#141417;cursor:pointer
+}
+.ppage-desc-mas:hover{text-decoration:underline}
+.ppage-desc-mas[hidden]{display:none!important}
+
+.ppage-desc-ov{
+  position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
+  padding:36px;background:rgba(14,14,16,.55);opacity:0;transition:opacity .18s
+}
+.ppage-desc-ov.abierto{opacity:1}
+.ppage-desc-full{
+  width:min(880px,100%);max-height:88vh;display:flex;flex-direction:column;
+  background:#fff;border-radius:18px;box-shadow:0 30px 80px rgba(0,0,0,.3);overflow:hidden
+}
+.ppage-desc-full-cab{display:flex;align-items:flex-start;gap:16px;padding:22px 26px;border-bottom:1px solid #eeeeF2}
+.ppage-desc-full-kicker{margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#9195a0}
+.ppage-desc-full-cab h3{margin:0;font-size:18px;line-height:1.3;font-weight:800;color:#141417}
+.ppage-desc-full-x{
+  margin-left:auto;flex:none;width:36px;height:36px;display:grid;place-items:center;
+  border:0;border-radius:50%;background:#f4f4f6;color:#141417;cursor:pointer
+}
+.ppage-desc-full-x:hover{background:#e9e9ee}
+.ppage-desc-full-x svg{width:17px;height:17px}
+.ppage-desc-full-txt{
+  padding:22px 26px 32px;overflow-y:auto;font-size:16.5px;line-height:1.8;color:#2b2b31;
+  white-space:pre-line;overscroll-behavior:contain
+}
+@media(max-width:900px){
+  .ppage-desc-ov{padding:0}
+  .ppage-desc-full{width:100%;max-height:100dvh;height:100dvh;border-radius:0}
+  .ppage-desc-full-cab{padding:20px 18px}
+  .ppage-desc-full-txt{padding:18px 18px 40px;font-size:15.5px}
+}
 
 #ppageTierWrap{margin-top:22px!important;padding-top:20px!important;border-top:1px solid #ededf1!important}
 .ppage-tier-label{font-size:11.5px!important;font-weight:700!important;letter-spacing:.1em!important;text-transform:uppercase!important;color:#9195a0!important;margin:0 0 4px!important}
