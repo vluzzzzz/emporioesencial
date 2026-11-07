@@ -2585,7 +2585,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-desc-wrap{position:relative;margin:12px 0 0}
 .ppage-desc{margin:0!important;font-size:14.5px!important;line-height:1.65!important;max-width:none!important;overflow:hidden;white-space:pre-wrap}
 .ppage-desc-wrap.animando .ppage-desc{transition:max-height .42s cubic-bezier(.22,1,.36,1)}
-.ppage-desc-wrap.recortada .ppage-desc{max-height:calc(1.65em * 4)}
+.ppage-desc-wrap.recortada .ppage-desc{max-height:calc(1.65em * 7)}
 .ppage-desc-wrap.abierta .ppage-desc{max-height:var(--desc-alto,3000px)}
 .ppage-desc-wrap.recortada::after{
   content:'';position:absolute;left:0;right:0;bottom:0;height:62px;pointer-events:none;

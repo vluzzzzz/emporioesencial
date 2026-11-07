@@ -269,7 +269,7 @@ const ProductModal=(()=>{
   }
 
   // ── Descripción larga ──────────────────────────────────────
-  // Se muestran unas pocas líneas y el resto se tapa con un degradé. El botón
+  // Se muestran unas pocas líneas (siete) y el resto se tapa con un degradé. El botón
   // aparece solo si el texto no entra y lo despliega ahí mismo, con una
   // animación suave hacia abajo, tanto en PC como en celular.
   function prepararDescripcion(texto){
@@ -282,14 +282,14 @@ const ProductModal=(()=>{
     wrap.style.removeProperty('--desc-alto');
     mas.hidden=true;
     mas.textContent='Ver más';
-    // Se mide el texto completo y, si pasa de cuatro líneas, se recorta. Si la
+    // Se mide el texto completo y, si pasa de siete líneas, se recorta. Si la
     // ficha todavía está oculta, se espera a que tome tamaño para medir bien.
     let intentos=0;
     const medir=()=>{
       if(!desc.clientHeight&&intentos++<40){requestAnimationFrame(medir);return;}
       const lh=parseFloat(getComputedStyle(desc).lineHeight)||24;
       const alto=desc.scrollHeight;
-      const sobra=!!desc.textContent.trim()&&alto>lh*4+6;
+      const sobra=!!desc.textContent.trim()&&alto>lh*7+6;
       wrap.style.setProperty('--desc-alto',alto+2+'px');
       wrap.classList.toggle('recortada',sobra);
       mas.hidden=!sobra;
