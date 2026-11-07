@@ -2541,7 +2541,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 .ppage-thumbs{
   order:2;position:static!important;transform:none!important;
   display:flex!important;flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important;
-  flex:0 0 auto;justify-content:flex-start!important;
+  flex:0 0 auto;justify-content:safe center!important;
   width:100%;max-width:100%;overflow-x:auto;overflow-y:hidden;
   padding:4px 2px 8px;scroll-snap-type:x proximity;overscroll-behavior-x:contain;
   -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.28) transparent
@@ -2583,7 +2583,7 @@ svg{ -webkit-user-select:none; user-select:none; }
 
 .ppage-viewers{margin:12px 0 0!important}
 .ppage-desc-wrap{position:relative;margin:12px 0 0}
-.ppage-desc{margin:0!important;font-size:14.5px!important;line-height:1.65!important;max-width:none!important;overflow:hidden;white-space:pre-wrap}
+.ppage-desc{margin:0!important;font-size:14.5px!important;line-height:1.65!important;max-width:none!important;overflow:hidden;white-space:pre-wrap;text-align:justify}
 .ppage-desc-wrap.animando .ppage-desc{transition:max-height .42s cubic-bezier(.22,1,.36,1)}
 .ppage-desc-wrap.recortada .ppage-desc{max-height:calc(1.65em * 7)}
 .ppage-desc-wrap.abierta .ppage-desc{max-height:var(--desc-alto,3000px)}
@@ -2625,7 +2625,7 @@ svg{ -webkit-user-select:none; user-select:none; }
   .ppage-img-panel{height:auto!important;min-height:0!important;padding:58px 16px 16px!important;justify-content:flex-start!important}
   .ppage-img-wrap{aspect-ratio:4/3!important;height:auto!important;flex:0 1 auto!important;max-height:46dvh!important}
   .ppage-thumb{width:62px!important;height:62px!important;flex:0 0 62px}
-  .ppage-thumbs{flex-wrap:nowrap!important;justify-content:flex-start!important}
+  .ppage-thumbs{flex-wrap:nowrap!important;justify-content:safe center!important}
   .ppage-info{
     border-left:none!important;border-top:1px solid #eeeef1!important;
     padding:24px 20px 36px!important;height:auto!important;min-height:0!important;
@@ -3655,3 +3655,4 @@ body.puede-vender .card-pedido:active{transform:scale(.97)}
 /* El campo donde se escribe el nombre también se ve en mayúscula, así no hay
    que andar activando Bloq Mayús título por título. */
 .venta-f input[name="name"]{text-transform:uppercase}
+.venta-f textarea[name="desc"]{text-align:justify}
